@@ -4,17 +4,13 @@ pragma abicoder v2;
 
 import './dependencies/SafeMath.sol';
 import './interfaces/IBridgeExecutor.sol';
-import './interfaces/IFxMessageProcessor.sol';
 
-contract BridgeExecutor is IBridgeExecutor, IFxMessageProcessor {
+abstract contract BridgeExecutorBase is IBridgeExecutor {
   using SafeMath for uint256;
 
   uint256 public immutable override GRACE_PERIOD;
   uint256 public immutable override MINIMUM_DELAY;
   uint256 public immutable override MAXIMUM_DELAY;
-
-  address private immutable _fxRootSender;
-  address private immutable _fxChild;
 
   uint256 private _actionsSetCounter;
   address private _guardian;
@@ -33,8 +29,6 @@ contract BridgeExecutor is IBridgeExecutor, IFxMessageProcessor {
     uint256 gracePeriod,
     uint256 minimumDelay,
     uint256 maximumDelay,
-    address fxRootSender,
-    address fxChild,
     address guardian
   ) {
     require(delay >= minimumDelay, 'DELAY_SHORTER_THAN_MINIMUM');
@@ -44,40 +38,9 @@ contract BridgeExecutor is IBridgeExecutor, IFxMessageProcessor {
     MINIMUM_DELAY = minimumDelay;
     MAXIMUM_DELAY = maximumDelay;
 
-    _fxRootSender = fxRootSender;
-    _fxChild = fxChild;
-
     _guardian = guardian;
 
     emit NewDelay(delay);
-  }
-
-  /**
-   * @dev Process the cross-chain message from an FxChild contract through the ETH/Polygon StateSender
-   * @param stateId Id of the cross-chain message created in the ETH/Polygon StateSender
-   * @param rootMessageSender address that initally sent this message on ethereum
-   * @param data the data from the abi-encoded cross-chain message
-   **/
-  function processMessageFromRoot(
-    uint256 stateId,
-    address rootMessageSender,
-    bytes calldata data
-  ) external override {
-    require(msg.sender == _fxChild, 'UNAUTHORIZED_CHILD_ORIGIN');
-    require(rootMessageSender == _fxRootSender, 'UNAUTHORIZED_ROOT_ORIGIN');
-
-    address[] memory targets;
-    uint256[] memory values;
-    string[] memory signatures;
-    bytes[] memory calldatas;
-    bool[] memory withDelegatecalls;
-
-    (targets, values, signatures, calldatas, withDelegatecalls) = abi.decode(
-      data,
-      (address[], uint256[], string[], bytes[], bool[])
-    );
-
-    _queue(stateId, targets, values, signatures, calldatas, withDelegatecalls);
   }
 
   /**

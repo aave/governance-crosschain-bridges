@@ -1,8 +1,8 @@
 import { DRE } from './misc-utils';
 import { BigNumber } from 'ethers';
 import {
-  BridgeExecutor,
-  BridgeExecutor__factory,
+  PolygonBridgeExecutor,
+  PolygonBridgeExecutor__factory,
   PolygonMarketUpdate,
   PolygonMarketUpdate__factory,
 } from '../typechain/index';
@@ -10,7 +10,7 @@ import ContractAddresses from '../contractAddresses.json';
 import { getMnemonicSigner } from './wallet-helpers';
 
 let polygonMarketUpdateContract: PolygonMarketUpdate;
-let bridgeExecutor: BridgeExecutor;
+let bridgeExecutor: PolygonBridgeExecutor;
 let actionsSet;
 
 export const getMumbaiBlocktime = async (): Promise<number> => {
@@ -30,12 +30,12 @@ export const initPolygonMarketUpdateContract = async (): Promise<void> => {
   );
 };
 
-export const initBridgeExecutor = async (): Promise<BridgeExecutor> => {
+export const initBridgeExecutor = async (): Promise<PolygonBridgeExecutor> => {
   let aaveWhaleSigner = getMnemonicSigner(1);
   const net: any = DRE.config.networks.mumbai;
   const mumbaiProvider = new DRE.ethers.providers.JsonRpcProvider(net.url);
   aaveWhaleSigner = aaveWhaleSigner.connect(mumbaiProvider);
-  bridgeExecutor = BridgeExecutor__factory.connect(
+  bridgeExecutor = PolygonBridgeExecutor__factory.connect(
     ContractAddresses.bridgeExecutor,
     aaveWhaleSigner
   );

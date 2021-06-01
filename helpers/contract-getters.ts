@@ -10,8 +10,8 @@ import {
   FxRoot__factory,
   FxChild,
   FxChild__factory,
-  BridgeExecutor,
-  BridgeExecutor__factory,
+  PolygonBridgeExecutor,
+  PolygonBridgeExecutor__factory,
   PolygonMarketUpdate,
   PolygonMarketUpdate__factory,
 } from '../typechain';
@@ -82,24 +82,24 @@ export const deployFxChild = async (signer: Signer): Promise<FxChild> => {
   return fxChild;
 };
 
-export const deployBridgeExecutor = async (
+export const deployPolygonBridgeExecutor = async (
+  rootSenderAddress: tEthereumAddress,
+  childAddress: tEthereumAddress,
   delay: BigNumber,
   gracePeriod: BigNumber,
   minimumDelay: BigNumber,
   maximumDelay: BigNumber,
-  rootSenderAddress: tEthereumAddress,
-  childAddress: tEthereumAddress,
   guardian: tEthereumAddress,
   signer: Signer
-): Promise<BridgeExecutor> => {
-  const bridgeExecutorFactory = new BridgeExecutor__factory(signer);
+): Promise<PolygonBridgeExecutor> => {
+  const bridgeExecutorFactory = new PolygonBridgeExecutor__factory(signer);
   const bridgeExecutor = await bridgeExecutorFactory.deploy(
+    rootSenderAddress,
+    childAddress,
     delay,
     gracePeriod,
     minimumDelay,
     maximumDelay,
-    rootSenderAddress,
-    childAddress,
     guardian
   );
   await bridgeExecutor.deployTransaction.wait();
