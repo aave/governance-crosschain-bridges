@@ -20,7 +20,7 @@ import {
   triggerWhaleVotes,
   queueProposal,
 } from './helpers/governance-helpers';
-import { BridgeExecutor__factory } from '../typechain';
+import { PolygonBridgeExecutor__factory } from '../typechain';
 
 chai.use(solidity);
 
@@ -206,30 +206,30 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
   describe('Executor - Failed Deployments', async function () {
     it('Delay > Maximum Delay', async () => {
       const { shortExecutor, fxChild, aaveGovOwner } = testEnv;
-      const bridgeExecutorFactory = new BridgeExecutor__factory(aaveGovOwner.signer);
+      const bridgeExecutorFactory = new PolygonBridgeExecutor__factory(aaveGovOwner.signer);
       await expect(
         bridgeExecutorFactory.deploy(
+          shortExecutor.address,
+          fxChild.address,
           BigNumber.from(2000),
           BigNumber.from(1000),
           BigNumber.from(15),
           BigNumber.from(500),
-          shortExecutor.address,
-          fxChild.address,
           aaveGovOwner.address
         )
       ).to.be.revertedWith('DELAY_LONGER_THAN_MAXIMUM');
     });
     it('Delay < Minimum Delay', async () => {
       const { shortExecutor, fxChild, aaveGovOwner } = testEnv;
-      const bridgeExecutorFactory = new BridgeExecutor__factory(aaveGovOwner.signer);
+      const bridgeExecutorFactory = new PolygonBridgeExecutor__factory(aaveGovOwner.signer);
       await expect(
         bridgeExecutorFactory.deploy(
+          shortExecutor.address,
+          fxChild.address,
           BigNumber.from(10),
           BigNumber.from(1000),
           BigNumber.from(15),
           BigNumber.from(500),
-          shortExecutor.address,
-          fxChild.address,
           aaveGovOwner.address
         )
       ).to.be.revertedWith('DELAY_SHORTER_THAN_MINIMUM');
