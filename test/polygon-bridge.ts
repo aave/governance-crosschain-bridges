@@ -318,7 +318,6 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         .to.emit(bridgeExecutor, 'ActionsSetQueued')
         .withArgs(
           0,
-          1,
           targets,
           values,
           signatures,
@@ -358,7 +357,6 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         .to.emit(bridgeExecutor, 'ActionsSetQueued')
         .withArgs(
           1,
-          2,
           targets,
           values,
           signatures,

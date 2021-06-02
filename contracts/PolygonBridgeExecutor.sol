@@ -47,6 +47,6 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
       (address[], uint256[], string[], bytes[], bool[])
     );
 
-    _queue(stateId, targets, values, signatures, calldatas, withDelegatecalls);
+    _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 }
