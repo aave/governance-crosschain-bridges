@@ -20,7 +20,6 @@ interface IBridgeExecutor {
   /**
    * @dev emitted when an ActionsSet is received from the bridge message processor and queued
    * @param id Id of the ActionsSet
-   * @param bridgeStateId id of cross-chain message, created by StateSender contract
    * @param targets list of contracts called by each action's associated transaction
    * @param values list of value in wei for each action's  associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
@@ -30,7 +29,6 @@ interface IBridgeExecutor {
    **/
   event ActionsSetQueued(
     uint256 id,
-    uint256 bridgeStateId,
     address[] targets,
     uint256[] values,
     string[] signatures,
