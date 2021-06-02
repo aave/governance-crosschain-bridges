@@ -11,17 +11,22 @@
  -/:             :/-  -/:             :/.     ://:         `/////////////-
 ```
 
-# Aave Polygon Governance Bridge
+# Aave Governance Bridges
 
-This repo contains the smart contracts and related code for bridging Aave governance-v2 contracts on Ethereum to the Polygon network in order to make to execute desired updates on the Polygon Network.
+This repo contains the smart contracts and related code for bridging Aave governance-v2 contracts on Ethereum to other networks.
 
-## Architecture
+The `BridgeExecutorBase` contract is implemented to facilitate sets of actions approved through Aave's governance process to be queued on another network. Once queued, these actions must wait for a certain `delay` during which a `guardian` address can potentially cancel the execution of these actions.
 
-The BridgeExecutor contract is the focus of this repo.
+The `BridgeExecutorBase` intentionally leaves the `_queue` function internal with the expectation that another contract will extend the `BridgeExecutorBase`. By doing this, the logic for this governance process can be decoupled from:
 
-![aave-polygon-governance-bridge-architecture](./PolygonBridgeExecutorArchitecture.png)
+1) Network specific logic / functionality for cross-chain transactions
+2) The permissioning necessary to validate that the incoming transaction is a legitamate cross-chain transaction stemming from the Ethereum based Aave governance process
 
-## Setup
+This repo currently contains contracts to support bridging to Polygon and Arbitrum.
+
+## Getting Started
+
+### Setup
 
 - Clone the repo
 - run `npm install`
@@ -31,7 +36,7 @@ Follow the next steps to setup the repository:
 - Install `docker` and `docker-compose`
 - Create an enviroment file named `.env` and fill out the environment variables per `example.env`
 
-## Running in Docker
+### Running in Docker
 
 Terminal Window 1
 `docker-compose up`
@@ -41,13 +46,22 @@ Once Terminal Window 1 Loaded - in a seperate terminal window - Terminal Window 
 
 In Terminal Window 2, run desired scripts from npm package file (i.e `npm run compile`)
 
-## Available Scripts
-
 ### Compile
 
 `npm run compile`
 
 This will compile the available smart contracts.
+
+## Polygon Governance Bridge 
+
+### Polygon Governance Bridge Architecture
+
+![aave-polygon-governance-bridge-architecture](./PolygonBridgeArch.png)
+
+Additional documentation around the Polygon Bridging setup can be found at the links below:
+
+[Polygon Docs `L1<>L2 Communication`](https://docs.matic.network/docs/develop/l1-l2-communication/state-transfer)
+[FxPortal](https://github.com/jdkanani/fx-portal) 
 
 ### Test / Coverage
 
@@ -85,16 +99,14 @@ The script will:
 - Validators listening for this StateSync even then trigger the `onStateReceived()` in the `FxChild` contract. The `FxRoot` contract is mapped to the `FxChild` through the `StateSender` contract.
 - In `onStateReceived` the encoded data is passed along to a contract that implements the function `processMessageFromRoot` - which in this case is the `BridgeExecutor` contract. In `processMessageFromRoot` the BridgeExecutor calls `queue()` to queue the proposed actions for the appropriate execution time
 
-## Deploying the Bridge Executor
+### Deploying the Bridge Executor
 
+- `fxRootSender` - the address that can send messages to this BridgeExecutor through the FxPortal. For Aave-Governance-V2 it is the executor contract.- `fxChild` - the fxChild contract from the FxPortal
 - `delay` - the time required to pass after the ActionsSet is queued, before execution
 - `gracePeriod` - once execution time passes, you can execute this until the grace period ends
 - `minimumDelay` - if the delay is updated by the guardian, it cannot be less than this minimum
 - `maximumDelay` - if the delay is updated by the guardian, it cannot be more than this maximum
-- `fxRootSender` - the address that can send messages to this BridgeExecutor through the FxPortal. For Aave-Governance-V2 it is the executor contract.- `fxChild` - the fxChild contract from the FxPortal
 - `guardian` - the admin address of this contract with the permission to cancel ActionsSets and update the delay value
-
-## Dependencies
 
 ### PolygonBridge - FxPortal
 
@@ -104,9 +116,14 @@ Polygon validators listen for `StateSynced` events from the `StateSender` - upon
 
 The BridgeExecutor implements the function `processMessageFromRoot(stateId, rootMessageSender, data);`. In this function, requiring that the `msg.sender` is the `FxChild` should ensure this is a legitimate transaction stemming from the ethereum bridge. By confirming that the `rootMessageSender` is the AaveGovernance Executor contract, this BridgeExecutor can conclude this bridge transaction was triggered be the Aave Governance process and should be handled.
 
-### Trigger Contracts
+### Arbitrum Governance Bridge Architecture
 
-This repo uses Aave-Governance-V2 tor trigger transactions through the BridgeExecutor in this repo. Any contract can trigger these transactions, however the address of the triggering contract should be set as the `fxRootSender` in the `BridgeExecutor` contract to enforce that only this contract can queue actions in the `BridgeExecutor`
+![aave-abitrum-governance-bridge-architecture](./ArbitrumBridgeArch.png)
+
+Additional documentation around the Polygon Bridging setup can be found at the links below:
+
+[Arbitrum Docs `Messaging Between Layers`](https://developer.offchainlabs.com/docs/l1_l2_messages)
+[Inside Arbitrum `Bridging`](https://github.com/jdkanani/fx-portal) 
 
 
 ## Additional Available Tasks
