@@ -160,7 +160,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
   /**
    * @dev Queue the ActionsSet - only callable by the BridgeMessageProvessor
-   * @param bridgeStateId id of cross-chain message, created by StateSender contract
    * @param targets list of contracts called by each action's associated transaction
    * @param values list of value in wei for each action's  associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
@@ -168,7 +167,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
    * @param withDelegatecalls boolean, true = transaction delegatecalls the taget, else calls the target
    **/
   function _queue(
-    uint256 bridgeStateId,
     address[] memory targets,
     uint256[] memory values,
     string[] memory signatures,
@@ -215,7 +213,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
     emit ActionsSetQueued(
       actionsSetId,
-      bridgeStateId,
       targets,
       values,
       signatures,

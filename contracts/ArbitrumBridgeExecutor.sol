@@ -34,6 +34,6 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
     bool[] memory withDelegatecalls
   ) external {
     require(msg.sender == _ethereumGovernanceExecutor, 'UNAUTHORIZED_EXECUTOR');
-    _queue(0, targets, values, signatures, calldatas, withDelegatecalls);
+    _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 }
