@@ -11,7 +11,7 @@
  -/:             :/-  -/:             :/.     ://:         `/////////////-
 ```
 
-# Aave Governance Bridges
+# Aave Crosschain Bridges
 
 This repo contains the smart contracts and related code for bridging Aave governance-v2 contracts on Ethereum to other networks.
 
@@ -60,8 +60,8 @@ This will compile the available smart contracts.
 
 Additional documentation around the Polygon Bridging setup can be found at the links below:
 
-[Polygon Docs `L1<>L2 Communication`](https://docs.matic.network/docs/develop/l1-l2-communication/state-transfer)
-[FxPortal](https://github.com/jdkanani/fx-portal) 
+- [Polygon Docs `L1<>L2 Communication`](https://docs.matic.network/docs/develop/l1-l2-communication/state-transfer)
+- [FxPortal](https://github.com/jdkanani/fx-portal) 
 
 ### Test / Coverage
 
@@ -116,14 +116,14 @@ Polygon validators listen for `StateSynced` events from the `StateSender` - upon
 
 The BridgeExecutor implements the function `processMessageFromRoot(stateId, rootMessageSender, data);`. In this function, requiring that the `msg.sender` is the `FxChild` should ensure this is a legitimate transaction stemming from the ethereum bridge. By confirming that the `rootMessageSender` is the AaveGovernance Executor contract, this BridgeExecutor can conclude this bridge transaction was triggered be the Aave Governance process and should be handled.
 
-### Arbitrum Governance Bridge Architecture
+## Arbitrum Governance Bridge Architecture
 
 ![aave-abitrum-governance-bridge-architecture](./ArbitrumBridgeArch.png)
 
 Additional documentation around the Polygon Bridging setup can be found at the links below:
 
-[Arbitrum Docs `Messaging Between Layers`](https://developer.offchainlabs.com/docs/l1_l2_messages)
-[Inside Arbitrum `Bridging`](https://github.com/jdkanani/fx-portal) 
+- [Arbitrum Docs `Messaging Between Layers`](https://developer.offchainlabs.com/docs/l1_l2_messages)
+- [Inside Arbitrum `Bridging`](https://github.com/jdkanani/fx-portal) 
 
 
 ## Additional Available Tasks
