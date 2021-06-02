@@ -125,6 +125,37 @@ Additional documentation around the Polygon Bridging setup can be found at the l
 - [Arbitrum Docs `Messaging Between Layers`](https://developer.offchainlabs.com/docs/l1_l2_messages)
 - [Inside Arbitrum `Bridging`](https://github.com/jdkanani/fx-portal) 
 
+### Arbitrum Bridge Contracts Functionality
+
+After going through the Aave governance, the propsal that is executed is a call to the following function in the Arbitrum Inbox contract on Ethereum:
+
+```
+ /**
+    @notice Put an message in the L2 inbox that can be re-executed for some fixed amount of time if it reverts
+    * @dev all msg.value will deposited to callValueRefundAddress on L2
+    * @param destAddr destination L2 contract address
+    * @param l2CallValue call value for retryable L2 message
+    * @param  maxSubmissionCost Max gas deducted from user's L2 balance to cover base submission fee
+    * @param excessFeeRefundAddress maxGas x gasprice - execution cost gets credited here on L2 balance
+    * @param callValueRefundAddress l2Callvalue gets credited here on L2 if retryable txn times out or gets cancelled
+    * @param maxGas Max gas deducted from user's L2 balance to cover L2 execution
+    * @param gasPriceBid price bid for L2 execution
+    * @param data ABI encoded data of L2 message
+    * @return unique id for retryable transaction (keccak256(requestID, uint(0) )
+     */
+    function createRetryableTicket(
+        address destAddr,
+        uint256 l2CallValue,
+        uint256 maxSubmissionCost,
+        address excessFeeRefundAddress,
+        address callValueRefundAddress,
+        uint256 maxGas,
+        uint256 gasPriceBid,
+        bytes calldata data
+    ) external payable override returns (uint256)
+  ```
+
+
 
 ## Additional Available Tasks
 
