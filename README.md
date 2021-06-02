@@ -127,7 +127,7 @@ Additional documentation around the Polygon Bridging setup can be found at the l
 
 ### Arbitrum Bridge Contracts Functionality
 
-After going through the Aave governance, the propsal that is executed is a call to the following function in the Arbitrum Inbox contract on Ethereum:
+After going through the Aave governance, the proposal payload will be a call to the following function in the Arbitrum Inbox contract on Ethereum:
 
 ```
  /**
@@ -153,9 +153,11 @@ After going through the Aave governance, the propsal that is executed is a call 
         uint256 gasPriceBid,
         bytes calldata data
     ) external payable override returns (uint256)
-  ```
+```
 
-
+In this format, the key bridging fields are `destAddr`, `data`, and `l2CallValue`. `destAddr` is the contract that will be called on Arbitrum. In this case it is the ArbitrumBridgeExecutor contract. The `data` is the encoded data for the cross chain transaction. In this case it should be the calldata for `queue(targets, values, signatures, calldatas, withDelegatecalls)` in the ArbitrumBridgeExecutor contract. `l2CallValue` is what will be sent over as the `msg.value` on L2. The rest of the fields pertain to gas management on Arbitrum and should be defined per arbitrum documentation.
+ 
+When this transaction is sent cross-chain, the `msg.sender` is retained. This means that the Aave governance executor contract will be the sender what the ArbitrumBridgeExecutor is called. For this reason, the Aave governance executor contract address should be provided to the ArbitrumBridgeExecutor contract in the constructor. This address will be saved and used to permission the queue function so that only calls from this address can successfully queue the ActionsSet in the `BridgeExecutorBase`.
 
 ## Additional Available Tasks
 
