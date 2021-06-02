@@ -96,11 +96,13 @@ The script will:
 
 ## Dependencies
 
-### FxPortal
+### PolygonBridge - FxPortal
 
-This repo uses the FxPortal developed and designed by the Polygon team
+This repo uses the [FxPortal](https://github.com/jdkanani/fx-portal) developed and designed by the Polygon team to support bridging from Ethereum to Polygon. The intent of the FxPortal is to help users avoid the step of registering their own sender and receiver contracts within Polygon's `StateSender` contract. The FxPortal contains two contracts - `FxRoot` and `FxChild`. The `FxRoot` contract has been deployed on Ethereum and the `FxChild` contract has been deployed on Polygon. The `FxRoot` contract is mapped to the `FxChild` contract via Polygon's `StateSender` contract on Ethereum. By calling the `sendMessageToChild(address _receiver, bytes calldata _data)` function in the `FxRoot`, the `msg.sender` is encoded, along with the provided `_receiver` and `_data`. This encoded message is sent to the `StateSender` contract and a `StateSynced` event is emitted with this data.
 
-https://github.com/jdkanani/fx-portal
+Polygon validators listen for `StateSynced` events from the `StateSender` - upon identifying one of these events, they will call the function `onStateReceive(uint256 stateId, bytes calldata _data)` in `FxChild`. The encoded message is decoded in `FxChild` and forwarded to the `receiver` contract via the function `processMessageFromRoot(stateId, rootMessageSender, data);`. The `rootMessageSender` that is passed along is the original `msg.sender` that called `FxRoot` which in this case is the Aave Governance Executor contract.
+
+The BridgeExecutor implements the function `processMessageFromRoot(stateId, rootMessageSender, data);`. In this function, requiring that the `msg.sender` is the `FxChild` should ensure this is a legitimate transaction stemming from the ethereum bridge. By confirming that the `rootMessageSender` is the AaveGovernance Executor contract, this BridgeExecutor can conclude this bridge transaction was triggered be the Aave Governance process and should be handled.
 
 ### Trigger Contracts
 
