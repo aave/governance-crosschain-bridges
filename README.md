@@ -94,11 +94,11 @@ The script will:
 - The second variable is the data that will be decoded on the polygon chain. This field contains encoded bytes for the following fields targets[], values[], signatures[], calldatas[], and withDelegatecall[] 
 - When the proposal is executed, `sendMessageToChild()` in the `FxRoot` triggers `syncState()` on the `StateSender` contract which emits a `StateSync` event. 
 - Validators listening for this `StateSync` event then trigger the `onStateReceived()` in the `FxChild` contract on Polygon.
-- In `onStateReceived` the encoded data is passed along to a contract that implements the function `processMessageFromRoot` - which in this case is in the `PolygonBridgeExecutor` contract. In `processMessageFromRoot` the PolygonBridgeExecutor calls `_queue()` in the `BridgeExecutorBese` contract to queue the proposed actions for the appropriate execution time
+- In `onStateReceived` the encoded data is passed along to a contract that implements the function `processMessageFromRoot` - which in this case is in the `PolygonBridgeExecutor` contract. In `processMessageFromRoot` the `PolygonBridgeExecutor` calls `_queue()` in the `BridgeExecutorBese` contract to queue the proposed actions for the appropriate execution time
 
 ### Deploying the PolygonBridgeExecutor
 
-- `fxRootSender` - the address that can send messages to this BridgeExecutor through the FxPortal. For Aave-Governance-V2 it is the executor contract.
+- `fxRootSender` - the address that can send messages to this PolygonBridgeExecutor through the FxPortal. For Aave-Governance-V2 it is the executor contract.
 - `fxChild` - the fxChild contract from the FxPortal
 - `delay` - the time required to pass after the ActionsSet is queued, before execution
 - `gracePeriod` - once execution time passes, you can execute this until the grace period ends

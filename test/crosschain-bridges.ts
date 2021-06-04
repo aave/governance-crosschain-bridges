@@ -13,6 +13,7 @@ import {
   createBridgeTest6,
   createBridgeTest7,
   createBridgeTest8,
+  createArbitrumBridgeTest,
 } from './helpers/bridge-helpers';
 import {
   expectProposalState,
@@ -35,7 +36,7 @@ const proposalStates = {
   EXECUTED: 7,
 };
 
-makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) => {
+makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) => {
   const proposals: any = [];
   const dummyAddress = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
   const dummyUint = 10203040;
@@ -55,6 +56,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       fxRoot,
       fxChild,
       bridgeExecutor,
+      inbox,
     } = testEnv;
 
     // Authorize new executor
@@ -129,7 +131,16 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     const proposal8Actions = await createBridgeTest8(dummyUint, testEnv);
     testEnv.proposalActions.push(proposal8Actions);
 
-    // Create Proposals
+    /**
+     * Arbitrum -- Create Proposal Actions
+     * Successful Transactions on PolygonMarketUpdate
+     * -> Action 1 PolygonMarketUpdate.execute(dummyInt) with value of 100 (non-delegate)
+     * -> Action 2 PolygonMarketUpdate.executeWithDelegate(dummyString) with no value, as delegate
+     */
+    const proposal9Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
+    testEnv.proposalActions.push(proposal9Actions);
+
+    // Create Polygon Proposals
     for (let i = 0; i < 8; i++) {
       proposals[i] = await createProposal(
         aaveGovContract,
@@ -145,8 +156,21 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       await expectProposalState(aaveGovContract, proposals[i].id, proposalStates.PENDING);
     }
 
+    // Create Arbitrum Proposal
+    proposals[8] = await createProposal(
+      aaveGovContract,
+      aaveWhale1.signer,
+      shortExecutor.address,
+      [inbox.address],
+      [BigNumber.from(0)],
+      ['createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'],
+      [proposal9Actions.encodedRootCalldata],
+      [false],
+      '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
+    );
+
     // Vote on Proposals
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       await triggerWhaleVotes(
         aaveGovContract,
         [aaveWhale1.signer, aaveWhale2.signer, aaveWhale3.signer],
@@ -157,7 +181,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     }
 
     // Advance Block to End of Voting
-    await advanceBlockTo(proposals[7].endBlock.add(1));
+    await advanceBlockTo(proposals[8].endBlock.add(1));
 
     // Queue Proposals
     await queueProposal(aaveGovContract, proposals[0].id);
@@ -167,14 +191,15 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     await queueProposal(aaveGovContract, proposals[4].id);
     await queueProposal(aaveGovContract, proposals[5].id);
     await queueProposal(aaveGovContract, proposals[6].id);
-    const queuedProposal8 = await queueProposal(aaveGovContract, proposals[7].id);
+    await queueProposal(aaveGovContract, proposals[7].id);
+    const queuedProposal9 = await queueProposal(aaveGovContract, proposals[8].id);
 
     await expectProposalState(aaveGovContract, proposals[0].id, proposalStates.QUEUED);
 
     // advance to execution
     const currentBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
     const { timestamp } = currentBlock;
-    const fastForwardTime = queuedProposal8.executionTime.sub(timestamp).toNumber();
+    const fastForwardTime = queuedProposal9.executionTime.sub(timestamp).toNumber();
     await advanceBlock(timestamp + fastForwardTime + 10);
   });
 
@@ -235,7 +260,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       ).to.be.revertedWith('DELAY_SHORTER_THAN_MINIMUM');
     });
   });
-  describe('Bridge Authorization', async function () {
+  describe('PolygonBridgeExecutor Authorization', async function () {
     it('Unauthorized Transaction - Call Bridge Receiver From Non-FxChild Address', async () => {
       const { shortExecutor, bridgeExecutor } = testEnv;
       const { encodedActions } = testEnv.proposalActions[0];
@@ -249,6 +274,21 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       await expect(
         fxRoot.sendMessageToChild(bridgeExecutor.address, encodedActions)
       ).to.be.revertedWith('FAILED_ACTION_EXECUTION_CUSTOM_MAPPING');
+    });
+  });
+  describe('ArbitrumBridgeExecutor Authorization', async function () {
+    it('Unauthorized Transaction - Call Bridge Receiver From Non-FxChild Address', async () => {
+      const { arbitrumBridgeExecutor } = testEnv;
+      const {
+        targets,
+        values,
+        signatures,
+        calldatas,
+        withDelegatecalls,
+      } = testEnv.proposalActions[0];
+      await expect(
+        arbitrumBridgeExecutor.queue(targets, values, signatures, calldatas, withDelegatecalls)
+      ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
     });
   });
   describe('Executor - Set Delay', async function () {
@@ -277,7 +317,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       expect(await bridgeExecutor.getDelay()).to.be.equal(BigNumber.from(61));
     });
   });
-  describe('Queue - Aave Polygon Governance', async function () {
+  describe('Queue - PolgygonBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 1 - successfully queue transaction - expected successful actions', async () => {
       const { ethers } = DRE;
 
@@ -436,6 +476,39 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       await expect(aaveGovContract.execute(proposals[7].id)).to.be.revertedWith(
         'FAILED_ACTION_EXECUTION'
       );
+    });
+  });
+  describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
+    it('Execute Proposal 9 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
+      const { ethers } = DRE;
+      const { aaveGovContract, inbox, shortExecutor, arbitrumBridgeExecutor, bridge } = testEnv;
+      const {
+        targets,
+        values,
+        signatures,
+        calldatas,
+        withDelegatecalls,
+      } = testEnv.proposalActions[8];
+
+      const blockNumber = await ethers.provider.getBlockNumber();
+      const block = await await ethers.provider.getBlock(blockNumber);
+      const blocktime = block.timestamp;
+      const expectedExecutionTime = blocktime + 1 + 61;
+
+      testEnv.proposalActions[8].executionTime = expectedExecutionTime;
+      const tx = await aaveGovContract.execute(proposals[8].id, overrides);
+      const txReceipt = await tx.wait();
+      expect(tx)
+        .to.emit(bridge, 'MessageDelivered')
+        .to.emit(inbox, 'InboxMessageDelivered')
+        .to.emit(shortExecutor, 'ExecutedAction')
+        .to.emit(aaveGovContract, 'ProposalExecuted');
+      const parsedLog = arbitrumBridgeExecutor.interface.parseLog(txReceipt.logs[2]);
+      expect(parsedLog.args.targets).to.be.eql(targets);
+      expect(parsedLog.args[2]).to.be.eql(values);
+      expect(parsedLog.args.signatures).to.be.eql(signatures);
+      expect(parsedLog.args.calldatas).to.be.eql(calldatas);
+      expect(parsedLog.args.withDelegatecalls).to.be.eql(withDelegatecalls);
     });
   });
   describe('Confirm ActionSet State - Bridge Executor', async function () {

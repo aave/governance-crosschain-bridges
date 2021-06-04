@@ -5,7 +5,11 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 
 import { tEthereumAddress } from '../../helpers/types';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import {
+  deployArbitrumBridge,
+  deployArbitrumInbox,
+  deployArbitrumBridgeExecutor,
+} from '../../helpers/arbitrum-contract-getters';
 import {
   getAaveGovContract,
   deployExecutorContract,
@@ -15,6 +19,7 @@ import {
   deployPolygonMarketUpdate,
   deployPolygonBridgeExecutor,
 } from '../../helpers/contract-getters';
+
 import {
   AaveGovernanceV2,
   Executor,
@@ -23,6 +28,9 @@ import {
   FxChild,
   FxRoot,
   PolygonBridgeExecutor,
+  ArbitrumBridgeExecutor,
+  Inbox,
+  Bridge,
 } from '../../typechain';
 
 chai.use(solidity);
@@ -66,6 +74,9 @@ export interface TestEnv {
   fxChild: FxChild;
   bridgeExecutor: PolygonBridgeExecutor;
   polygonMarketUpdate: PolygonMarketUpdate;
+  inbox: Inbox;
+  bridge: Bridge;
+  arbitrumBridgeExecutor: ArbitrumBridgeExecutor;
   proposalActions: ProposalActions[];
 }
 
@@ -111,9 +122,8 @@ const createGovernanceContracts = async (): Promise<void> => {
   testEnv.shortExecutor = await deployExecutorContract(aaveGovOwner.signer);
 };
 
-const deployBridgeContracts = async (): Promise<void> => {
+const deployPolygonBridgeContracts = async (): Promise<void> => {
   const { aaveWhale1, aaveGovOwner } = testEnv;
-
   testEnv.customPolygonMapping = await deployCustomPolygonMapping(aaveWhale1.signer);
   testEnv.fxChild = await deployFxChild(aaveWhale1.signer);
   testEnv.fxRoot = await deployFxRoot(testEnv.customPolygonMapping.address, aaveWhale1.signer);
@@ -128,14 +138,37 @@ const deployBridgeContracts = async (): Promise<void> => {
     aaveGovOwner.address,
     aaveGovOwner.signer
   );
+  testEnv.polygonMarketUpdate = await deployPolygonMarketUpdate(aaveWhale1.signer);
+};
+
+const deployArbitrumBridgeContracts = async (): Promise<void> => {
+  const { aaveWhale1, aaveGovOwner } = testEnv;
+
+  // test env bridge
+  testEnv.bridge = await deployArbitrumBridge(aaveWhale1.signer);
+  testEnv.inbox = await deployArbitrumInbox(aaveWhale1.signer, testEnv.bridge.address);
+
+  // deploy arbitrum executor
+  testEnv.arbitrumBridgeExecutor = await deployArbitrumBridgeExecutor(
+    testEnv.shortExecutor.address,
+    BigNumber.from(60),
+    BigNumber.from(1000),
+    BigNumber.from(15),
+    BigNumber.from(500),
+    aaveGovOwner.address,
+    aaveGovOwner.signer
+  );
 
   testEnv.polygonMarketUpdate = await deployPolygonMarketUpdate(aaveWhale1.signer);
+  const tx = await testEnv.bridge.setInbox(testEnv.inbox.address, true);
+  await tx.wait();
 };
 
 export const setupTestEnvironment = async (): Promise<void> => {
   await setUpSigners();
   await createGovernanceContracts();
-  await deployBridgeContracts();
+  await deployPolygonBridgeContracts();
+  await deployArbitrumBridgeContracts();
 };
 
 export async function makeSuite(
