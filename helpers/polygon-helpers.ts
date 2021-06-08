@@ -10,7 +10,7 @@ import ContractAddresses from '../contractAddresses.json';
 import { getMnemonicSigner } from './wallet-helpers';
 
 let polygonMarketUpdateContract: PolygonMarketUpdate;
-let bridgeExecutor: PolygonBridgeExecutor;
+let polygonBridgeExecutor: PolygonBridgeExecutor;
 let actionsSet;
 
 export const getMumbaiBlocktime = async (): Promise<number> => {
@@ -35,11 +35,11 @@ export const initBridgeExecutor = async (): Promise<PolygonBridgeExecutor> => {
   const net: any = DRE.config.networks.mumbai;
   const mumbaiProvider = new DRE.ethers.providers.JsonRpcProvider(net.url);
   aaveWhaleSigner = aaveWhaleSigner.connect(mumbaiProvider);
-  bridgeExecutor = PolygonBridgeExecutor__factory.connect(
-    ContractAddresses.bridgeExecutor,
+  polygonBridgeExecutor = PolygonBridgeExecutor__factory.connect(
+    ContractAddresses.polygonBridgeExecutor,
     aaveWhaleSigner
   );
-  return bridgeExecutor;
+  return polygonBridgeExecutor;
 };
 
 export const getPolygonCounter = async (): Promise<BigNumber> => {
@@ -67,11 +67,11 @@ export const listenForUpdateExecuted = async (): Promise<void> => {
 };
 
 export const getDelay = async (): Promise<BigNumber> => {
-  return await bridgeExecutor.getDelay();
+  return await polygonBridgeExecutor.getDelay();
 };
 
 export const getActionsSetById = async (actionsSetId: BigNumber): Promise<void> => {
-  actionsSet = await bridgeExecutor.getActionsSetById(actionsSetId);
+  actionsSet = await polygonBridgeExecutor.getActionsSetById(actionsSetId);
   console.log(` --- From Contract State --- `);
   console.log(`actionsSetId:      ${actionsSet.id.toString()}`);
   console.log(`targets:           ${actionsSet.targets}`);
@@ -92,12 +92,12 @@ export const getActionsExecutionTime = (): BigNumber => {
   return actionsSet.executionTime;
 };
 export const getActionsSetState = async (actionsSetId: BigNumber): Promise<number> => {
-  return await bridgeExecutor.getActionsSetState(actionsSetId);
+  return await polygonBridgeExecutor.getActionsSetState(actionsSetId);
 };
 
 export const listenForActionsQueued = async (): Promise<void> => {
   console.log(`Creating Listener Polygon Listener...`);
-  bridgeExecutor.once(
+  polygonBridgeExecutor.once(
     'ActionsSetQueued',
     async (
       actionsSetId,
@@ -128,5 +128,5 @@ export const listenForActionsQueued = async (): Promise<void> => {
 };
 
 export const getExecutorListenerCount = (): number => {
-  return bridgeExecutor.listenerCount();
+  return polygonBridgeExecutor.listenerCount();
 };

@@ -47,7 +47,7 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   console.log();
 
   await initPolygonMarketUpdateContract();
-  const bridgeExecutor = await initBridgeExecutor();
+  const polygonBridgeExecutor = await initBridgeExecutor();
   await listenForActionsQueued();
 
   /*
@@ -92,7 +92,7 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   // encode data for FxRoot
   const encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [ContractAddresses.bridgeExecutor, encodedActions]
+    [ContractAddresses.polygonBridgeExecutor, encodedActions]
   );
 
   let proposalTransaction;
@@ -293,7 +293,9 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   console.log(`Executing Transaction...`);
   let actionSetFailedTx;
   try {
-    actionSetFailedTx = await bridgeExecutor.execute(getActionsSetId(), { gasLimit: 200000 });
+    actionSetFailedTx = await polygonBridgeExecutor.execute(getActionsSetId(), {
+      gasLimit: 200000,
+    });
   } catch (e) {
     console.log(`Immediate Execution Successfully Reverted`);
     console.log(`Transaction: ${actionSetFailedTx.hash}`);
@@ -328,7 +330,9 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   let executeActionsSetTx;
   let executeActionsSetReceipt;
   try {
-    executeActionsSetTx = await bridgeExecutor.execute(getActionsSetId(), { gasLimit: 500000 });
+    executeActionsSetTx = await polygonBridgeExecutor.execute(getActionsSetId(), {
+      gasLimit: 500000,
+    });
     executeActionsSetReceipt = await executeActionsSetTx.wait();
   } catch (e) {
     console.log(`Error executing transaction`);
@@ -337,8 +341,10 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
     process.exit(1);
   }
   try {
-    const rawExecutionLog = bridgeExecutor.interface.parseLog(executeActionsSetReceipt.logs[2]);
-    executionLog = bridgeExecutor.interface.decodeEventLog(
+    const rawExecutionLog = polygonBridgeExecutor.interface.parseLog(
+      executeActionsSetReceipt.logs[2]
+    );
+    executionLog = polygonBridgeExecutor.interface.decodeEventLog(
       rawExecutionLog.eventFragment,
       executeActionsSetReceipt.logs[2].data
     );
