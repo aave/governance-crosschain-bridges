@@ -72,7 +72,7 @@ export interface TestEnv {
   customPolygonMapping: CustomPolygonMapping;
   fxRoot: FxRoot;
   fxChild: FxChild;
-  bridgeExecutor: PolygonBridgeExecutor;
+  polygonBridgeExecutor: PolygonBridgeExecutor;
   polygonMarketUpdate: PolygonMarketUpdate;
   inbox: Inbox;
   bridge: Bridge;
@@ -90,7 +90,7 @@ const testEnv: TestEnv = {
   customPolygonMapping: {} as CustomPolygonMapping,
   fxRoot: {} as FxRoot,
   fxChild: {} as FxChild,
-  bridgeExecutor: {} as PolygonBridgeExecutor,
+  polygonBridgeExecutor: {} as PolygonBridgeExecutor,
   polygonMarketUpdate: {} as PolygonMarketUpdate,
   proposalActions: {} as ProposalActions[],
 } as TestEnv;
@@ -128,7 +128,7 @@ const deployPolygonBridgeContracts = async (): Promise<void> => {
   testEnv.fxChild = await deployFxChild(aaveWhale1.signer);
   testEnv.fxRoot = await deployFxRoot(testEnv.customPolygonMapping.address, aaveWhale1.signer);
 
-  testEnv.bridgeExecutor = await deployPolygonBridgeExecutor(
+  testEnv.polygonBridgeExecutor = await deployPolygonBridgeExecutor(
     testEnv.shortExecutor.address,
     testEnv.fxChild.address,
     BigNumber.from(60),
