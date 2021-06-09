@@ -20,13 +20,13 @@ import {
 
 dotenv.config({ path: '../../.env' });
 
-task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => {
+task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localBRE) => {
   await localBRE.run('set-DRE');
   const { ethers } = DRE;
   const { provider, BigNumber } = ethers;
   const overrides = {
     gasLimit: 2000000,
-    gasPrice: 550 * 1000 * 1000 * 1000,
+    gasPrice: 951 * 1000 * 1000 * 1000,
   };
   let proposal;
   let vote;
@@ -47,9 +47,7 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   const polygonMarketUpdate = await initPolygonMarketUpdateContract();
   await listenForUpdateExecuted(polygonMarketUpdate);
   const polygonBridgeExecutor = await initPolygonBridgeExecutor();
-  console.log(`ListenerCount: ${polygonBridgeExecutor.listenerCount()}`);
   await listenForActionsQueued(polygonBridgeExecutor);
-  console.log(`ListenerCount: ${polygonBridgeExecutor.listenerCount()}`);
 
   /*
    * Create Proposal
@@ -108,7 +106,11 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
       [encodedRootCalldata],
       [0],
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949',
-      overrides
+      {
+        gasLimit: 2000000,
+        gasPrice: 951 * 1000 * 1000 * 1000,
+        nonce: 224,
+      }
     );
     proposalReceipt = await proposalTransaction.wait();
   } catch (e) {
