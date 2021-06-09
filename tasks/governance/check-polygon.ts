@@ -5,38 +5,57 @@ import { BigNumber } from 'ethers';
 import {
   getMumbaiBlocktime,
   initPolygonMarketUpdateContract,
-  initBridgeExecutor,
-  getDelay,
-  getPolygonCounter,
-  getPolygonTestInt,
-  getExecutorListenerCount,
-  listenForActionsQueued,
+  listenForNewDelay,
+  listenForUpdateExecuted,
+  initPolygonBridgeExecutor,
   getActionsSetById,
-  getActionsSetId,
-  getActionsExecutionTime,
-  getActionsSetState,
+  getMumbaiBlocknumber,
 } from '../../helpers/polygon-helpers';
+import { textChangeRangeIsUnchanged } from 'typescript';
 
 dotenv.config({ path: '../../.env' });
 
 task('check-polygon', 'Create Proposal').setAction(async (_, localBRE) => {
   await localBRE.run('set-DRE');
 
-  await initPolygonMarketUpdateContract();
-  console.log((await getPolygonCounter()).toString());
-  console.log((await getPolygonTestInt()).toString());
+  console.log(`0___Setup___`);
+  console.log(`Mumbai Blocktime:   ${await (await getMumbaiBlocktime()).toString()}`);
+  console.log();
+  const polygonMarketUpdate = await initPolygonMarketUpdateContract();
+  await listenForUpdateExecuted(polygonMarketUpdate);
+  const polygonBridgeExecutor = await initPolygonBridgeExecutor();
+  await listenForNewDelay(polygonBridgeExecutor);
+  console.log();
 
-  await initBridgeExecutor();
-  await listenForActionsQueued();
-  console.log((await getDelay()).toString());
-  console.log(getExecutorListenerCount());
-  await getActionsSetById(BigNumber.from(0));
-  await getActionsSetById(BigNumber.from(1));
-  await getActionsSetById(BigNumber.from(2));
-  await getActionsSetById(BigNumber.from(3));
-  await getActionsSetById(BigNumber.from(4));
-  console.log(await getActionsSetState(BigNumber.from(4)));
-  console.log((await getActionsSetId()).toString());
-  console.log((await getActionsExecutionTime()).toString());
-  console.log((await getMumbaiBlocktime()).toString());
+  // console.log('1__Test Market Update Contract');
+  // console.log(`Current Counter: ${(await polygonMarketUpdate.getCounter()).toString()}`);
+  // console.log(`Executing Polygon Market Update...`);
+  // const executeTx = await polygonMarketUpdate.execute(81);
+  // await executeTx.wait();
+  // while (polygonMarketUpdate.listenerCount() > 0) {
+  //   console.log('Waiting for event');
+  //   await sleep(2000);
+  // }
+  // await sleep(3000);
+
+  // console.log();
+  // console.log('2__Test Polygon Bridge Executor');
+  // console.log(`Current Delay: ${(await polygonBridgeExecutor.getDelay()).toString()}`);
+  // const delayTx = await polygonBridgeExecutor.setDelay(61);
+  // await delayTx.wait();
+  // while (polygonBridgeExecutor.listenerCount() > 0) {
+  //   console.log('Waiting for event');
+  //   await sleep(2000);
+  // }
+  // await sleep(3000);
+
+  const events = await polygonBridgeExecutor.queryFilter(
+    polygonBridgeExecutor.filters.ActionsSetQueued(null, null, null, null, null, null, null),
+    14865983
+  );
+  console.log(JSON.stringify(events));
 });
+
+const sleep = async (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
