@@ -8,10 +8,7 @@ import {
   listenForNewDelay,
   listenForUpdateExecuted,
   initPolygonBridgeExecutor,
-  getActionsSetById,
-  getMumbaiBlocknumber,
 } from '../../helpers/polygon-helpers';
-import { textChangeRangeIsUnchanged } from 'typescript';
 
 dotenv.config({ path: '../../.env' });
 
@@ -27,33 +24,27 @@ task('check-polygon', 'Create Proposal').setAction(async (_, localBRE) => {
   await listenForNewDelay(polygonBridgeExecutor);
   console.log();
 
-  // console.log('1__Test Market Update Contract');
-  // console.log(`Current Counter: ${(await polygonMarketUpdate.getCounter()).toString()}`);
-  // console.log(`Executing Polygon Market Update...`);
-  // const executeTx = await polygonMarketUpdate.execute(81);
-  // await executeTx.wait();
-  // while (polygonMarketUpdate.listenerCount() > 0) {
-  //   console.log('Waiting for event');
-  //   await sleep(2000);
-  // }
-  // await sleep(3000);
+  console.log('1__Test Market Update Contract');
+  console.log(`Current Counter: ${(await polygonMarketUpdate.getCounter()).toString()}`);
+  console.log(`Executing Polygon Market Update...`);
+  const executeTx = await polygonMarketUpdate.execute(81);
+  await executeTx.wait();
+  while (polygonMarketUpdate.listenerCount() > 0) {
+    console.log('Waiting for event');
+    await sleep(2000);
+  }
+  await sleep(3000);
 
-  // console.log();
-  // console.log('2__Test Polygon Bridge Executor');
-  // console.log(`Current Delay: ${(await polygonBridgeExecutor.getDelay()).toString()}`);
-  // const delayTx = await polygonBridgeExecutor.setDelay(61);
-  // await delayTx.wait();
-  // while (polygonBridgeExecutor.listenerCount() > 0) {
-  //   console.log('Waiting for event');
-  //   await sleep(2000);
-  // }
-  // await sleep(3000);
-
-  const events = await polygonBridgeExecutor.queryFilter(
-    polygonBridgeExecutor.filters.ActionsSetQueued(null, null, null, null, null, null, null),
-    14865983
-  );
-  console.log(JSON.stringify(events));
+  console.log();
+  console.log('2__Test Polygon Bridge Executor');
+  console.log(`Current Delay: ${(await polygonBridgeExecutor.getDelay()).toString()}`);
+  const delayTx = await polygonBridgeExecutor.setDelay(61);
+  await delayTx.wait();
+  while (polygonBridgeExecutor.listenerCount() > 0) {
+    console.log('Waiting for event');
+    await sleep(2000);
+  }
+  await sleep(3000);
 });
 
 const sleep = async (ms: number) => {
