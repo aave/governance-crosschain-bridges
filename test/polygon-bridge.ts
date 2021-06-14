@@ -490,7 +490,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
   describe('Execute Action Set 0 - Aave Polygon Governance', async function () {
     it('Get State of Actions 0 - Actions Queued', async () => {
       const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(0)).to.be.eq(0);
+      await expect(await bridgeExecutor.getCurrentState(0)).to.be.eq(0);
     });
     it('Execute Action Set 0 - polygon gov error - timelock not finished', async () => {
       const { bridgeExecutor } = testEnv;
@@ -516,7 +516,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     });
     it('Get State of Action Set 0 - Actions Executed', async () => {
       const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(0)).to.be.eq(1);
+      await expect(await bridgeExecutor.getCurrentState(0)).to.be.eq(1);
     });
     it('Execute Action Set 100 - polygon gov error - invalid actions id', async () => {
       const { bridgeExecutor } = testEnv;
@@ -534,7 +534,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
   describe('Cancel Actions - Aave Polygon Governance', async function () {
     it('Get State of Action Set 2 - Action Set Queued', async () => {
       const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(3)).to.be.eq(0);
+      await expect(await bridgeExecutor.getCurrentState(3)).to.be.eq(0);
     });
     it('Cancel Action Set 2 - polygon gov error - only guardian', async () => {
       const { bridgeExecutor, aaveWhale1 } = testEnv;
@@ -554,13 +554,13 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     });
     it('Get State of Action Set 2 - Actions Canceled', async () => {
       const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(3)).to.be.eq(2);
+      await expect(await bridgeExecutor.getCurrentState(3)).to.be.eq(2);
     });
   });
   describe('Expired Actions - Aave Polygon Governance', async function () {
     it('Get State of Action Set 3 - Actions Queued', async () => {
       const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(4)).to.be.eq(0);
+      await expect(await bridgeExecutor.getCurrentState(4)).to.be.eq(0);
     });
     it('Execute Actions 3 - polygon gov error - expired action', async () => {
       const { ethers } = DRE;
@@ -572,7 +572,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     });
     it('Get State of Actions 3 - Actions Expired', async () => {
       const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(4)).to.be.eq(3);
+      await expect(await bridgeExecutor.getCurrentState(4)).to.be.eq(3);
     });
   });
 });

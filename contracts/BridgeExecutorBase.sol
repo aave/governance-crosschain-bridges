@@ -48,7 +48,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
    * @param actionsSetId id of the ActionsSet to execute
    **/
   function execute(uint256 actionsSetId) external payable override {
-    require(getActionsSetState(actionsSetId) == ActionsSetState.Queued, 'ONLY_QUEUED_ACTIONS');
+    require(getCurrentState(actionsSetId) == ActionsSetState.Queued, 'ONLY_QUEUED_ACTIONS');
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     require(block.timestamp >= actionsSet.executionTime, 'TIMELOCK_NOT_FINISHED');
@@ -72,7 +72,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
    * @param actionsSetId id of the ActionsSet to cancel
    **/
   function cancel(uint256 actionsSetId) external override onlyGuardian {
-    ActionsSetState state = getActionsSetState(actionsSetId);
+    ActionsSetState state = getCurrentState(actionsSetId);
     require(state == ActionsSetState.Queued, 'ONLY_BEFORE_EXECUTED');
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
@@ -121,7 +121,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
    * @param actionsSetId id of the ActionsSet
    * @return The current state if the ActionsSet
    **/
-  function getActionsSetState(uint256 actionsSetId) public view override returns (ActionsSetState) {
+  function getCurrentState(uint256 actionsSetId) public view override returns (ActionsSetState) {
     require(_actionsSetCounter >= actionsSetId, 'INVALID_ACTION_ID');
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     if (actionsSet.canceled) {
