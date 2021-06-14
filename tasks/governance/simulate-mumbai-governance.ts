@@ -36,14 +36,13 @@ task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localB
   let aaveWhaleSigner = getMnemonicSigner(1);
   aaveWhaleSigner = aaveWhaleSigner.connect(provider);
   const aaveWhaleAddress = await aaveWhaleSigner.getAddress();
-  console.log(`Aave Whale: ${aaveWhaleAddress}\n`);
+  console.log(`Aave Whale: ${aaveWhaleAddress}\n\n`);
   const govContract = new DRE.ethers.Contract(
     ContractAddresses.governance,
     AaveGovernanceV2Abi,
     aaveWhaleSigner
   );
 
-  console.log();
   const polygonMarketUpdate = await initPolygonMarketUpdateContract();
   await listenForUpdateExecuted(polygonMarketUpdate);
   const polygonBridgeExecutor = await initPolygonBridgeExecutor();
