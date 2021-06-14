@@ -2,7 +2,7 @@
 pragma solidity 0.7.5;
 pragma abicoder v2;
 
-import './dependencies/SafeMath.sol';
+import './dependencies/utilities/SafeMath.sol';
 import './interfaces/IBridgeExecutor.sol';
 
 abstract contract BridgeExecutorBase is IBridgeExecutor {
