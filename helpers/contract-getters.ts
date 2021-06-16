@@ -92,8 +92,8 @@ export const deployPolygonBridgeExecutor = async (
   guardian: tEthereumAddress,
   signer: Signer
 ): Promise<PolygonBridgeExecutor> => {
-  const bridgeExecutorFactory = new PolygonBridgeExecutor__factory(signer);
-  const bridgeExecutor = await bridgeExecutorFactory.deploy(
+  const polygonBridgeExecutorFactory = new PolygonBridgeExecutor__factory(signer);
+  const polygonBridgeExecutor = await polygonBridgeExecutorFactory.deploy(
     rootSenderAddress,
     childAddress,
     delay,
@@ -102,6 +102,6 @@ export const deployPolygonBridgeExecutor = async (
     maximumDelay,
     guardian
   );
-  await bridgeExecutor.deployTransaction.wait();
-  return bridgeExecutor;
+  await polygonBridgeExecutor.deployTransaction.wait();
+  return polygonBridgeExecutor;
 };

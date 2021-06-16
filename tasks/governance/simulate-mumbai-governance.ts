@@ -9,25 +9,24 @@ import ContractAddresses from '../../contractAddresses.json';
 import AaveGovernanceV2Abi from '../../abis/AaveGovernanceV2.json';
 import {
   initPolygonMarketUpdateContract,
-  getPolygonCounter,
-  getPolygonTestInt,
-  getExecutorListenerCount,
-  initBridgeExecutor,
+  initPolygonBridgeExecutor,
   listenForActionsQueued,
   getMumbaiBlocktime,
   getActionsExecutionTime,
   getActionsSetId,
+  listenForUpdateExecuted,
+  getActionsSetById,
 } from '../../helpers/polygon-helpers';
 
 dotenv.config({ path: '../../.env' });
 
-task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => {
+task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localBRE) => {
   await localBRE.run('set-DRE');
   const { ethers } = DRE;
   const { provider, BigNumber } = ethers;
   const overrides = {
     gasLimit: 2000000,
-    gasPrice: 200000000000,
+    gasPrice: 951 * 1000 * 1000 * 1000,
   };
   let proposal;
   let vote;
@@ -37,18 +36,17 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   let aaveWhaleSigner = getMnemonicSigner(1);
   aaveWhaleSigner = aaveWhaleSigner.connect(provider);
   const aaveWhaleAddress = await aaveWhaleSigner.getAddress();
-  console.log(`Aave Whale: ${aaveWhaleAddress}\n`);
+  console.log(`Aave Whale: ${aaveWhaleAddress}\n\n`);
   const govContract = new DRE.ethers.Contract(
     ContractAddresses.governance,
     AaveGovernanceV2Abi,
     aaveWhaleSigner
   );
 
-  console.log();
-
-  await initPolygonMarketUpdateContract();
-  const bridgeExecutor = await initBridgeExecutor();
-  await listenForActionsQueued();
+  const polygonMarketUpdate = await initPolygonMarketUpdateContract();
+  await listenForUpdateExecuted(polygonMarketUpdate);
+  const polygonBridgeExecutor = await initPolygonBridgeExecutor();
+  await listenForActionsQueued(polygonBridgeExecutor);
 
   /*
    * Create Proposal
@@ -92,7 +90,7 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   // encode data for FxRoot
   const encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [ContractAddresses.bridgeExecutor, encodedActions]
+    [ContractAddresses.polygonBridgeExecutor, encodedActions]
   );
 
   let proposalTransaction;
@@ -107,7 +105,11 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
       [encodedRootCalldata],
       [0],
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949',
-      overrides
+      {
+        gasLimit: 2000000,
+        gasPrice: 951 * 1000 * 1000 * 1000,
+        nonce: 224,
+      }
     );
     proposalReceipt = await proposalTransaction.wait();
   } catch (e) {
@@ -252,6 +254,8 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   process.stdout.write(`Current Time:   ${blockTimestamp}\n\n`);
 
   // Execute (Aave-Gov)
+
+  console.log(``);
   console.log(`Executing Transaction...`);
   let executeTransaction;
   let executeReceipt;
@@ -281,7 +285,7 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   // Wait for polygon update
   console.log(`waiting for update event on Polygon...`);
   const start = Date.now();
-  while (getExecutorListenerCount() > 0) {
+  while (polygonBridgeExecutor.listenerCount() > 0) {
     readline.cursorTo(process.stdout, 0);
     process.stdout.write(`Seconds Passed:     ${Math.floor((Date.now() - start) / 1000)}`);
     await sleep(1000);
@@ -293,7 +297,10 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   console.log(`Executing Transaction...`);
   let actionSetFailedTx;
   try {
-    actionSetFailedTx = await bridgeExecutor.execute(getActionsSetId(), { gasLimit: 200000 });
+    console.log(`actionSetId: ${getActionsSetId()} `);
+    actionSetFailedTx = await polygonBridgeExecutor.execute(getActionsSetId(), {
+      gasLimit: 200000,
+    });
   } catch (e) {
     console.log(`Immediate Execution Successfully Reverted`);
     console.log(`Transaction: ${actionSetFailedTx.hash}`);
@@ -303,6 +310,7 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   console.log(`\n\nWaiting for ActionsSet Execution Time`);
   let mumbaiBlocktime = await getMumbaiBlocktime();
   const mumbaiExecutionTime = await getActionsExecutionTime();
+  console.log(`Blocktime:   ${mumbaiBlocktime}`);
   console.log(`Execution Time:   ${mumbaiExecutionTime}`);
   while (BigNumber.from(mumbaiBlocktime).lt(mumbaiExecutionTime)) {
     if (DRE.network.name === 'tenderly') {
@@ -323,12 +331,14 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
 
   // Execute ActionsSet (Polygon)
   console.log(`\n\nExecute ActionsSet`);
-  const initialCounter = await getPolygonCounter();
-  const initialTestNumber = await getPolygonTestInt();
+  const initialCounter = await polygonMarketUpdate.getCounter();
+  const initialTestNumber = await polygonMarketUpdate.getTestInt();
   let executeActionsSetTx;
   let executeActionsSetReceipt;
   try {
-    executeActionsSetTx = await bridgeExecutor.execute(getActionsSetId(), { gasLimit: 500000 });
+    executeActionsSetTx = await polygonBridgeExecutor.execute(getActionsSetId(), {
+      gasLimit: 500000,
+    });
     executeActionsSetReceipt = await executeActionsSetTx.wait();
   } catch (e) {
     console.log(`Error executing transaction`);
@@ -337,8 +347,10 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
     process.exit(1);
   }
   try {
-    const rawExecutionLog = bridgeExecutor.interface.parseLog(executeActionsSetReceipt.logs[2]);
-    executionLog = bridgeExecutor.interface.decodeEventLog(
+    const rawExecutionLog = polygonBridgeExecutor.interface.parseLog(
+      executeActionsSetReceipt.logs[2]
+    );
+    executionLog = polygonBridgeExecutor.interface.decodeEventLog(
       rawExecutionLog.eventFragment,
       executeActionsSetReceipt.logs[2].data
     );
@@ -355,8 +367,8 @@ task('simulate-governance', 'Create Proposal').setAction(async (_, localBRE) => 
   console.log(`Initial Counter:  ${initialCounter.toString()}`);
   console.log(`Initial Test Int: ${initialTestNumber.toString()}`);
   console.log();
-  console.log(`Current Counter:  ${(await getPolygonCounter()).toString()}`);
-  console.log(`Current Test Int: ${(await getPolygonTestInt()).toString()}`);
+  console.log(`Current Counter:  ${(await polygonMarketUpdate.getCounter()).toString()}`);
+  console.log(`Current Test Int: ${(await polygonMarketUpdate.getTestInt()).toString()}`);
 });
 
 const sleep = async (ms: number) => {

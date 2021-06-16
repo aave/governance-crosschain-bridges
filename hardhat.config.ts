@@ -18,7 +18,7 @@ if (!SKIP_LOAD) {
   require('./tasks/setup/print-default-wallets');
   require('./tasks/deploy/deploy');
   require('./tasks/verify/verify-template');
-  require('./tasks/governance/simulate-governance');
+  require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
 }
