@@ -13,6 +13,7 @@ import {
   createBridgeTest6,
   createBridgeTest7,
   createBridgeTest8,
+  createArbitrumBridgeTest,
 } from './helpers/bridge-helpers';
 import {
   expectProposalState,
@@ -35,7 +36,7 @@ const proposalStates = {
   EXECUTED: 7,
 };
 
-makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) => {
+makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) => {
   const proposals: any = [];
   const dummyAddress = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
   const dummyUint = 10203040;
@@ -54,7 +55,8 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       customPolygonMapping,
       fxRoot,
       fxChild,
-      bridgeExecutor,
+      polygonBridgeExecutor,
+      inbox,
     } = testEnv;
 
     // Authorize new executor
@@ -66,7 +68,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
 
     // Fund Polygon Bridge
     await waitForTx(
-      await bridgeExecutor.connect(aaveWhale1.signer).receiveFunds({
+      await polygonBridgeExecutor.connect(aaveWhale1.signer).receiveFunds({
         value: DRE.ethers.BigNumber.from('20225952773035674962'),
       })
     );
@@ -129,7 +131,16 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     const proposal8Actions = await createBridgeTest8(dummyUint, testEnv);
     testEnv.proposalActions.push(proposal8Actions);
 
-    // Create Proposals
+    /**
+     * Arbitrum -- Create Proposal Actions
+     * Successful Transactions on PolygonMarketUpdate
+     * -> Action 1 PolygonMarketUpdate.execute(dummyInt) with value of 100 (non-delegate)
+     * -> Action 2 PolygonMarketUpdate.executeWithDelegate(dummyString) with no value, as delegate
+     */
+    const proposal9Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
+    testEnv.proposalActions.push(proposal9Actions);
+
+    // Create Polygon Proposals
     for (let i = 0; i < 8; i++) {
       proposals[i] = await createProposal(
         aaveGovContract,
@@ -145,8 +156,21 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       await expectProposalState(aaveGovContract, proposals[i].id, proposalStates.PENDING);
     }
 
+    // Create Arbitrum Proposal
+    proposals[8] = await createProposal(
+      aaveGovContract,
+      aaveWhale1.signer,
+      shortExecutor.address,
+      [inbox.address],
+      [BigNumber.from(0)],
+      ['createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'],
+      [proposal9Actions.encodedRootCalldata],
+      [false],
+      '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
+    );
+
     // Vote on Proposals
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       await triggerWhaleVotes(
         aaveGovContract,
         [aaveWhale1.signer, aaveWhale2.signer, aaveWhale3.signer],
@@ -157,7 +181,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     }
 
     // Advance Block to End of Voting
-    await advanceBlockTo(proposals[7].endBlock.add(1));
+    await advanceBlockTo(proposals[8].endBlock.add(1));
 
     // Queue Proposals
     await queueProposal(aaveGovContract, proposals[0].id);
@@ -167,39 +191,40 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
     await queueProposal(aaveGovContract, proposals[4].id);
     await queueProposal(aaveGovContract, proposals[5].id);
     await queueProposal(aaveGovContract, proposals[6].id);
-    const queuedProposal8 = await queueProposal(aaveGovContract, proposals[7].id);
+    await queueProposal(aaveGovContract, proposals[7].id);
+    const queuedProposal9 = await queueProposal(aaveGovContract, proposals[8].id);
 
     await expectProposalState(aaveGovContract, proposals[0].id, proposalStates.QUEUED);
 
     // advance to execution
     const currentBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
     const { timestamp } = currentBlock;
-    const fastForwardTime = queuedProposal8.executionTime.sub(timestamp).toNumber();
+    const fastForwardTime = queuedProposal9.executionTime.sub(timestamp).toNumber();
     await advanceBlock(timestamp + fastForwardTime + 10);
   });
 
   describe('Executor - Check Deployed State', async function () {
     it('Check Grace Period', async () => {
-      const { bridgeExecutor } = testEnv;
-      expect(await bridgeExecutor.GRACE_PERIOD()).to.be.equal(BigNumber.from(1000));
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.GRACE_PERIOD()).to.be.equal(BigNumber.from(1000));
     });
     it('Check Minimum Delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      expect(await bridgeExecutor.MINIMUM_DELAY()).to.be.equal(BigNumber.from(15));
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.MINIMUM_DELAY()).to.be.equal(BigNumber.from(15));
     });
     it('Check Maximum Delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      expect(await bridgeExecutor.MAXIMUM_DELAY()).to.be.equal(BigNumber.from(500));
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.MAXIMUM_DELAY()).to.be.equal(BigNumber.from(500));
     });
     it('Check Delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      expect(await bridgeExecutor.getDelay()).to.be.equal(BigNumber.from(60));
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.getDelay()).to.be.equal(BigNumber.from(60));
     });
     it('Check isActionQueued', async () => {
       const { ethers } = DRE;
-      const { bridgeExecutor } = testEnv;
+      const { polygonBridgeExecutor } = testEnv;
       const hash = ethers.utils.formatBytes32String('hello');
-      expect(await bridgeExecutor.isActionQueued(hash)).to.be.false;
+      expect(await polygonBridgeExecutor.isActionQueued(hash)).to.be.false;
     });
   });
 
@@ -235,49 +260,68 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       ).to.be.revertedWith('DELAY_SHORTER_THAN_MINIMUM');
     });
   });
-  describe('Bridge Authorization', async function () {
+  describe('PolygonBridgeExecutor Authorization', async function () {
     it('Unauthorized Transaction - Call Bridge Receiver From Non-FxChild Address', async () => {
-      const { shortExecutor, bridgeExecutor } = testEnv;
+      const { shortExecutor, polygonBridgeExecutor } = testEnv;
       const { encodedActions } = testEnv.proposalActions[0];
       await expect(
-        bridgeExecutor.processMessageFromRoot(1, shortExecutor.address, encodedActions)
+        polygonBridgeExecutor.processMessageFromRoot(1, shortExecutor.address, encodedActions)
       ).to.be.revertedWith('UNAUTHORIZED_CHILD_ORIGIN');
     });
     it('Unauthorized Transaction - Call Root From Unauthorized Address', async () => {
-      const { fxRoot, bridgeExecutor } = testEnv;
+      const { fxRoot, polygonBridgeExecutor } = testEnv;
       const { encodedActions } = testEnv.proposalActions[0];
       await expect(
-        fxRoot.sendMessageToChild(bridgeExecutor.address, encodedActions)
+        fxRoot.sendMessageToChild(polygonBridgeExecutor.address, encodedActions)
       ).to.be.revertedWith('FAILED_ACTION_EXECUTION_CUSTOM_MAPPING');
+    });
+  });
+  describe('ArbitrumBridgeExecutor Authorization', async function () {
+    it('Unauthorized Transaction - Call Bridge Receiver From Non-FxChild Address', async () => {
+      const { arbitrumBridgeExecutor } = testEnv;
+      const {
+        targets,
+        values,
+        signatures,
+        calldatas,
+        withDelegatecalls,
+      } = testEnv.proposalActions[0];
+      await expect(
+        arbitrumBridgeExecutor.queue(targets, values, signatures, calldatas, withDelegatecalls)
+      ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
     });
   });
   describe('Executor - Set Delay', async function () {
     it('Unauthorized Transaction - set delay from non-guardian address', async () => {
-      const { bridgeExecutor, aaveWhale1 } = testEnv;
-      await expect(bridgeExecutor.connect(aaveWhale1.signer).setDelay(1000)).to.be.revertedWith(
-        'ONLY_BY_GUARDIAN'
-      );
+      const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
+      await expect(
+        polygonBridgeExecutor.connect(aaveWhale1.signer).setDelay(1000)
+      ).to.be.revertedWith('ONLY_BY_GUARDIAN');
     });
     it('Delay > Maximum Delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.setDelay(100000000)).to.be.revertedWith(
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.setDelay(100000000)).to.be.revertedWith(
         'DELAY_LONGER_THAN_MAXIMUM'
       );
     });
     it('Delay < Minimum Delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.setDelay(1)).to.be.revertedWith('DELAY_SHORTER_THAN_MINIMUM');
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.setDelay(1)).to.be.revertedWith(
+        'DELAY_SHORTER_THAN_MINIMUM'
+      );
     });
     it('Successful Transaction - update the delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.setDelay(61)).to.emit(bridgeExecutor, 'NewDelay').withArgs(61);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.setDelay(61))
+        .to.emit(polygonBridgeExecutor, 'NewDelay')
+        .withArgs(61);
     });
     it('Check State - get delay', async () => {
-      const { bridgeExecutor } = testEnv;
-      expect(await bridgeExecutor.getDelay()).to.be.equal(BigNumber.from(61));
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.getDelay()).to.be.equal(BigNumber.from(61));
     });
   });
-  describe('Queue - Aave Polygon Governance', async function () {
+  describe('Queue - PolgygonBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 1 - successfully queue transaction - expected successful actions', async () => {
       const { ethers } = DRE;
 
@@ -286,7 +330,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         customPolygonMapping,
         fxChild,
         shortExecutor,
-        bridgeExecutor,
+        polygonBridgeExecutor,
       } = testEnv;
 
       const {
@@ -300,7 +344,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
 
       const encodedSyncData = ethers.utils.defaultAbiCoder.encode(
         ['address', 'address', 'bytes'],
-        [shortExecutor.address, bridgeExecutor.address, encodedActions]
+        [shortExecutor.address, polygonBridgeExecutor.address, encodedActions]
       );
 
       const blockNumber = await ethers.provider.getBlockNumber();
@@ -314,8 +358,8 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         .to.emit(customPolygonMapping, 'StateSynced')
         .withArgs(1, fxChild.address, encodedSyncData)
         .to.emit(fxChild, 'NewFxMessage')
-        .withArgs(shortExecutor.address, bridgeExecutor.address, encodedActions)
-        .to.emit(bridgeExecutor, 'ActionsSetQueued')
+        .withArgs(shortExecutor.address, polygonBridgeExecutor.address, encodedActions)
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
         .withArgs(
           0,
           targets,
@@ -334,7 +378,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         aaveGovContract,
         customPolygonMapping,
         fxChild,
-        bridgeExecutor,
+        polygonBridgeExecutor,
         shortExecutor,
       } = testEnv;
       const {
@@ -354,7 +398,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       await expect(aaveGovContract.execute(proposals[1].id, overrides))
         .to.emit(customPolygonMapping, 'StateSynced')
         .to.emit(fxChild, 'NewFxMessage')
-        .to.emit(bridgeExecutor, 'ActionsSetQueued')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
         .withArgs(
           1,
           targets,
@@ -372,13 +416,13 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         aaveGovContract,
         customPolygonMapping,
         fxChild,
-        bridgeExecutor,
+        polygonBridgeExecutor,
         shortExecutor,
       } = testEnv;
       await expect(aaveGovContract.execute(proposals[2].id, overrides))
         .to.emit(customPolygonMapping, 'StateSynced')
         .to.emit(fxChild, 'NewFxMessage')
-        .to.emit(bridgeExecutor, 'ActionsSetQueued')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
@@ -388,7 +432,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         aaveGovContract,
         customPolygonMapping,
         fxChild,
-        bridgeExecutor,
+        polygonBridgeExecutor,
         shortExecutor,
       } = testEnv;
       const blockNumber = await ethers.provider.getBlockNumber();
@@ -400,7 +444,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       await expect(aaveGovContract.execute(proposals[3].id, overrides))
         .to.emit(customPolygonMapping, 'StateSynced')
         .to.emit(fxChild, 'NewFxMessage')
-        .to.emit(bridgeExecutor, 'ActionsSetQueued')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
@@ -409,13 +453,13 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         aaveGovContract,
         customPolygonMapping,
         fxChild,
-        bridgeExecutor,
+        polygonBridgeExecutor,
         shortExecutor,
       } = testEnv;
       await expect(aaveGovContract.execute(proposals[4].id, overrides))
         .to.emit(customPolygonMapping, 'StateSynced')
         .to.emit(fxChild, 'NewFxMessage')
-        .to.emit(bridgeExecutor, 'ActionsSetQueued')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
@@ -438,9 +482,42 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       );
     });
   });
+  describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
+    it('Execute Proposal 9 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
+      const { ethers } = DRE;
+      const { aaveGovContract, inbox, shortExecutor, arbitrumBridgeExecutor, bridge } = testEnv;
+      const {
+        targets,
+        values,
+        signatures,
+        calldatas,
+        withDelegatecalls,
+      } = testEnv.proposalActions[8];
+
+      const blockNumber = await ethers.provider.getBlockNumber();
+      const block = await await ethers.provider.getBlock(blockNumber);
+      const blocktime = block.timestamp;
+      const expectedExecutionTime = blocktime + 1 + 61;
+
+      testEnv.proposalActions[8].executionTime = expectedExecutionTime;
+      const tx = await aaveGovContract.execute(proposals[8].id, overrides);
+      const txReceipt = await tx.wait();
+      expect(tx)
+        .to.emit(bridge, 'MessageDelivered')
+        .to.emit(inbox, 'InboxMessageDelivered')
+        .to.emit(shortExecutor, 'ExecutedAction')
+        .to.emit(aaveGovContract, 'ProposalExecuted');
+      const parsedLog = arbitrumBridgeExecutor.interface.parseLog(txReceipt.logs[2]);
+      expect(parsedLog.args.targets).to.be.eql(targets);
+      expect(parsedLog.args[2]).to.be.eql(values);
+      expect(parsedLog.args.signatures).to.be.eql(signatures);
+      expect(parsedLog.args.calldatas).to.be.eql(calldatas);
+      expect(parsedLog.args.withDelegatecalls).to.be.eql(withDelegatecalls);
+    });
+  });
   describe('Confirm ActionSet State - Bridge Executor', async function () {
     it('Confirm ActionsSet 0 State', async () => {
-      const { bridgeExecutor } = testEnv;
+      const { polygonBridgeExecutor } = testEnv;
       const {
         targets,
         values,
@@ -450,7 +527,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         executionTime,
       } = testEnv.proposalActions[0];
 
-      const actionsSet = await bridgeExecutor.getActionsSetById(0);
+      const actionsSet = await polygonBridgeExecutor.getActionsSetById(0);
       expect(actionsSet.id).to.be.equal(0);
       expect(actionsSet.targets).to.be.eql(targets);
       // work around - actionsSet[2] == actionsSet.values
@@ -463,7 +540,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       expect(actionsSet.canceled).to.be.false;
     });
     it('Confirm ActionsSet 1 State', async () => {
-      const { bridgeExecutor } = testEnv;
+      const { polygonBridgeExecutor } = testEnv;
       const {
         targets,
         values,
@@ -473,7 +550,7 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
         executionTime,
       } = testEnv.proposalActions[1];
 
-      const actionsSet = await bridgeExecutor.getActionsSetById(1);
+      const actionsSet = await polygonBridgeExecutor.getActionsSetById(1);
 
       expect(actionsSet.id).to.be.equal(1);
       expect(actionsSet.targets).to.be.eql(targets);
@@ -489,25 +566,25 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
   });
   describe('Execute Action Set 0 - Aave Polygon Governance', async function () {
     it('Get State of Actions 0 - Actions Queued', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(0)).to.be.eq(0);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(await polygonBridgeExecutor.getActionsSetState(0)).to.be.eq(0);
     });
     it('Execute Action Set 0 - polygon gov error - timelock not finished', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.execute(0)).to.revertedWith('TIMELOCK_NOT_FINISHED');
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(0)).to.revertedWith('TIMELOCK_NOT_FINISHED');
     });
     it('Execute Action Set 0 - execution successful', async () => {
       const { ethers } = DRE;
-      const { bridgeExecutor, polygonMarketUpdate, aaveGovOwner } = testEnv;
+      const { polygonBridgeExecutor, polygonMarketUpdate, aaveGovOwner } = testEnv;
       const { values } = testEnv.proposalActions[0];
       const blocktime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp;
       await advanceBlock(blocktime + 100);
-      const tx = await bridgeExecutor.execute(0);
+      const tx = await polygonBridgeExecutor.execute(0);
       await expect(tx)
         .to.emit(polygonMarketUpdate, 'UpdateExecuted')
         .withArgs(1, dummyUint, dummyAddress, values[0])
-        .to.emit(bridgeExecutor, 'ActionsSetExecuted')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetExecuted')
         .withArgs(0, aaveGovOwner.address);
       const transactionReceipt = await tx.wait();
       const delegateLog = polygonMarketUpdate.interface.parseLog(transactionReceipt.logs[1]);
@@ -515,64 +592,64 @@ makeSuite('Aave Governance V2 tests', setupTestEnvironment, (testEnv: TestEnv) =
       expect(delegateLog.args.sender).to.equal(aaveGovOwner.address);
     });
     it('Get State of Action Set 0 - Actions Executed', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(0)).to.be.eq(1);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(await polygonBridgeExecutor.getActionsSetState(0)).to.be.eq(1);
     });
     it('Execute Action Set 100 - polygon gov error - invalid actions id', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.execute(100)).to.revertedWith('INVALID_ACTION_ID');
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(100)).to.revertedWith('INVALID_ACTION_ID');
     });
     it('Execute Action Set 1 - polygon gov error - failing action', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.execute(1)).to.revertedWith('FAILED_ACTION_EXECUTION');
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(1)).to.revertedWith('FAILED_ACTION_EXECUTION');
     });
     it('Execute Action Set 2 - polygon gov error - not enough msg value', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.execute(2)).to.revertedWith('NOT_ENOUGH_MSG_VALUE');
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(2)).to.revertedWith('NOT_ENOUGH_MSG_VALUE');
     });
   });
   describe('Cancel Actions - Aave Polygon Governance', async function () {
     it('Get State of Action Set 2 - Action Set Queued', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(3)).to.be.eq(0);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(await polygonBridgeExecutor.getActionsSetState(3)).to.be.eq(0);
     });
     it('Cancel Action Set 2 - polygon gov error - only guardian', async () => {
-      const { bridgeExecutor, aaveWhale1 } = testEnv;
-      await expect(bridgeExecutor.connect(aaveWhale1.signer).cancel(3)).to.be.revertedWith(
+      const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
+      await expect(polygonBridgeExecutor.connect(aaveWhale1.signer).cancel(3)).to.be.revertedWith(
         'ONLY_BY_GUARDIAN'
       );
     });
     it('Cancel Action Set 0 - polygon gov error - only before executed', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(bridgeExecutor.cancel(0)).to.be.revertedWith('ONLY_BEFORE_EXECUTED');
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.cancel(0)).to.be.revertedWith('ONLY_BEFORE_EXECUTED');
     });
     it('Cancel Action Set 2 - successful cancellation', async () => {
-      const { bridgeExecutor, aaveGovOwner } = testEnv;
-      await expect(bridgeExecutor.connect(aaveGovOwner.signer).cancel(3))
-        .to.emit(bridgeExecutor, 'ActionsSetCanceled')
+      const { polygonBridgeExecutor, aaveGovOwner } = testEnv;
+      await expect(polygonBridgeExecutor.connect(aaveGovOwner.signer).cancel(3))
+        .to.emit(polygonBridgeExecutor, 'ActionsSetCanceled')
         .withArgs(3);
     });
     it('Get State of Action Set 2 - Actions Canceled', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(3)).to.be.eq(2);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(await polygonBridgeExecutor.getActionsSetState(3)).to.be.eq(2);
     });
   });
   describe('Expired Actions - Aave Polygon Governance', async function () {
     it('Get State of Action Set 3 - Actions Queued', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(4)).to.be.eq(0);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(await polygonBridgeExecutor.getActionsSetState(4)).to.be.eq(0);
     });
     it('Execute Actions 3 - polygon gov error - expired action', async () => {
       const { ethers } = DRE;
-      const { bridgeExecutor } = testEnv;
+      const { polygonBridgeExecutor } = testEnv;
       const blocktime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp;
       await advanceBlock(blocktime + 100000);
-      await expect(bridgeExecutor.execute(4)).to.revertedWith('ONLY_QUEUED_ACTIONS');
+      await expect(polygonBridgeExecutor.execute(4)).to.revertedWith('ONLY_QUEUED_ACTIONS');
     });
     it('Get State of Actions 3 - Actions Expired', async () => {
-      const { bridgeExecutor } = testEnv;
-      await expect(await bridgeExecutor.getActionsSetState(4)).to.be.eq(3);
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(await polygonBridgeExecutor.getActionsSetState(4)).to.be.eq(3);
     });
   });
 });

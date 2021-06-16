@@ -18,7 +18,7 @@ if (!SKIP_LOAD) {
   require('./tasks/setup/print-default-wallets');
   require('./tasks/deploy/deploy');
   require('./tasks/verify/verify-template');
-  require('./tasks/governance/simulate-governance');
+  require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
 }
@@ -61,6 +61,7 @@ const config: HardhatUserConfig = {
     compilers: [
       { version: '0.7.5', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.7.3', settings: { optimizer: { enabled: true, runs: 200 } } },
+      { version: '0.6.11', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.5.2', settings: { optimizer: { enabled: true, runs: 200 } } },
     ],
   },

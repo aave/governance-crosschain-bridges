@@ -32,7 +32,7 @@ export const createBridgeTest1 = async (
   testEnv: TestEnv
 ): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -67,7 +67,7 @@ export const createBridgeTest1 = async (
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -75,7 +75,7 @@ export const createBridgeTest1 = async (
 
 export const createBridgeTest2 = async (testEnv: TestEnv): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -99,7 +99,7 @@ export const createBridgeTest2 = async (testEnv: TestEnv): Promise<ProposalActio
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -110,7 +110,7 @@ export const createBridgeTest3 = async (
   testEnv: TestEnv
 ): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -134,7 +134,7 @@ export const createBridgeTest3 = async (
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -145,7 +145,7 @@ export const createBridgeTest4 = async (
   testEnv: TestEnv
 ): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -169,7 +169,7 @@ export const createBridgeTest4 = async (
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -180,7 +180,7 @@ export const createBridgeTest5 = async (
   testEnv: TestEnv
 ): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -204,7 +204,7 @@ export const createBridgeTest5 = async (
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -212,7 +212,7 @@ export const createBridgeTest5 = async (
 
 export const createBridgeTest6 = async (testEnv: TestEnv): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { bridgeExecutor } = testEnv;
+  const { polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -235,7 +235,7 @@ export const createBridgeTest6 = async (testEnv: TestEnv): Promise<ProposalActio
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -243,7 +243,7 @@ export const createBridgeTest6 = async (testEnv: TestEnv): Promise<ProposalActio
 
 export const createBridgeTest7 = async (testEnv: TestEnv): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -268,7 +268,7 @@ export const createBridgeTest7 = async (testEnv: TestEnv): Promise<ProposalActio
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
   return proposalActions;
@@ -279,7 +279,7 @@ export const createBridgeTest8 = async (
   testEnv: TestEnv
 ): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { polygonMarketUpdate, bridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
@@ -310,8 +310,71 @@ export const createBridgeTest8 = async (
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes'],
-    [bridgeExecutor.address, proposalActions.encodedActions]
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
+  return proposalActions;
+};
+
+export const createArbitrumBridgeTest = async (
+  dummyUint: number,
+  dummyString: string,
+  testEnv: TestEnv
+): Promise<ProposalActions> => {
+  const { ethers } = DRE;
+  const { aaveWhale1, polygonMarketUpdate, arbitrumBridgeExecutor } = testEnv;
+  const proposalActions = new ProposalActions();
+
+  // push the first transaction fields into action arrays
+  const encodedNumber = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyUint]);
+  proposalActions.targets.push(polygonMarketUpdate.address);
+  proposalActions.values.push(BigNumber.from(100));
+  proposalActions.signatures.push('execute(uint256)');
+  proposalActions.calldatas.push(encodedNumber);
+  proposalActions.withDelegatecalls.push(false);
+
+  // push the second transaction fields into action arrays
+  const encodedBytes = ethers.utils.defaultAbiCoder.encode(
+    ['bytes32'],
+    [ethers.utils.formatBytes32String(dummyString)]
+  );
+  proposalActions.targets.push(polygonMarketUpdate.address);
+  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.signatures.push('executeWithDelegate(bytes32)');
+  proposalActions.calldatas.push(encodedBytes);
+  proposalActions.withDelegatecalls.push(true);
+
+  proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
+    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    [
+      proposalActions.targets,
+      proposalActions.values,
+      proposalActions.signatures,
+      proposalActions.calldatas,
+      proposalActions.withDelegatecalls,
+    ]
+  );
+
+  const arbitrumTransaction = await arbitrumBridgeExecutor.populateTransaction.queue(
+    proposalActions.targets,
+    proposalActions.values,
+    proposalActions.signatures,
+    proposalActions.calldatas,
+    proposalActions.withDelegatecalls
+  );
+
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'uint256', 'uint256', 'address', 'address', 'uint256', 'uint256', 'bytes'],
+    [
+      arbitrumBridgeExecutor.address,
+      0,
+      1000,
+      aaveWhale1.address,
+      aaveWhale1.address,
+      100000,
+      1000000,
+      arbitrumTransaction.data,
+    ]
+  );
   return proposalActions;
 };
