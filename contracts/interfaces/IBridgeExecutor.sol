@@ -99,7 +99,7 @@ interface IBridgeExecutor {
    * @param actionsSetId id of the ActionsSet
    * @return The current state if the ActionsSet
    **/
-  function getActionsSetState(uint256 actionsSetId) external view returns (ActionsSetState);
+  function getCurrentState(uint256 actionsSetId) external view returns (ActionsSetState);
 
   /**
    * @dev Returns whether an action (via actionHash) is queued
