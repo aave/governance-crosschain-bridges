@@ -528,10 +528,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       } = testEnv.proposalActions[0];
 
       const actionsSet = await polygonBridgeExecutor.getActionsSetById(0);
-      expect(actionsSet.id).to.be.equal(0);
       expect(actionsSet.targets).to.be.eql(targets);
-      // work around - actionsSet[2] == actionsSet.values
-      expect(actionsSet[2]).to.be.eql(values);
+      // work around - actionsSet[1] == actionsSet.values
+      expect(actionsSet[1]).to.be.eql(values);
       expect(actionsSet.signatures).to.be.eql(signatures);
       expect(actionsSet.calldatas).to.be.eql(calldatas);
       expect(actionsSet.withDelegatecalls).to.be.eql(withDelegatecalls);
@@ -552,10 +551,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
 
       const actionsSet = await polygonBridgeExecutor.getActionsSetById(1);
 
-      expect(actionsSet.id).to.be.equal(1);
       expect(actionsSet.targets).to.be.eql(targets);
-      // work around - actionsSet[2] == actionsSet.values
-      expect(actionsSet[2]).to.be.eql(values);
+      // work around - actionsSet[1] == actionsSet.values
+      expect(actionsSet[1]).to.be.eql(values);
       expect(actionsSet.signatures).to.be.eql(signatures);
       expect(actionsSet.calldatas).to.be.eql(calldatas);
       expect(actionsSet.withDelegatecalls).to.be.eql(withDelegatecalls);
