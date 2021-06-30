@@ -7,6 +7,11 @@ import './BridgeExecutorBase.sol';
 contract ArbitrumBridgeExecutor is BridgeExecutorBase {
   address private immutable _ethereumGovernanceExecutor;
 
+  modifier onlyEthereumGovernanceExecutor() {
+    require(msg.sender == _ethereumGovernanceExecutor, 'UNAUTHORIZED_EXECUTOR');
+    _;
+  }
+
   constructor(
     address ethereumGovernanceExecutor,
     uint256 delay,
@@ -32,8 +37,7 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
     string[] memory signatures,
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
-  ) external {
-    require(msg.sender == _ethereumGovernanceExecutor, 'UNAUTHORIZED_EXECUTOR');
+  ) external onlyEthereumGovernanceExecutor {
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 }

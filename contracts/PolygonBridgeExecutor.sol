@@ -9,6 +9,11 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   address private immutable _fxRootSender;
   address private immutable _fxChild;
 
+  modifier onlyFxChild() {
+    require(msg.sender == _fxChild, 'UNAUTHORIZED_CHILD_ORIGIN');
+    _;
+  }
+
   constructor(
     address fxRootSender,
     address fxChild,
@@ -32,8 +37,7 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     uint256 stateId,
     address rootMessageSender,
     bytes calldata data
-  ) external override {
-    require(msg.sender == _fxChild, 'UNAUTHORIZED_CHILD_ORIGIN');
+  ) external override onlyFxChild {
     require(rootMessageSender == _fxRootSender, 'UNAUTHORIZED_ROOT_ORIGIN');
 
     address[] memory targets;
