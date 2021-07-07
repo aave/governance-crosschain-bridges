@@ -292,6 +292,18 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         fxRoot.sendMessageToChild(polygonBridgeExecutor.address, encodedActions)
       ).to.be.revertedWith('FAILED_ACTION_EXECUTION_CUSTOM_MAPPING');
     });
+    it('Unauthorized FxRootSender Update - Revert', async () => {
+      const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
+      await expect(polygonBridgeExecutor.updateFxRootSender(aaveWhale2.address)).to.be.revertedWith(
+        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+      );
+    });
+    it('Unauthorized FxChild Update - Revert', async () => {
+      const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
+      await expect(polygonBridgeExecutor.updateFxChild(aaveWhale2.address)).to.be.revertedWith(
+        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+      );
+    });
   });
   describe('ArbitrumBridgeExecutor Authorization', async function () {
     it('Unauthorized Transaction - Call Bridge Receiver From Non-FxChild Address', async () => {
@@ -713,20 +725,6 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Get State of Actions 3 - Actions Expired', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(await polygonBridgeExecutor.getActionsSetState(4)).to.be.eq(3);
-    });
-  });
-  describe('Update PolygonBridgeExecutor Vars', async function () {
-    it('Unauthorized FxRootSender Update - Revert', async () => {
-      const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
-      await expect(polygonBridgeExecutor.updateFxRootSender(aaveWhale2.address)).to.be.revertedWith(
-        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
-      );
-    });
-    it('Unauthorized FxChild Update - Revert', async () => {
-      const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
-      await expect(polygonBridgeExecutor.updateFxChild(aaveWhale2.address)).to.be.revertedWith(
-        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
-      );
     });
   });
 });
