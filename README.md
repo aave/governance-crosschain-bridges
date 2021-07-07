@@ -116,13 +116,13 @@ The `PolygonBridgeExecutor` implements the function `processMessageFromRoot(stat
 
 ### Examples of Upgradability
 
-<u>Polygon Protocol Ownership Change</u>
+**Polygon Protocol Ownership Change**
 
 In order to change the ownership of the Aave Polygon Market, the current owner must call `transferOwnership(address)` on Ownable contracts within the protocol. The address parameter provided to `transferOwnership(address)` should be the address of the deployed PolygonBridgeExecutor contract on Polygon. Once ownership of the Aave Polygon Market contracts is transferred to the PolygonBridgeExecutor, the PolygonBridgeExecutor will have the authorization to make updates to the Aave Polygon Market. Updates are only possible if they have completed the end-to-end, cross-chain governance process, passing Aave governance on Ethereum and going through the timelock on polygon without being cancelled.
 
-In the future, if a change is needed in the PolygonBridgeExecutor contract, a new version can be deployed, and `transferOwnership(address)` should be called on Ownable contracts within the Aave Polygon Market through the original version in order to pass ownership to the new PolygonBridgeExecutor version.
+In the future, if a change is needed in the PolygonBridgeExecutor contract, a new version can be deployed, and `transferOwnership(address)` should be called on Ownable contracts within the Aave Polygon Market, through the original version of the PolygonBridgeExecutor contract in order to pass ownership to the new PolygonBridgeExecutor version.
 
-<u>Aave Governance Executor Update</u>
+**Aave Governance Executor Update**
 
 Aave's governance contracts on Ethereum are upgradable and because the PolygonBridgeExecutor is dependent on knowing the address of the Aave Governance Executor contract on ethereum, the PolygonBridgeExecutor will also have to be updated as part of this upgrade.
 
