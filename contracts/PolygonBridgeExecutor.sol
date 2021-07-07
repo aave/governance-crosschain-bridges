@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import './interfaces/IFxMessageProcessor.sol';
 import './BridgeExecutorBase.sol';
-import 'hardhat/console.sol';
 
 contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   address private _fxRootSender;
