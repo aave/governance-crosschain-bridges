@@ -114,6 +114,20 @@ Polygon validators listen for `StateSynced` events from the `StateSender` - upon
 
 The `PolygonBridgeExecutor` implements the function `processMessageFromRoot(stateId, rootMessageSender, data);`. In this function, requiring that the `msg.sender` is the `FxChild` should ensure this is a legitimate transaction stemming from the ethereum bridge. By confirming that the `rootMessageSender` is the Aave governance executor contract, the `PolygonBridgeExecutor` can conclude this bridge transaction was triggered be the Aave Governance process and should in-fact be queued for execution.
 
+### Examples of Upgradability
+
+<u>Polygon Protocol Ownership Change</u>
+
+In order to change the ownership of the Aave Polygon Market, the current owner must call `transferOwnership(address)` on Ownable contracts within the protocol. The address parameter provided to `transferOwnership(address)` should be the address of the deployed PolygonBridgeExecutor contract on Polygon. Once ownership of the Aave Polygon Market contracts is transferred to the PolygonBridgeExecutor, the PolygonBridgeExecutor will have the authorization to make updates to the Aave Polygon Market. Updates are only possible if they have completed the end-to-end, cross-chain governance process, passing Aave governance on Ethereum and going through the timelock on polygon without being cancelled.
+
+In the future, if a change is needed in the PolygonBridgeExecutor contract, a new version can be deployed, and `transferOwnership(address)` should be called on Ownable contracts within the Aave Polygon Market through the original version in order to pass ownership to the new PolygonBridgeExecutor version.
+
+<u>Aave Governance Executor Update</u>
+
+Aave's governance contracts on Ethereum are upgradable and because the PolygonBridgeExecutor is dependent on knowing the address of the Aave Governance Executor contract on ethereum, the PolygonBridgeExecutor will also have to be updated as part of this upgrade.
+
+In order to update the PolygonBridgeExecutor - the function `updateFxRootSender(address)` should be called on the PolygonBridgeExecutor. This function should be executed via the cross-chain governance process using the original Aave Governance Executor. A proposal should be created on the ethereum based Aave goverance, once passed and executed, the transaction will be send to the PolygonBridgeExecutor contract. Once queued and exectued, the PolygonBridgeExecutor will call `updateFxRootSender(address)` on itself and updated the expected Aave Governance Executor address. Once that transaction executes, the PolygonBridgeExecutor will only queue ActionsSets that originate from the new Aave Governance Executor.
+
 ## Arbitrum Governance Bridge Architecture
 
 ![aave-abitrum-governance-bridge-architecture](./ArbitrumBridgeArch.png)
