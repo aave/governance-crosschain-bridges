@@ -1,6 +1,7 @@
 import { DRE } from '../../helpers/misc-utils';
 import { BigNumber } from 'ethers';
 import { ProposalActions, TestEnv } from './make-suite';
+import { tEthereumAddress } from '../../helpers/types';
 
 export const createActionHash = (
   proposalIndex: number,
@@ -295,6 +296,76 @@ export const createBridgeTest8 = async (
   proposalActions.values.push(BigNumber.from(100));
   proposalActions.signatures.push('execute(uint256)');
   proposalActions.calldatas.push(encodedNumber);
+  proposalActions.withDelegatecalls.push(false);
+
+  proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
+    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    [
+      proposalActions.targets,
+      proposalActions.values,
+      proposalActions.signatures,
+      proposalActions.calldatas,
+      proposalActions.withDelegatecalls,
+    ]
+  );
+
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'bytes'],
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
+  );
+
+  return proposalActions;
+};
+
+export const createBridgeTest9 = async (
+  dummyAddress: tEthereumAddress,
+  testEnv: TestEnv
+): Promise<ProposalActions> => {
+  const { ethers } = DRE;
+  const { polygonBridgeExecutor } = testEnv;
+  const proposalActions = new ProposalActions();
+
+  // push the first transaction fields into action arrays
+  const encodedAddress = ethers.utils.defaultAbiCoder.encode(['address'], [dummyAddress]);
+  proposalActions.targets.push(polygonBridgeExecutor.address);
+  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.signatures.push('updateFxRootSender(address)');
+  proposalActions.calldatas.push(encodedAddress);
+  proposalActions.withDelegatecalls.push(false);
+
+  proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
+    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    [
+      proposalActions.targets,
+      proposalActions.values,
+      proposalActions.signatures,
+      proposalActions.calldatas,
+      proposalActions.withDelegatecalls,
+    ]
+  );
+
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'bytes'],
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
+  );
+
+  return proposalActions;
+};
+
+export const createBridgeTest10 = async (
+  dummyAddress: tEthereumAddress,
+  testEnv: TestEnv
+): Promise<ProposalActions> => {
+  const { ethers } = DRE;
+  const { polygonBridgeExecutor } = testEnv;
+  const proposalActions = new ProposalActions();
+
+  // push the first transaction fields into action arrays
+  const encodedAddress = ethers.utils.defaultAbiCoder.encode(['address'], [dummyAddress]);
+  proposalActions.targets.push(polygonBridgeExecutor.address);
+  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.signatures.push('updateFxChild(address)');
+  proposalActions.calldatas.push(encodedAddress);
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(

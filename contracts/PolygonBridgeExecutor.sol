@@ -4,13 +4,22 @@ pragma abicoder v2;
 
 import './interfaces/IFxMessageProcessor.sol';
 import './BridgeExecutorBase.sol';
+import 'hardhat/console.sol';
 
 contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
-  address private immutable _fxRootSender;
-  address private immutable _fxChild;
+  address private _fxRootSender;
+  address private _fxChild;
+
+  event FxRootSenderUpdate(address previousFxRootSender, address newFxRootSender);
+  event FxChildUpdate(address previousFxChild, address newFxChild);
 
   modifier onlyFxChild() {
     require(msg.sender == _fxChild, 'UNAUTHORIZED_CHILD_ORIGIN');
+    _;
+  }
+
+  modifier onlyThis() {
+    require(msg.sender == address(this), 'UNAUTHORIZED_ORIGIN_ONLY_THIS');
     _;
   }
 
@@ -52,5 +61,15 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     );
 
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
+  }
+
+  function updateFxRootSender(address fxRootSender) external onlyThis {
+    emit FxRootSenderUpdate(_fxRootSender, fxRootSender);
+    _fxRootSender = fxRootSender;
+  }
+
+  function updateFxChild(address fxChild) external onlyThis {
+    emit FxChildUpdate(_fxChild, fxChild);
+    _fxChild = fxChild;
   }
 }
