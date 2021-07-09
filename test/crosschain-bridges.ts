@@ -13,12 +13,12 @@ import {
   createBridgeTest6,
   createBridgeTest7,
   createBridgeTest8,
-  createArbitrumBridgeTest,
   createBridgeTest9,
   createBridgeTest10,
   createBridgeTest11,
   createBridgeTest12,
   createBridgeTest13,
+  createArbitrumBridgeTest,
 } from './helpers/bridge-helpers';
 import {
   expectProposalState,
@@ -102,35 +102,35 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     testEnv.proposalActions.push(proposal3Actions);
 
     /**
-     * Create Proposal Actions 3 -
+     * Create Proposal Actions 4 -
      * Normal Contract Call - used for cancellation
      */
     const proposal4Actions = await createBridgeTest4(dummyUint, testEnv);
     testEnv.proposalActions.push(proposal4Actions);
 
     /**
-     * Create Proposal Actions 4 -
+     * Create Proposal Actions 5 -
      * Normal Contract Call - used for expiration
      */
     const proposal5Actions = await createBridgeTest5(dummyUint, testEnv);
     testEnv.proposalActions.push(proposal5Actions);
 
     /**
-     * Create Proposal Actions 5 -
+     * Create Proposal Actions 6 -
      * targets[].length = 0
      */
     const proposal6Actions = await createBridgeTest6(testEnv);
     testEnv.proposalActions.push(proposal6Actions);
 
     /**
-     * Create Proposal Actions 6 -
+     * Create Proposal Actions 7 -
      * targets[].length != values[].length
      */
     const proposal7Actions = await createBridgeTest7(testEnv);
     testEnv.proposalActions.push(proposal7Actions);
 
     /**
-     * Create Proposal Actions 7 -
+     * Create Proposal Actions 8 -
      * duplicate actions
      */
     const proposal8Actions = await createBridgeTest8(dummyUint, testEnv);
@@ -165,14 +165,14 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     testEnv.proposalActions.push(proposal12Actions);
 
     /**
-     * Create Proposal Actions 11 -
+     * Create Proposal Actions 13 -
      * Update MinimumDelay - PolygonBridgeExecutor
      */
     const proposal13Actions = await createBridgeTest13(2000, testEnv);
     testEnv.proposalActions.push(proposal13Actions);
 
     /**
-     * Arbitrum -- Create Proposal Actions
+     * Arbitrum -- Create Proposal Actions 14
      * Successful Transactions on PolygonMarketUpdate
      * -> Action 1 PolygonMarketUpdate.execute(dummyInt) with value of 100 (non-delegate)
      * -> Action 2 PolygonMarketUpdate.executeWithDelegate(dummyString) with no value, as delegate

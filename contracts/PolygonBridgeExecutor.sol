@@ -57,11 +57,19 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 
+  /**
+   * @dev Update the expected address of contract originating a cross-chain tranasaction
+   * @param fxRootSender contract originating a cross-chain tranasaction - likely the aave governance executor
+   **/
   function updateFxRootSender(address fxRootSender) external onlyThis {
     emit FxRootSenderUpdate(_fxRootSender, fxRootSender);
     _fxRootSender = fxRootSender;
   }
 
+  /**
+   * @dev Update the address of the FxChild contract
+   * @param fxChild the address of the contract used to foward cross-chain transactions on Polygon
+   **/
   function updateFxChild(address fxChild) external onlyThis {
     emit FxChildUpdate(_fxChild, fxChild);
     _fxChild = fxChild;
