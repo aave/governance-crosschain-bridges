@@ -8,9 +8,9 @@ import './interfaces/IBridgeExecutor.sol';
 abstract contract BridgeExecutorBase is IBridgeExecutor {
   using SafeMath for uint256;
 
-  uint256 public immutable override GRACE_PERIOD;
-  uint256 public immutable override MINIMUM_DELAY;
-  uint256 public immutable override MAXIMUM_DELAY;
+  uint256 private _gracePeriod;
+  uint256 public _minimumDelay;
+  uint256 public _maximumDelay;
 
   uint256 private _actionsSetCounter;
   address private _guardian;
@@ -19,8 +19,17 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   mapping(uint256 => ActionsSet) private _actionsSets;
   mapping(bytes32 => bool) private _queuedActions;
 
+  event GracePeriodUpdate(uint256 previousGracePeriod, uint256 newGracePeriod);
+  event MinimumDelayUpdate(uint256 previousMinimumDelay, uint256 newMinimumDelay);
+  event MaximumDelayUpdate(uint256 previousMaximumDelay, uint256 newMaximumDelay);
+
   modifier onlyGuardian() {
     require(msg.sender == _guardian, 'ONLY_BY_GUARDIAN');
+    _;
+  }
+
+  modifier onlyThis() {
+    require(msg.sender == address(this), 'UNAUTHORIZED_ORIGIN_ONLY_THIS');
     _;
   }
 
@@ -34,9 +43,9 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     require(delay >= minimumDelay, 'DELAY_SHORTER_THAN_MINIMUM');
     require(delay <= maximumDelay, 'DELAY_LONGER_THAN_MAXIMUM');
     _delay = delay;
-    GRACE_PERIOD = gracePeriod;
-    MINIMUM_DELAY = minimumDelay;
-    MAXIMUM_DELAY = maximumDelay;
+    _gracePeriod = gracePeriod;
+    _minimumDelay = minimumDelay;
+    _maximumDelay = maximumDelay;
 
     _guardian = guardian;
 
@@ -128,7 +137,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
       return ActionsSetState.Canceled;
     } else if (actionsSet.executed) {
       return ActionsSetState.Executed;
-    } else if (block.timestamp > actionsSet.executionTime.add(GRACE_PERIOD)) {
+    } else if (block.timestamp > actionsSet.executionTime.add(_gracePeriod)) {
       return ActionsSetState.Expired;
     } else {
       return ActionsSetState.Queued;
@@ -151,11 +160,66 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   function receiveFunds() external payable {}
 
   /**
+   * @dev Set the grace period - time before a queued action will expire
+   * @param gracePeriod The gracePeriod in seconds
+   **/
+  function updateGracePeriod(uint256 gracePeriod) external override onlyThis {
+    emit GracePeriodUpdate(_gracePeriod, gracePeriod);
+    _gracePeriod = gracePeriod;
+  }
+
+  /**
+   * @dev Set the minimum allowed delay between queing and exection
+   * @param minimumDelay The minimum delay in seconds
+   **/
+  function updateMinimumDelay(uint256 minimumDelay) external override onlyThis {
+    uint256 previousMinimumDelay = _minimumDelay;
+    _minimumDelay = minimumDelay;
+    _validateDelay(_delay);
+    emit MinimumDelayUpdate(previousMinimumDelay, minimumDelay);
+  }
+
+  /**
+   * @dev Set the maximum allowed delay between queing and exection
+   * @param maximumDelay The maximum delay in seconds
+   **/
+  function updateMaximumDelay(uint256 maximumDelay) external override onlyThis {
+    uint256 previousMaximumDelay = _maximumDelay;
+    _maximumDelay = maximumDelay;
+    _validateDelay(_delay);
+    emit MaximumDelayUpdate(previousMaximumDelay, maximumDelay);
+  }
+
+  /**
    * @dev Getter of the delay between queuing and execution
    * @return The delay in seconds
    **/
   function getDelay() external view override returns (uint256) {
     return _delay;
+  }
+
+  /**
+   * @dev Getter of grace period constant
+   * @return grace period in seconds
+   **/
+  function getGracePeriod() external view override returns (uint256) {
+    return _gracePeriod;
+  }
+
+  /**
+   * @dev Getter of minimum delay constant
+   * @return minimum delay in seconds
+   **/
+  function getMinimumDelay() external view override returns (uint256) {
+    return _minimumDelay;
+  }
+
+  /**
+   * @dev Getter of maximum delay constant
+   * @return maximum delay in seconds
+   **/
+  function getMaximumDelay() external view override returns (uint256) {
+    return _maximumDelay;
   }
 
   /**
@@ -269,7 +333,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   }
 
   function _validateDelay(uint256 delay) internal view {
-    require(delay >= MINIMUM_DELAY, 'DELAY_SHORTER_THAN_MINIMUM');
-    require(delay <= MAXIMUM_DELAY, 'DELAY_LONGER_THAN_MAXIMUM');
+    require(delay >= _minimumDelay, 'DELAY_SHORTER_THAN_MINIMUM');
+    require(delay <= _maximumDelay, 'DELAY_LONGER_THAN_MAXIMUM');
   }
 }

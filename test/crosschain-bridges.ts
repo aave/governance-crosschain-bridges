@@ -16,6 +16,9 @@ import {
   createArbitrumBridgeTest,
   createBridgeTest9,
   createBridgeTest10,
+  createBridgeTest11,
+  createBridgeTest12,
+  createBridgeTest13,
 } from './helpers/bridge-helpers';
 import {
   expectProposalState,
@@ -148,16 +151,37 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     testEnv.proposalActions.push(proposal10Actions);
 
     /**
+     * Create Proposal Actions 11 -
+     * Update MinimumDelay - PolygonBridgeExecutor
+     */
+    const proposal11Actions = await createBridgeTest11(1, testEnv);
+    testEnv.proposalActions.push(proposal11Actions);
+
+    /**
+     * Create Proposal Actions 12 -
+     * Update MinimumDelay - PolygonBridgeExecutor
+     */
+    const proposal12Actions = await createBridgeTest12(90000, testEnv);
+    testEnv.proposalActions.push(proposal12Actions);
+
+    /**
+     * Create Proposal Actions 11 -
+     * Update MinimumDelay - PolygonBridgeExecutor
+     */
+    const proposal13Actions = await createBridgeTest13(2000, testEnv);
+    testEnv.proposalActions.push(proposal13Actions);
+
+    /**
      * Arbitrum -- Create Proposal Actions
      * Successful Transactions on PolygonMarketUpdate
      * -> Action 1 PolygonMarketUpdate.execute(dummyInt) with value of 100 (non-delegate)
      * -> Action 2 PolygonMarketUpdate.executeWithDelegate(dummyString) with no value, as delegate
      */
-    const proposal11Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
-    testEnv.proposalActions.push(proposal11Actions);
+    const proposal14Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
+    testEnv.proposalActions.push(proposal14Actions);
 
     // Create Polygon Proposals
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 13; i++) {
       proposals[i] = await createProposal(
         aaveGovContract,
         aaveWhale1.signer,
@@ -173,20 +197,20 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Create Arbitrum Proposal
-    proposals[10] = await createProposal(
+    proposals[13] = await createProposal(
       aaveGovContract,
       aaveWhale1.signer,
       shortExecutor.address,
       [inbox.address],
       [BigNumber.from(0)],
       ['createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'],
-      [proposal11Actions.encodedRootCalldata],
+      [proposal14Actions.encodedRootCalldata],
       [false],
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
     );
 
     // Vote on Proposals
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i < 14; i++) {
       await triggerWhaleVotes(
         aaveGovContract,
         [aaveWhale1.signer, aaveWhale2.signer, aaveWhale3.signer],
@@ -197,7 +221,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Advance Block to End of Voting
-    await advanceBlockTo(proposals[9].endBlock.add(1));
+    await advanceBlockTo(proposals[13].endBlock.add(1));
 
     // Queue Proposals
     await queueProposal(aaveGovContract, proposals[0].id);
@@ -210,29 +234,32 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     await queueProposal(aaveGovContract, proposals[7].id);
     await queueProposal(aaveGovContract, proposals[8].id);
     await queueProposal(aaveGovContract, proposals[9].id);
-    const queuedProposal11 = await queueProposal(aaveGovContract, proposals[10].id);
+    await queueProposal(aaveGovContract, proposals[10].id);
+    await queueProposal(aaveGovContract, proposals[11].id);
+    await queueProposal(aaveGovContract, proposals[12].id);
+    const queuedProposal12 = await queueProposal(aaveGovContract, proposals[13].id);
 
-    await expectProposalState(aaveGovContract, proposals[0].id, proposalStates.QUEUED);
+    await expectProposalState(aaveGovContract, proposals[13].id, proposalStates.QUEUED);
 
     // advance to execution
     const currentBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
     const { timestamp } = currentBlock;
-    const fastForwardTime = queuedProposal11.executionTime.sub(timestamp).toNumber();
+    const fastForwardTime = queuedProposal12.executionTime.sub(timestamp).toNumber();
     await advanceBlock(timestamp + fastForwardTime + 10);
   });
 
   describe('Executor - Check Deployed State', async function () {
     it('Check Grace Period', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      expect(await polygonBridgeExecutor.GRACE_PERIOD()).to.be.equal(BigNumber.from(1000));
+      expect(await polygonBridgeExecutor.getGracePeriod()).to.be.equal(BigNumber.from(1000));
     });
     it('Check Minimum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      expect(await polygonBridgeExecutor.MINIMUM_DELAY()).to.be.equal(BigNumber.from(15));
+      expect(await polygonBridgeExecutor.getMinimumDelay()).to.be.equal(BigNumber.from(15));
     });
     it('Check Maximum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      expect(await polygonBridgeExecutor.MAXIMUM_DELAY()).to.be.equal(BigNumber.from(500));
+      expect(await polygonBridgeExecutor.getMaximumDelay()).to.be.equal(BigNumber.from(500));
     });
     it('Check Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
@@ -301,6 +328,24 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Unauthorized FxChild Update - Revert', async () => {
       const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
       await expect(polygonBridgeExecutor.updateFxChild(aaveWhale2.address)).to.be.revertedWith(
+        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+      );
+    });
+    it('Unauthorized GracePeriod Update - Revert', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.updateGracePeriod(1000)).to.be.revertedWith(
+        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+      );
+    });
+    it('Unauthorized Minimum Delay Update - Revert', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.updateMinimumDelay(1)).to.be.revertedWith(
+        'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+      );
+    });
+    it('Unauthorized Maximum Delay Update - Revert', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.updateMaximumDelay(100000000)).to.be.revertedWith(
         'UNAUTHORIZED_ORIGIN_ONLY_THIS'
       );
     });
@@ -540,9 +585,54 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
+    it('Execute Proposal 11 - successfully queue transaction - min delay update', async () => {
+      const {
+        aaveGovContract,
+        customPolygonMapping,
+        fxChild,
+        polygonBridgeExecutor,
+        shortExecutor,
+      } = testEnv;
+      await expect(aaveGovContract.execute(proposals[10].id, overrides))
+        .to.emit(customPolygonMapping, 'StateSynced')
+        .to.emit(fxChild, 'NewFxMessage')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
+        .to.emit(shortExecutor, 'ExecutedAction')
+        .to.emit(aaveGovContract, 'ProposalExecuted');
+    });
+    it('Execute Proposal 12 - successfully queue transaction - max delay update', async () => {
+      const {
+        aaveGovContract,
+        customPolygonMapping,
+        fxChild,
+        polygonBridgeExecutor,
+        shortExecutor,
+      } = testEnv;
+      await expect(aaveGovContract.execute(proposals[11].id, overrides))
+        .to.emit(customPolygonMapping, 'StateSynced')
+        .to.emit(fxChild, 'NewFxMessage')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
+        .to.emit(shortExecutor, 'ExecutedAction')
+        .to.emit(aaveGovContract, 'ProposalExecuted');
+    });
+    it('Execute Proposal 13 - successfully queue transaction - gracePeriod update', async () => {
+      const {
+        aaveGovContract,
+        customPolygonMapping,
+        fxChild,
+        polygonBridgeExecutor,
+        shortExecutor,
+      } = testEnv;
+      await expect(aaveGovContract.execute(proposals[12].id, overrides))
+        .to.emit(customPolygonMapping, 'StateSynced')
+        .to.emit(fxChild, 'NewFxMessage')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
+        .to.emit(shortExecutor, 'ExecutedAction')
+        .to.emit(aaveGovContract, 'ProposalExecuted');
+    });
   });
   describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
-    it('Execute Proposal 11 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
+    it('Execute Proposal 14 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
       const { ethers } = DRE;
       const { aaveGovContract, inbox, shortExecutor, arbitrumBridgeExecutor, bridge } = testEnv;
       const {
@@ -551,15 +641,15 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         signatures,
         calldatas,
         withDelegatecalls,
-      } = testEnv.proposalActions[10];
+      } = testEnv.proposalActions[13];
 
       const blockNumber = await ethers.provider.getBlockNumber();
       const block = await await ethers.provider.getBlock(blockNumber);
       const blocktime = block.timestamp;
       const expectedExecutionTime = blocktime + 1 + 61;
 
-      testEnv.proposalActions[10].executionTime = expectedExecutionTime;
-      const tx = await aaveGovContract.execute(proposals[10].id, overrides);
+      testEnv.proposalActions[13].executionTime = expectedExecutionTime;
+      const tx = await aaveGovContract.execute(proposals[13].id, overrides);
       const txReceipt = await tx.wait();
       expect(tx)
         .to.emit(bridge, 'MessageDelivered')
@@ -681,6 +771,24 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
           DRE.ethers.utils.getAddress(fxChild.address),
           DRE.ethers.utils.getAddress(aaveWhale2.address)
         );
+    });
+    it('Execute Action Set 7 - updateMinDelay', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(7))
+        .to.emit(polygonBridgeExecutor, 'MinimumDelayUpdate')
+        .withArgs(15, 1);
+    });
+    it('Execute Action Set 8 - updateMaxDelay', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(8))
+        .to.emit(polygonBridgeExecutor, 'MaximumDelayUpdate')
+        .withArgs(500, 90000);
+    });
+    it('Execute Action Set 9 - updateGracePeriod', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(9))
+        .to.emit(polygonBridgeExecutor, 'GracePeriodUpdate')
+        .withArgs(1000, 2000);
     });
   });
   describe('Cancel Actions - Aave Polygon Governance', async function () {

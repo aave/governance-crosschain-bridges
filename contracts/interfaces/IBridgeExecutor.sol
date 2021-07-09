@@ -109,6 +109,24 @@ interface IBridgeExecutor {
   function isActionQueued(bytes32 actionHash) external view returns (bool);
 
   /**
+   * @dev Set the grace period - time before a queued action will expire
+   * @param gracePeriod The gracePeriod in seconds
+   **/
+  function updateGracePeriod(uint256 gracePeriod) external;
+
+  /**
+   * @dev Set the minimum allowed delay between queing and exection
+   * @param minimumDelay The minimum delay in seconds
+   **/
+  function updateMinimumDelay(uint256 minimumDelay) external;
+
+  /**
+   * @dev Set the maximum allowed delay between queing and exection
+   * @param maximumDelay The maximum delay in seconds
+   **/
+  function updateMaximumDelay(uint256 maximumDelay) external;
+
+  /**
    * @dev Getter of the delay between queuing and execution
    * @return The delay in seconds
    **/
@@ -118,17 +136,17 @@ interface IBridgeExecutor {
    * @dev Getter of grace period constant
    * @return grace period in seconds
    **/
-  function GRACE_PERIOD() external view returns (uint256);
+  function getGracePeriod() external view returns (uint256);
 
   /**
    * @dev Getter of minimum delay constant
    * @return minimum delay in seconds
    **/
-  function MINIMUM_DELAY() external view returns (uint256);
+  function getMinimumDelay() external view returns (uint256);
 
   /**
    * @dev Getter of maximum delay constant
    * @return maximum delay in seconds
    **/
-  function MAXIMUM_DELAY() external view returns (uint256);
+  function getMaximumDelay() external view returns (uint256);
 }

@@ -17,11 +17,6 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     _;
   }
 
-  modifier onlyThis() {
-    require(msg.sender == address(this), 'UNAUTHORIZED_ORIGIN_ONLY_THIS');
-    _;
-  }
-
   constructor(
     address fxRootSender,
     address fxChild,
