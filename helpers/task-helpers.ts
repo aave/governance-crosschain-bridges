@@ -76,7 +76,7 @@ export const parseLibraries = async (libraries: string, librariesFile: string) =
 };
 
 export const defineParams = async (
-  contractParams: string,
+  contractParams: any,
   constructorInputs: ParamType[]
 ): Promise<any[]> => {
   console.log(`\nDefining Parameters...\n`);

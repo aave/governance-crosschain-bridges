@@ -17,6 +17,7 @@ if (!SKIP_LOAD) {
   require('./tasks/setup/get-info');
   require('./tasks/setup/print-default-wallets');
   require('./tasks/deploy/deploy');
+  require('./tasks/deploy/deployPolygonGovernance');
   require('./tasks/verify/verify-template');
   require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
@@ -71,7 +72,7 @@ const config: HardhatUserConfig = {
   tenderly: {
     project: TENDERLY_PROJECT,
     username: TENDERLY_USERNAME,
-    forkNetwork: '5',
+    forkNetwork: '137',
   },
   networks: {
     coverage: {
