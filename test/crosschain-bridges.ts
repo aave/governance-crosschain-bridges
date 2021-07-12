@@ -81,7 +81,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     // Fund Polygon Bridge
     await waitForTx(
       await polygonBridgeExecutor.connect(aaveWhale1.signer).receiveFunds({
-        value: DRE.ethers.BigNumber.from('20225952773035674962'),
+        value: DRE.ethers.BigNumber.from('100000000000000000010'),
       })
     );
 
@@ -762,7 +762,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const transactionReceipt = await tx.wait();
       const delegateLog = polygonMarketUpdate.interface.parseLog(transactionReceipt.logs[1]);
       expect(ethers.utils.parseBytes32String(delegateLog.args.testBytes)).to.equal(dummyString);
-      expect(delegateLog.args.sender).to.equal(aaveGovOwner.address);
+      expect(delegateLog.args.sender).to.equal(polygonBridgeExecutor.address);
     });
     it('Get State of Action Set 0 - Actions Executed', async () => {
       const { polygonBridgeExecutor } = testEnv;
@@ -778,7 +778,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Execute Action Set 2 - polygon gov error - not enough msg value', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.execute(2)).to.revertedWith('NOT_ENOUGH_MSG_VALUE');
+      await expect(polygonBridgeExecutor.execute(2)).to.revertedWith('NOT_ENOUGH_CONTRACT_BALANCE');
     });
     it('Execute Action Set 5 - updateFxRootSender', async () => {
       const { polygonBridgeExecutor, shortExecutor, aaveWhale2 } = testEnv;

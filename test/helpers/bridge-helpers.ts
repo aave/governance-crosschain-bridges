@@ -39,7 +39,7 @@ export const createBridgeTest1 = async (
   // push the first transaction fields into action arrays
   const encodedNumber = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyUint]);
   proposalActions.targets.push(polygonMarketUpdate.address);
-  proposalActions.values.push(BigNumber.from(100));
+  proposalActions.values.push(BigNumber.from('100000000000000000000'));
   proposalActions.signatures.push('execute(uint256)');
   proposalActions.calldatas.push(encodedNumber);
   proposalActions.withDelegatecalls.push(false);
@@ -50,7 +50,7 @@ export const createBridgeTest1 = async (
     [ethers.utils.formatBytes32String(dummyString)]
   );
   proposalActions.targets.push(polygonMarketUpdate.address);
-  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.values.push(BigNumber.from(10));
   proposalActions.signatures.push('executeWithDelegate(bytes32)');
   proposalActions.calldatas.push(encodedBytes);
   proposalActions.withDelegatecalls.push(true);
