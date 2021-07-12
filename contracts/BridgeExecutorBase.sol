@@ -222,11 +222,12 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
    * @return success - boolean indicating it the delegate call was successfull
    * @return resultdata - bytes returned by the delegate call
    **/
-  function executeDelegateCall(
-    address target,
-    uint256 value,
-    bytes calldata data
-  ) external payable onlyThis returns (bool, bytes memory) {
+  function executeDelegateCall(address target, bytes calldata data)
+    external
+    payable
+    onlyThis
+    returns (bool, bytes memory)
+  {
     bool success;
     bytes memory resultData;
     // solium-disable-next-line security/no-call-value
@@ -321,7 +322,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     bool success;
     bytes memory resultData;
     if (withDelegatecall) {
-      (success, resultData) = this.executeDelegateCall{value: value}(target, value, callData);
+      (success, resultData) = this.executeDelegateCall{value: value}(target, callData);
     } else {
       // solium-disable-next-line security/no-call-value
       (success, resultData) = target.call{value: value}(callData);
