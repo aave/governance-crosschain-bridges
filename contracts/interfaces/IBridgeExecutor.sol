@@ -64,9 +64,10 @@ interface IBridgeExecutor {
 
   /**
    * @dev emitted when a new delay (between queueing and execution) is set
-   * @param delay new delay
+   * @param previousDelay previous delay
+   * @param newDelay new delay
    **/
-  event NewDelay(uint256 delay);
+  event DelayUpdate(uint256 previousDelay, uint256 newDelay);
 
   /**
    * @dev emitted when a GracePeriod is updated
@@ -102,12 +103,6 @@ interface IBridgeExecutor {
   function cancel(uint256 actionsSetId) external;
 
   /**
-   * @dev Set the delay
-   * @param delay delay between queue and execution of an ActionSet
-   **/
-  function setDelay(uint256 delay) external;
-
-  /**
    * @dev Get the ActionsSet by Id
    * @param actionsSetId id of the ActionsSet
    * @return the ActionsSet requested
@@ -128,6 +123,12 @@ interface IBridgeExecutor {
    * @return true if underlying action of actionHash is queued
    **/
   function isActionQueued(bytes32 actionHash) external view returns (bool);
+
+  /**
+   * @dev Update the delay
+   * @param delay delay between queue and execution of an ActionSet
+   **/
+  function updateDelay(uint256 delay) external;
 
   /**
    * @dev Set the grace period - time before a queued action will expire

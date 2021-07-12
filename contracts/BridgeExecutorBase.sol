@@ -8,13 +8,12 @@ import './interfaces/IBridgeExecutor.sol';
 abstract contract BridgeExecutorBase is IBridgeExecutor {
   using SafeMath for uint256;
 
+  uint256 private _delay;
   uint256 private _gracePeriod;
   uint256 private _minimumDelay;
   uint256 private _maximumDelay;
-
-  uint256 private _actionsSetCounter;
   address private _guardian;
-  uint256 private _delay;
+  uint256 private _actionsSetCounter;
 
   mapping(uint256 => ActionsSet) private _actionsSets;
   mapping(bytes32 => bool) private _queuedActions;
@@ -42,10 +41,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     _gracePeriod = gracePeriod;
     _minimumDelay = minimumDelay;
     _maximumDelay = maximumDelay;
-
     _guardian = guardian;
-
-    emit NewDelay(delay);
   }
 
   /**
@@ -97,17 +93,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   }
 
   /**
-   * @dev Set the delay
-   * @param delay delay between queue and execution of an ActionsSet
-   **/
-  function setDelay(uint256 delay) public override onlyGuardian {
-    _validateDelay(delay);
-    _delay = delay;
-
-    emit NewDelay(delay);
-  }
-
-  /**
    * @dev Get the ActionsSet by Id
    * @param actionsSetId id of the ActionsSet
    * @return the ActionsSet requested
@@ -154,6 +139,16 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
    * @dev Receive Funds if necessary for delegate calls
    **/
   function receiveFunds() external payable {}
+
+  /**
+   * @dev Set the delay
+   * @param delay delay between queue and execution of an ActionsSet
+   **/
+  function updateDelay(uint256 delay) external override onlyThis {
+    _validateDelay(delay);
+    emit DelayUpdate(_delay, delay);
+    _delay = delay;
+  }
 
   /**
    * @dev Set the grace period - time before a queued action will expire
