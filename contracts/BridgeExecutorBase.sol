@@ -9,8 +9,8 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   using SafeMath for uint256;
 
   uint256 private _gracePeriod;
-  uint256 public _minimumDelay;
-  uint256 public _maximumDelay;
+  uint256 private _minimumDelay;
+  uint256 private _maximumDelay;
 
   uint256 private _actionsSetCounter;
   address private _guardian;
@@ -18,10 +18,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
   mapping(uint256 => ActionsSet) private _actionsSets;
   mapping(bytes32 => bool) private _queuedActions;
-
-  event GracePeriodUpdate(uint256 previousGracePeriod, uint256 newGracePeriod);
-  event MinimumDelayUpdate(uint256 previousMinimumDelay, uint256 newMinimumDelay);
-  event MaximumDelayUpdate(uint256 previousMaximumDelay, uint256 newMaximumDelay);
 
   modifier onlyGuardian() {
     require(msg.sender == _guardian, 'ONLY_BY_GUARDIAN');

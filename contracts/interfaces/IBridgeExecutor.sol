@@ -69,6 +69,27 @@ interface IBridgeExecutor {
   event NewDelay(uint256 delay);
 
   /**
+   * @dev emitted when a GracePeriod is updated
+   * @param previousGracePeriod previous grace period
+   * @param newGracePeriod new grace period
+   **/
+  event GracePeriodUpdate(uint256 previousGracePeriod, uint256 newGracePeriod);
+
+  /**
+   * @dev emitted when a Minimum Delay is updated
+   * @param previousMinimumDelay previous minimum delay
+   * @param newMinimumDelay new minimum delay
+   **/
+  event MinimumDelayUpdate(uint256 previousMinimumDelay, uint256 newMinimumDelay);
+
+  /**
+   * @dev emitted when a Maximum Delay is updated
+   * @param previousMaximumDelay previous maximum delay
+   * @param newMaximumDelay new maximum delay
+   **/
+  event MaximumDelayUpdate(uint256 previousMaximumDelay, uint256 newMaximumDelay);
+
+  /**
    * @dev Execute the ActionsSet
    * @param actionsSetId id of the ActionsSet to execute
    **/
