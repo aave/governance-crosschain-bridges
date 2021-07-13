@@ -69,7 +69,6 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       fxRoot,
       fxChild,
       polygonBridgeExecutor,
-      inbox,
     } = testEnv;
 
     // Authorize new executor
@@ -194,12 +193,11 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     testEnv.proposalActions.push(proposal15Actions);
 
     /**
-     * Arbitrum -- Create Proposal Actions 15
+     * Arbitrum -- Create Proposal Actions 16
      * Successful Transactions on PolygonMarketUpdate
-     * -> Action 1 PolygonMarketUpdate.execute(dummyInt) with value of 100 (non-delegate)
-     * -> Action 2 PolygonMarketUpdate.executeWithDelegate(dummyString) with no value, as delegate
+     * Update Ethereum Governance Executor in the Arbitrum Governance contract
      */
-    const proposal16Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
+    const proposal16Actions = await createArbitrumBridgeTest(aaveWhale2.address, testEnv);
     testEnv.proposalActions.push(proposal16Actions);
 
     // Create Polygon Proposals
@@ -218,21 +216,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       await expectProposalState(aaveGovContract, proposals[i].id, proposalStates.PENDING);
     }
 
-    // Create Arbitrum Proposal
-    proposals[15] = await createProposal(
-      aaveGovContract,
-      aaveWhale1.signer,
-      shortExecutor.address,
-      [inbox.address],
-      [BigNumber.from(0)],
-      ['createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'],
-      [proposal16Actions.encodedRootCalldata],
-      [false],
-      '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
-    );
-
     // Vote on Proposals
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 15; i++) {
       await triggerWhaleVotes(
         aaveGovContract,
         [aaveWhale1.signer, aaveWhale2.signer, aaveWhale3.signer],
@@ -243,7 +228,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Advance Block to End of Voting
-    await advanceBlockTo(proposals[15].endBlock.add(1));
+    await advanceBlockTo(proposals[14].endBlock.add(1));
 
     // Queue Proposals
     await queueProposal(aaveGovContract, proposals[0].id);
@@ -260,10 +245,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     await queueProposal(aaveGovContract, proposals[11].id);
     await queueProposal(aaveGovContract, proposals[12].id);
     await queueProposal(aaveGovContract, proposals[13].id);
-    await queueProposal(aaveGovContract, proposals[14].id);
-    const queuedProposal16 = await queueProposal(aaveGovContract, proposals[15].id);
+    const queuedProposal16 = await queueProposal(aaveGovContract, proposals[14].id);
 
-    await expectProposalState(aaveGovContract, proposals[15].id, proposalStates.QUEUED);
+    await expectProposalState(aaveGovContract, proposals[14].id, proposalStates.QUEUED);
 
     // advance to execution
     const currentBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
@@ -393,6 +377,14 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       await expect(
         arbitrumBridgeExecutor.queue(targets, values, signatures, calldatas, withDelegatecalls)
       ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
+    });
+    it('Unauthorized Update Ethereum Governance Executor - revert', async () => {
+      const { arbitrumBridgeExecutor, aaveWhale1 } = testEnv;
+      await expect(
+        arbitrumBridgeExecutor
+          .connect(aaveWhale1.signer)
+          .updateEthereumGovernanceExecutor(aaveWhale1.address)
+      ).to.be.revertedWith('UNAUTHORIZED_ORIGIN_ONLY_THIS');
     });
   });
   describe('Executor - Validate Delay Logic', async function () {
@@ -684,7 +676,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 16 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
       const { ethers } = DRE;
-      const { aaveGovContract, inbox, shortExecutor, arbitrumBridgeExecutor, bridge } = testEnv;
+      const { shortExecutor, arbitrumBridgeExecutor, aaveWhale1 } = testEnv;
       const {
         targets,
         values,
@@ -698,15 +690,18 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const blocktime = block.timestamp;
       const expectedExecutionTime = blocktime + 61;
 
+      await aaveWhale1.signer.sendTransaction({
+        to: shortExecutor.address,
+        value: BigNumber.from('1000000000000000000'),
+      });
+
       testEnv.proposalActions[15].executionTime = expectedExecutionTime;
-      const tx = await aaveGovContract.execute(proposals[15].id, overrides);
+      const shortExecutorSigner = await getImpersonatedSigner(shortExecutor.address);
+      const tx = await arbitrumBridgeExecutor
+        .connect(shortExecutorSigner)
+        .queue(targets, values, signatures, calldatas, withDelegatecalls);
       const txReceipt = await tx.wait();
-      expect(tx)
-        .to.emit(bridge, 'MessageDelivered')
-        .to.emit(inbox, 'InboxMessageDelivered')
-        .to.emit(shortExecutor, 'ExecutedAction')
-        .to.emit(aaveGovContract, 'ProposalExecuted');
-      const parsedLog = arbitrumBridgeExecutor.interface.parseLog(txReceipt.logs[2]);
+      const parsedLog = arbitrumBridgeExecutor.interface.parseLog(txReceipt.logs[0]);
       expect(parsedLog.args.targets).to.be.eql(targets);
       expect(parsedLog.args[2]).to.be.eql(values);
       expect(parsedLog.args.signatures).to.be.eql(signatures);
@@ -849,6 +844,17 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Execute Action Set 11 - revert with error', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.execute(11)).to.be.revertedWith('THIS_ALWAYS_FAILS');
+    });
+  });
+  describe('Execute Action Sets - Aave Arbitrum Governance', async function () {
+    it('Execute Action Set 0 - update ethereum governance executor', async () => {
+      const { arbitrumBridgeExecutor, shortExecutor, aaveWhale2 } = testEnv;
+      await expect(arbitrumBridgeExecutor.execute(0))
+        .to.emit(arbitrumBridgeExecutor, 'EthereumGovernanceExecutorUpdate')
+        .withArgs(
+          DRE.ethers.utils.getAddress(shortExecutor.address),
+          DRE.ethers.utils.getAddress(aaveWhale2.address)
+        );
     });
   });
   describe('Cancel Actions - Aave Polygon Governance', async function () {
