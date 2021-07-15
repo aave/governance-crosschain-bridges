@@ -5,11 +5,7 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 
 import { tEthereumAddress } from '../../helpers/types';
-import {
-  deployArbitrumBridge,
-  deployArbitrumInbox,
-  deployArbitrumBridgeExecutor,
-} from '../../helpers/arbitrum-contract-getters';
+import { deployArbitrumBridgeExecutor } from '../../helpers/arbitrum-contract-getters';
 import {
   getAaveGovContract,
   deployExecutorContract,
@@ -29,8 +25,6 @@ import {
   FxRoot,
   PolygonBridgeExecutor,
   ArbitrumBridgeExecutor,
-  Inbox,
-  Bridge,
 } from '../../typechain';
 
 chai.use(solidity);
@@ -74,8 +68,6 @@ export interface TestEnv {
   fxChild: FxChild;
   polygonBridgeExecutor: PolygonBridgeExecutor;
   polygonMarketUpdate: PolygonMarketUpdate;
-  inbox: Inbox;
-  bridge: Bridge;
   arbitrumBridgeExecutor: ArbitrumBridgeExecutor;
   proposalActions: ProposalActions[];
 }
@@ -142,11 +134,7 @@ const deployPolygonBridgeContracts = async (): Promise<void> => {
 };
 
 const deployArbitrumBridgeContracts = async (): Promise<void> => {
-  const { aaveWhale1, aaveGovOwner } = testEnv;
-
-  // test env bridge
-  testEnv.bridge = await deployArbitrumBridge(aaveWhale1.signer);
-  testEnv.inbox = await deployArbitrumInbox(aaveWhale1.signer, testEnv.bridge.address);
+  const { aaveGovOwner } = testEnv;
 
   // deploy arbitrum executor
   testEnv.arbitrumBridgeExecutor = await deployArbitrumBridgeExecutor(
@@ -158,10 +146,6 @@ const deployArbitrumBridgeContracts = async (): Promise<void> => {
     aaveGovOwner.address,
     aaveGovOwner.signer
   );
-
-  testEnv.polygonMarketUpdate = await deployPolygonMarketUpdate(aaveWhale1.signer);
-  const tx = await testEnv.bridge.setInbox(testEnv.inbox.address, true);
-  await tx.wait();
 };
 
 export const setupTestEnvironment = async (): Promise<void> => {
