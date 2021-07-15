@@ -327,8 +327,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
       // solium-disable-next-line security/no-call-value
       (success, resultData) = target.call{value: value}(callData);
     }
-
-    require(success, 'FAILED_ACTION_EXECUTION');
+    _verifyCallResult(success, resultData);
   }
 
   function _cancelTransaction(
@@ -347,5 +346,28 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   function _validateDelay(uint256 delay) internal view {
     require(delay >= _minimumDelay, 'DELAY_SHORTER_THAN_MINIMUM');
     require(delay <= _maximumDelay, 'DELAY_LONGER_THAN_MAXIMUM');
+  }
+
+  function _verifyCallResult(bool success, bytes memory returndata)
+    private
+    pure
+    returns (bytes memory)
+  {
+    if (success) {
+      return returndata;
+    } else {
+      // Look for revert reason and bubble it up if present
+      if (returndata.length > 0) {
+        // The easiest way to bubble the revert reason is using memory via assembly
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+          let returndata_size := mload(returndata)
+          revert(add(32, returndata), returndata_size)
+        }
+      } else {
+        revert('FAILED_ACTION_EXECUTION');
+      }
+    }
   }
 }
