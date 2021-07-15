@@ -47,10 +47,6 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor').setAction(
 
     console.log('  - Balance:', await contractSigner.getBalance());
 
-    const contractInstance = await deployContract(paramsArray, ContractFactory, contractSigner);
-
-    // if (verify) {
-    //   await verifyContract(contractInstance.address, paramsArray, '');
-    // }
+    await deployContract(paramsArray, ContractFactory, contractSigner);
   }
 );
