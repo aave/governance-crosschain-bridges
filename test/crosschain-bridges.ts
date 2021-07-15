@@ -1,7 +1,13 @@
 import chai, { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { solidity } from 'ethereum-waffle';
-import { DRE, advanceBlockTo, advanceBlock, waitForTx } from '../helpers/misc-utils';
+import {
+  DRE,
+  advanceBlockTo,
+  advanceBlock,
+  waitForTx,
+  getImpersonatedSigner,
+} from '../helpers/misc-utils';
 
 import { makeSuite, setupTestEnvironment, TestEnv } from './helpers/make-suite';
 import {
@@ -18,6 +24,7 @@ import {
   createBridgeTest11,
   createBridgeTest12,
   createBridgeTest13,
+  createBridgeTest14,
   createArbitrumBridgeTest,
 } from './helpers/bridge-helpers';
 import {
@@ -172,16 +179,23 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     testEnv.proposalActions.push(proposal13Actions);
 
     /**
-     * Arbitrum -- Create Proposal Actions 14
+     * Create Proposal Actions 14 -
+     * Update MinimumDelay - PolygonBridgeExecutor
+     */
+    const proposal14Actions = await createBridgeTest14(61, testEnv);
+    testEnv.proposalActions.push(proposal14Actions);
+
+    /**
+     * Arbitrum -- Create Proposal Actions 15
      * Successful Transactions on PolygonMarketUpdate
      * -> Action 1 PolygonMarketUpdate.execute(dummyInt) with value of 100 (non-delegate)
      * -> Action 2 PolygonMarketUpdate.executeWithDelegate(dummyString) with no value, as delegate
      */
-    const proposal14Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
-    testEnv.proposalActions.push(proposal14Actions);
+    const proposal15Actions = await createArbitrumBridgeTest(dummyUint, dummyString, testEnv);
+    testEnv.proposalActions.push(proposal15Actions);
 
     // Create Polygon Proposals
-    for (let i = 0; i < 13; i++) {
+    for (let i = 0; i < 14; i++) {
       proposals[i] = await createProposal(
         aaveGovContract,
         aaveWhale1.signer,
@@ -197,20 +211,20 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Create Arbitrum Proposal
-    proposals[13] = await createProposal(
+    proposals[14] = await createProposal(
       aaveGovContract,
       aaveWhale1.signer,
       shortExecutor.address,
       [inbox.address],
       [BigNumber.from(0)],
       ['createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'],
-      [proposal14Actions.encodedRootCalldata],
+      [proposal15Actions.encodedRootCalldata],
       [false],
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
     );
 
     // Vote on Proposals
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 15; i++) {
       await triggerWhaleVotes(
         aaveGovContract,
         [aaveWhale1.signer, aaveWhale2.signer, aaveWhale3.signer],
@@ -221,7 +235,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Advance Block to End of Voting
-    await advanceBlockTo(proposals[13].endBlock.add(1));
+    await advanceBlockTo(proposals[14].endBlock.add(1));
 
     // Queue Proposals
     await queueProposal(aaveGovContract, proposals[0].id);
@@ -237,14 +251,15 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     await queueProposal(aaveGovContract, proposals[10].id);
     await queueProposal(aaveGovContract, proposals[11].id);
     await queueProposal(aaveGovContract, proposals[12].id);
-    const queuedProposal12 = await queueProposal(aaveGovContract, proposals[13].id);
+    await queueProposal(aaveGovContract, proposals[13].id);
+    const queuedProposal14 = await queueProposal(aaveGovContract, proposals[14].id);
 
-    await expectProposalState(aaveGovContract, proposals[13].id, proposalStates.QUEUED);
+    await expectProposalState(aaveGovContract, proposals[14].id, proposalStates.QUEUED);
 
     // advance to execution
     const currentBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
     const { timestamp } = currentBlock;
-    const fastForwardTime = queuedProposal12.executionTime.sub(timestamp).toNumber();
+    const fastForwardTime = queuedProposal14.executionTime.sub(timestamp).toNumber();
     await advanceBlock(timestamp + fastForwardTime + 10);
   });
 
@@ -331,6 +346,12 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         'UNAUTHORIZED_ORIGIN_ONLY_THIS'
       );
     });
+    it('Unauthorized Delay Update - Revert', async () => {
+      const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
+      await expect(
+        polygonBridgeExecutor.connect(aaveWhale1.signer).updateDelay(1000)
+      ).to.be.revertedWith('UNAUTHORIZED_ORIGIN_ONLY_THIS');
+    });
     it('Unauthorized GracePeriod Update - Revert', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.updateGracePeriod(1000)).to.be.revertedWith(
@@ -365,34 +386,24 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
     });
   });
-  describe('Executor - Set Delay', async function () {
-    it('Unauthorized Transaction - set delay from non-guardian address', async () => {
-      const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
-      await expect(
-        polygonBridgeExecutor.connect(aaveWhale1.signer).setDelay(1000)
-      ).to.be.revertedWith('ONLY_BY_GUARDIAN');
-    });
+  describe('Executor - Validate Delay Logic', async function () {
     it('Delay > Maximum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.setDelay(100000000)).to.be.revertedWith(
-        'DELAY_LONGER_THAN_MAXIMUM'
+      const polygonBridgeExecutorSigner = await getImpersonatedSigner(
+        polygonBridgeExecutor.address
       );
+      await expect(
+        polygonBridgeExecutor.connect(polygonBridgeExecutorSigner).updateDelay(100000000)
+      ).to.be.revertedWith('DELAY_LONGER_THAN_MAXIMUM');
     });
     it('Delay < Minimum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.setDelay(1)).to.be.revertedWith(
-        'DELAY_SHORTER_THAN_MINIMUM'
+      const polygonBridgeExecutorSigner = await getImpersonatedSigner(
+        polygonBridgeExecutor.address
       );
-    });
-    it('Successful Transaction - update the delay', async () => {
-      const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.setDelay(61))
-        .to.emit(polygonBridgeExecutor, 'NewDelay')
-        .withArgs(61);
-    });
-    it('Check State - get delay', async () => {
-      const { polygonBridgeExecutor } = testEnv;
-      expect(await polygonBridgeExecutor.getDelay()).to.be.equal(BigNumber.from(61));
+      await expect(
+        polygonBridgeExecutor.connect(polygonBridgeExecutorSigner).updateDelay(1)
+      ).to.be.revertedWith('DELAY_SHORTER_THAN_MINIMUM');
     });
   });
   describe('Queue - PolgygonBridgeExecutor through Ethereum Aave Governance', async function () {
@@ -424,7 +435,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const blockNumber = await ethers.provider.getBlockNumber();
       const block = await await ethers.provider.getBlock(blockNumber);
       const blocktime = block.timestamp;
-      const expectedExecutionTime = blocktime + 1 + 61;
+      const expectedExecutionTime = blocktime + 61;
 
       testEnv.proposalActions[0].executionTime = expectedExecutionTime;
 
@@ -466,7 +477,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const blockNumber = await ethers.provider.getBlockNumber();
       const block = await await ethers.provider.getBlock(blockNumber);
       const blocktime = block.timestamp;
-      const expectedExecutionTime = blocktime + 1 + 61;
+      const expectedExecutionTime = blocktime + 61;
       testEnv.proposalActions[1].executionTime = expectedExecutionTime;
 
       await expect(aaveGovContract.execute(proposals[1].id, overrides))
@@ -513,7 +524,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const block = await await ethers.provider.getBlock(blockNumber);
       const blocktime = block.timestamp;
 
-      const expectedExecutionTime = blocktime + 1 + 61;
+      const expectedExecutionTime = blocktime + 61;
       testEnv.proposalActions[3].executionTime = expectedExecutionTime;
       await expect(aaveGovContract.execute(proposals[3].id, overrides))
         .to.emit(customPolygonMapping, 'StateSynced')
@@ -630,6 +641,21 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
+    it('Execute Proposal 14 - successfully queue transaction - delay update', async () => {
+      const {
+        aaveGovContract,
+        customPolygonMapping,
+        fxChild,
+        polygonBridgeExecutor,
+        shortExecutor,
+      } = testEnv;
+      await expect(aaveGovContract.execute(proposals[13].id, overrides))
+        .to.emit(customPolygonMapping, 'StateSynced')
+        .to.emit(fxChild, 'NewFxMessage')
+        .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
+        .to.emit(shortExecutor, 'ExecutedAction')
+        .to.emit(aaveGovContract, 'ProposalExecuted');
+    });
   });
   describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 14 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
@@ -641,15 +667,15 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         signatures,
         calldatas,
         withDelegatecalls,
-      } = testEnv.proposalActions[13];
+      } = testEnv.proposalActions[14];
 
       const blockNumber = await ethers.provider.getBlockNumber();
       const block = await await ethers.provider.getBlock(blockNumber);
       const blocktime = block.timestamp;
-      const expectedExecutionTime = blocktime + 1 + 61;
+      const expectedExecutionTime = blocktime + 61;
 
-      testEnv.proposalActions[13].executionTime = expectedExecutionTime;
-      const tx = await aaveGovContract.execute(proposals[13].id, overrides);
+      testEnv.proposalActions[14].executionTime = expectedExecutionTime;
+      const tx = await aaveGovContract.execute(proposals[14].id, overrides);
       const txReceipt = await tx.wait();
       expect(tx)
         .to.emit(bridge, 'MessageDelivered')
@@ -789,6 +815,12 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       await expect(polygonBridgeExecutor.execute(9))
         .to.emit(polygonBridgeExecutor, 'GracePeriodUpdate')
         .withArgs(1000, 2000);
+    });
+    it('Execute Action Set 10 - updateDelay', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.execute(10))
+        .to.emit(polygonBridgeExecutor, 'DelayUpdate')
+        .withArgs(60, 61);
     });
   });
   describe('Cancel Actions - Aave Polygon Governance', async function () {
