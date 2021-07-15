@@ -6,7 +6,6 @@ interface IBridgeExecutor {
   enum ActionsSetState {Queued, Executed, Canceled, Expired}
 
   struct ActionsSet {
-    uint256 id;
     address[] targets;
     uint256[] values;
     string[] signatures;

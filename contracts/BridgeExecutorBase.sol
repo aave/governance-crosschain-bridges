@@ -203,7 +203,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     }
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
-    actionsSet.id = actionsSetId;
     actionsSet.targets = targets;
     actionsSet.values = values;
     actionsSet.signatures = signatures;
