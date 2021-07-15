@@ -214,6 +214,28 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   }
 
   /**
+   * @dev target.delegatecall cannot be provided a value directly and is sent
+   * with the entire available msg.value. In this instance, we only want each proposed action
+   * to execute with exactly the value defined in the proposal. By splitting executeDelegateCall
+   * into a seperate function, it can be called from this contract with a defined amout of value,
+   * reducing the risk that a delegatecall is executed with more value than intended
+   * @return success - boolean indicating it the delegate call was successfull
+   * @return resultdata - bytes returned by the delegate call
+   **/
+  function executeDelegateCall(address target, bytes calldata data)
+    external
+    payable
+    onlyThis
+    returns (bool, bytes memory)
+  {
+    bool success;
+    bytes memory resultData;
+    // solium-disable-next-line security/no-call-value
+    (success, resultData) = target.delegatecall(data);
+    return (success, resultData);
+  }
+
+  /**
    * @dev Queue the ActionsSet - only callable by the BridgeMessageProvessor
    * @param targets list of contracts called by each action's associated transaction
    * @param values list of value in wei for each action's  associated transaction
@@ -284,12 +306,13 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     uint256 executionTime,
     bool withDelegatecall
   ) internal {
+    require(address(this).balance >= value, 'NOT_ENOUGH_CONTRACT_BALANCE');
+
     bytes32 actionHash =
       keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall));
     _queuedActions[actionHash] = false;
 
     bytes memory callData;
-
     if (bytes(signature).length == 0) {
       callData = data;
     } else {
@@ -299,9 +322,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     bool success;
     bytes memory resultData;
     if (withDelegatecall) {
-      require(msg.value >= value, 'NOT_ENOUGH_MSG_VALUE');
-      // solium-disable-next-line security/no-call-value
-      (success, resultData) = target.delegatecall(callData);
+      (success, resultData) = this.executeDelegateCall{value: value}(target, callData);
     } else {
       // solium-disable-next-line security/no-call-value
       (success, resultData) = target.call{value: value}(callData);
