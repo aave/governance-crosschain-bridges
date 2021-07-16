@@ -64,9 +64,31 @@ interface IBridgeExecutor {
 
   /**
    * @dev emitted when a new delay (between queueing and execution) is set
-   * @param delay new delay
+   * @param previousDelay previous delay
+   * @param newDelay new delay
    **/
-  event NewDelay(uint256 delay);
+  event DelayUpdate(uint256 previousDelay, uint256 newDelay);
+
+  /**
+   * @dev emitted when a GracePeriod is updated
+   * @param previousGracePeriod previous grace period
+   * @param newGracePeriod new grace period
+   **/
+  event GracePeriodUpdate(uint256 previousGracePeriod, uint256 newGracePeriod);
+
+  /**
+   * @dev emitted when a Minimum Delay is updated
+   * @param previousMinimumDelay previous minimum delay
+   * @param newMinimumDelay new minimum delay
+   **/
+  event MinimumDelayUpdate(uint256 previousMinimumDelay, uint256 newMinimumDelay);
+
+  /**
+   * @dev emitted when a Maximum Delay is updated
+   * @param previousMaximumDelay previous maximum delay
+   * @param newMaximumDelay new maximum delay
+   **/
+  event MaximumDelayUpdate(uint256 previousMaximumDelay, uint256 newMaximumDelay);
 
   /**
    * @dev Execute the ActionsSet
@@ -79,12 +101,6 @@ interface IBridgeExecutor {
    * @param actionsSetId id of the ActionsSet to cancel
    **/
   function cancel(uint256 actionsSetId) external;
-
-  /**
-   * @dev Set the delay
-   * @param delay delay between queue and execution of an ActionSet
-   **/
-  function setDelay(uint256 delay) external;
 
   /**
    * @dev Get the ActionsSet by Id
@@ -109,6 +125,30 @@ interface IBridgeExecutor {
   function isActionQueued(bytes32 actionHash) external view returns (bool);
 
   /**
+   * @dev Update the delay
+   * @param delay delay between queue and execution of an ActionSet
+   **/
+  function updateDelay(uint256 delay) external;
+
+  /**
+   * @dev Set the grace period - time before a queued action will expire
+   * @param gracePeriod The gracePeriod in seconds
+   **/
+  function updateGracePeriod(uint256 gracePeriod) external;
+
+  /**
+   * @dev Set the minimum allowed delay between queing and exection
+   * @param minimumDelay The minimum delay in seconds
+   **/
+  function updateMinimumDelay(uint256 minimumDelay) external;
+
+  /**
+   * @dev Set the maximum allowed delay between queing and exection
+   * @param maximumDelay The maximum delay in seconds
+   **/
+  function updateMaximumDelay(uint256 maximumDelay) external;
+
+  /**
    * @dev Getter of the delay between queuing and execution
    * @return The delay in seconds
    **/
@@ -118,17 +158,17 @@ interface IBridgeExecutor {
    * @dev Getter of grace period constant
    * @return grace period in seconds
    **/
-  function GRACE_PERIOD() external view returns (uint256);
+  function getGracePeriod() external view returns (uint256);
 
   /**
    * @dev Getter of minimum delay constant
    * @return minimum delay in seconds
    **/
-  function MINIMUM_DELAY() external view returns (uint256);
+  function getMinimumDelay() external view returns (uint256);
 
   /**
    * @dev Getter of maximum delay constant
    * @return maximum delay in seconds
    **/
-  function MAXIMUM_DELAY() external view returns (uint256);
+  function getMaximumDelay() external view returns (uint256);
 }
