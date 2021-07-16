@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import './dependencies/utilities/SafeMath.sol';
 import './interfaces/IBridgeExecutor.sol';
-import 'hardhat/console.sol';
 
 abstract contract BridgeExecutorBase is IBridgeExecutor {
   using SafeMath for uint256;
