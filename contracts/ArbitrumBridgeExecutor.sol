@@ -5,7 +5,12 @@ pragma abicoder v2;
 import './BridgeExecutorBase.sol';
 
 contract ArbitrumBridgeExecutor is BridgeExecutorBase {
-  address private immutable _ethereumGovernanceExecutor;
+  address private _ethereumGovernanceExecutor;
+
+  event EthereumGovernanceExecutorUpdate(
+    address previousEthereumGovernanceExecutor,
+    address newEthereumGovernanceExecutor
+  );
 
   modifier onlyEthereumGovernanceExecutor() {
     require(msg.sender == _ethereumGovernanceExecutor, 'UNAUTHORIZED_EXECUTOR');
@@ -39,5 +44,14 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
     bool[] memory withDelegatecalls
   ) external onlyEthereumGovernanceExecutor {
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
+  }
+
+  /**
+   * @dev Update the address of the Ethereum Governance Executor contract responsible for sending cross-chain transactions
+   * @param ethereumGovernanceExecutor the address of the Ethereum Governance Executor contract
+   **/
+  function updateEthereumGovernanceExecutor(address ethereumGovernanceExecutor) external onlyThis {
+    emit EthereumGovernanceExecutorUpdate(_ethereumGovernanceExecutor, ethereumGovernanceExecutor);
+    _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
   }
 }

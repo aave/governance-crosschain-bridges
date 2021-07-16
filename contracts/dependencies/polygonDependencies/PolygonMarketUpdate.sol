@@ -19,6 +19,11 @@ contract PolygonMarketUpdate {
     emit DelegateUpdateExecuted(testBytes, msg.sender);
   }
 
+  function alwaysFails() public {
+    _counter = _counter + 1;
+    require(1 < 0, 'THIS_ALWAYS_FAILS');
+  }
+
   function getCounter() public view returns (uint256) {
     return _counter;
   }

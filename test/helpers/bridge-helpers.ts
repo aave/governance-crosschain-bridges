@@ -39,7 +39,7 @@ export const createBridgeTest1 = async (
   // push the first transaction fields into action arrays
   const encodedNumber = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyUint]);
   proposalActions.targets.push(polygonMarketUpdate.address);
-  proposalActions.values.push(BigNumber.from(100));
+  proposalActions.values.push(BigNumber.from('100000000000000000000'));
   proposalActions.signatures.push('execute(uint256)');
   proposalActions.calldatas.push(encodedNumber);
   proposalActions.withDelegatecalls.push(false);
@@ -50,7 +50,7 @@ export const createBridgeTest1 = async (
     [ethers.utils.formatBytes32String(dummyString)]
   );
   proposalActions.targets.push(polygonMarketUpdate.address);
-  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.values.push(BigNumber.from(10));
   proposalActions.signatures.push('executeWithDelegate(bytes32)');
   proposalActions.calldatas.push(encodedBytes);
   proposalActions.withDelegatecalls.push(true);
@@ -527,33 +527,19 @@ export const createBridgeTest14 = async (
   return proposalActions;
 };
 
-export const createArbitrumBridgeTest = async (
-  dummyUint: number,
-  dummyString: string,
-  testEnv: TestEnv
-): Promise<ProposalActions> => {
+export const createBridgeTest15 = async (testEnv: TestEnv): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { aaveWhale1, polygonMarketUpdate, arbitrumBridgeExecutor } = testEnv;
+  const { polygonMarketUpdate, polygonBridgeExecutor } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
-  const encodedNumber = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyUint]);
-  proposalActions.targets.push(polygonMarketUpdate.address);
-  proposalActions.values.push(BigNumber.from(100));
-  proposalActions.signatures.push('execute(uint256)');
-  proposalActions.calldatas.push(encodedNumber);
-  proposalActions.withDelegatecalls.push(false);
+  const encodedData = ethers.utils.defaultAbiCoder.encode(['uint256'], [0]);
 
-  // push the second transaction fields into action arrays
-  const encodedBytes = ethers.utils.defaultAbiCoder.encode(
-    ['bytes32'],
-    [ethers.utils.formatBytes32String(dummyString)]
-  );
   proposalActions.targets.push(polygonMarketUpdate.address);
-  proposalActions.values.push(BigNumber.from(0));
-  proposalActions.signatures.push('executeWithDelegate(bytes32)');
-  proposalActions.calldatas.push(encodedBytes);
-  proposalActions.withDelegatecalls.push(true);
+  proposalActions.values.push(BigNumber.from('0'));
+  proposalActions.signatures.push('alwaysFails()');
+  proposalActions.calldatas.push(encodedData);
+  proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
     ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
@@ -566,26 +552,29 @@ export const createArbitrumBridgeTest = async (
     ]
   );
 
-  const arbitrumTransaction = await arbitrumBridgeExecutor.populateTransaction.queue(
-    proposalActions.targets,
-    proposalActions.values,
-    proposalActions.signatures,
-    proposalActions.calldatas,
-    proposalActions.withDelegatecalls
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'bytes'],
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
   );
 
-  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
-    ['address', 'uint256', 'uint256', 'address', 'address', 'uint256', 'uint256', 'bytes'],
-    [
-      arbitrumBridgeExecutor.address,
-      0,
-      1000,
-      aaveWhale1.address,
-      aaveWhale1.address,
-      100000,
-      1000000,
-      arbitrumTransaction.data,
-    ]
-  );
+  return proposalActions;
+};
+
+export const createArbitrumBridgeTest = async (
+  dummyAddress: tEthereumAddress,
+  testEnv: TestEnv
+): Promise<ProposalActions> => {
+  const { ethers } = DRE;
+  const { arbitrumBridgeExecutor } = testEnv;
+  const proposalActions = new ProposalActions();
+
+  // push the first transaction fields into action arrays
+  const encodedAddress = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyAddress]);
+  proposalActions.targets.push(arbitrumBridgeExecutor.address);
+  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.signatures.push('updateEthereumGovernanceExecutor(address)');
+  proposalActions.calldatas.push(encodedAddress);
+  proposalActions.withDelegatecalls.push(false);
+
   return proposalActions;
 };
