@@ -154,7 +154,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
      * Create Proposal Actions 10 -
      * Update FxChild - PolygonBridgeExecutor
      */
-    const proposal10Actions = await createBridgeTest10(aaveWhale2.address, testEnv);
+    const proposal10Actions = await createBridgeTest10(aaveWhale3.address, testEnv);
     testEnv.proposalActions.push(proposal10Actions);
 
     /**
@@ -809,12 +809,12 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         );
     });
     it('Execute Action Set 6 - updateFxChild', async () => {
-      const { polygonBridgeExecutor, fxChild, aaveWhale2 } = testEnv;
+      const { polygonBridgeExecutor, fxChild, aaveWhale3 } = testEnv;
       await expect(polygonBridgeExecutor.execute(6))
         .to.emit(polygonBridgeExecutor, 'FxChildUpdate')
         .withArgs(
           DRE.ethers.utils.getAddress(fxChild.address),
-          DRE.ethers.utils.getAddress(aaveWhale2.address)
+          DRE.ethers.utils.getAddress(aaveWhale3.address)
         );
     });
     it('Execute Action Set 7 - updateMinDelay', async () => {
@@ -855,6 +855,28 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
           DRE.ethers.utils.getAddress(shortExecutor.address),
           DRE.ethers.utils.getAddress(aaveWhale2.address)
         );
+    });
+  });
+  describe('PolygonBridgeExecutor Getters - FxRootSender, FxChild', async function () {
+    it('Get FxRootSender', async () => {
+      const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
+      expect(await polygonBridgeExecutor.getFxRootSender()).to.be.equal(
+        DRE.ethers.utils.getAddress(aaveWhale2.address)
+      );
+    });
+    it('Get FxChild', async () => {
+      const { polygonBridgeExecutor, aaveWhale3 } = testEnv;
+      expect(await polygonBridgeExecutor.getFxChild()).to.be.equal(
+        DRE.ethers.utils.getAddress(aaveWhale3.address)
+      );
+    });
+  });
+  describe('ArbitrumBridgeExecutor Getters - EthereumGovernanceExecutor', async function () {
+    it('Get EthereumGovernanceExecutor', async () => {
+      const { arbitrumBridgeExecutor, aaveWhale2 } = testEnv;
+      expect(await arbitrumBridgeExecutor.getEthereumGovernanceExecutor()).to.be.equal(
+        DRE.ethers.utils.getAddress(aaveWhale2.address)
+      );
     });
   });
   describe('Cancel Actions - Aave Polygon Governance', async function () {
