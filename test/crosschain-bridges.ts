@@ -772,12 +772,13 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const blocktime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp;
       await advanceBlock(blocktime + 100);
+      const encodedInteger = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyUint]);
       const tx = await polygonBridgeExecutor.execute(0);
       await expect(tx)
         .to.emit(polygonMarketUpdate, 'UpdateExecuted')
         .withArgs(1, dummyUint, dummyAddress, values[0])
         .to.emit(polygonBridgeExecutor, 'ActionsSetExecuted')
-        .withArgs(0, aaveGovOwner.address);
+        .withArgs(0, aaveGovOwner.address, [encodedInteger, '0x']);
       const transactionReceipt = await tx.wait();
       const delegateLog = polygonMarketUpdate.interface.parseLog(transactionReceipt.logs[1]);
       expect(ethers.utils.parseBytes32String(delegateLog.args.testBytes)).to.equal(dummyString);

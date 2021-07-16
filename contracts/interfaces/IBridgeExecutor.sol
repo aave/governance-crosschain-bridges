@@ -40,8 +40,9 @@ interface IBridgeExecutor {
    * @dev emitted when an ActionsSet is executed successfully
    * @param id Id of the ActionsSet
    * @param initiatorExecution address that triggered the ActionsSet execution
+   * @param returnedData address that triggered the ActionsSet execution
    **/
-  event ActionsSetExecuted(uint256 id, address indexed initiatorExecution);
+  event ActionsSetExecuted(uint256 id, address indexed initiatorExecution, bytes[] returnedData);
 
   /**
    * @dev emitted when an ActionsSet is cancelled by the guardian
