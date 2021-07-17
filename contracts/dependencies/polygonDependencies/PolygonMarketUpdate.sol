@@ -9,10 +9,11 @@ contract PolygonMarketUpdate {
   uint256 private _counter;
   uint256 private _testInt;
 
-  function execute(uint256 testInt) external payable {
+  function execute(uint256 testInt) external payable returns (uint256) {
     _counter = _counter + 1;
     _testInt = testInt;
     emit UpdateExecuted(_counter, _testInt, UPDATED_ADDRESS, msg.value);
+    return testInt;
   }
 
   function executeWithDelegate(bytes32 testBytes) external payable {

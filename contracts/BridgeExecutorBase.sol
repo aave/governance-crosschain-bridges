@@ -55,8 +55,11 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     require(block.timestamp >= actionsSet.executionTime, 'TIMELOCK_NOT_FINISHED');
 
     actionsSet.executed = true;
-    for (uint256 i = 0; i < actionsSet.targets.length; i++) {
-      _executeTransaction(
+    uint256 actionCount = actionsSet.targets.length;
+
+    bytes[] memory returnedData = new bytes[](actionCount);
+    for (uint256 i = 0; i < actionCount; i++) {
+      returnedData[i] = _executeTransaction(
         actionsSet.targets[i],
         actionsSet.values[i],
         actionsSet.signatures[i],
@@ -65,7 +68,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
         actionsSet.withDelegatecalls[i]
       );
     }
-    emit ActionsSetExecuted(actionsSetId, msg.sender);
+    emit ActionsSetExecuted(actionsSetId, msg.sender, returnedData);
   }
 
   /**
@@ -305,7 +308,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     bytes memory data,
     uint256 executionTime,
     bool withDelegatecall
-  ) internal {
+  ) internal returns (bytes memory) {
     require(address(this).balance >= value, 'NOT_ENOUGH_CONTRACT_BALANCE');
 
     bytes32 actionHash =
@@ -327,7 +330,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
       // solium-disable-next-line security/no-call-value
       (success, resultData) = target.call{value: value}(callData);
     }
-    _verifyCallResult(success, resultData);
+    return _verifyCallResult(success, resultData);
   }
 
   function _cancelTransaction(
