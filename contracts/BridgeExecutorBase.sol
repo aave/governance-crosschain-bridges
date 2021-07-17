@@ -44,10 +44,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     _guardian = guardian;
   }
 
-  /**
-   * @dev Execute the ActionsSet
-   * @param actionsSetId id of the ActionsSet to execute
-   **/
+  /// @inheritdoc IBridgeExecutor
   function execute(uint256 actionsSetId) external payable override {
     require(getCurrentState(actionsSetId) == ActionsSetState.Queued, 'ONLY_QUEUED_ACTIONS');
 
@@ -71,10 +68,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     emit ActionsSetExecuted(actionsSetId, msg.sender, returnedData);
   }
 
-  /**
-   * @dev Cancel the ActionsSet
-   * @param actionsSetId id of the ActionsSet to cancel
-   **/
+  /// @inheritdoc IBridgeExecutor
   function cancel(uint256 actionsSetId) external override onlyGuardian {
     ActionsSetState state = getCurrentState(actionsSetId);
     require(state == ActionsSetState.Queued, 'ONLY_BEFORE_EXECUTED');
@@ -95,11 +89,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     emit ActionsSetCanceled(actionsSetId);
   }
 
-  /**
-   * @dev Get the ActionsSet by Id
-   * @param actionsSetId id of the ActionsSet
-   * @return the ActionsSet requested
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getActionsSetById(uint256 actionsSetId)
     external
     view
@@ -109,11 +99,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     return _actionsSets[actionsSetId];
   }
 
-  /**
-   * @dev Get the current state of an ActionsSet
-   * @param actionsSetId id of the ActionsSet
-   * @return The current state if the ActionsSet
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getCurrentState(uint256 actionsSetId) public view override returns (ActionsSetState) {
     require(_actionsSetCounter >= actionsSetId, 'INVALID_ACTION_ID');
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
@@ -128,44 +114,28 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     }
   }
 
-  /**
-   * @dev Returns whether an action (via actionHash) is queued
-   * @param actionHash hash of the action to be checked
-   * keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall))
-   * @return true if underlying action of actionHash is queued
-   **/
+  /// @inheritdoc IBridgeExecutor
   function isActionQueued(bytes32 actionHash) public view override returns (bool) {
     return _queuedActions[actionHash];
   }
 
-  /**
-   * @dev Receive Funds if necessary for delegate calls
-   **/
+  /// @inheritdoc IBridgeExecutor
   function receiveFunds() external payable {}
 
-  /**
-   * @dev Set the delay
-   * @param delay delay between queue and execution of an ActionsSet
-   **/
+  /// @inheritdoc IBridgeExecutor
   function updateDelay(uint256 delay) external override onlyThis {
     _validateDelay(delay);
     emit DelayUpdate(_delay, delay);
     _delay = delay;
   }
 
-  /**
-   * @dev Set the grace period - time before a queued action will expire
-   * @param gracePeriod The gracePeriod in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function updateGracePeriod(uint256 gracePeriod) external override onlyThis {
     emit GracePeriodUpdate(_gracePeriod, gracePeriod);
     _gracePeriod = gracePeriod;
   }
 
-  /**
-   * @dev Set the minimum allowed delay between queing and exection
-   * @param minimumDelay The minimum delay in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function updateMinimumDelay(uint256 minimumDelay) external override onlyThis {
     uint256 previousMinimumDelay = _minimumDelay;
     _minimumDelay = minimumDelay;
@@ -173,10 +143,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     emit MinimumDelayUpdate(previousMinimumDelay, minimumDelay);
   }
 
-  /**
-   * @dev Set the maximum allowed delay between queing and exection
-   * @param maximumDelay The maximum delay in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function updateMaximumDelay(uint256 maximumDelay) external override onlyThis {
     uint256 previousMaximumDelay = _maximumDelay;
     _maximumDelay = maximumDelay;
@@ -184,34 +151,22 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     emit MaximumDelayUpdate(previousMaximumDelay, maximumDelay);
   }
 
-  /**
-   * @dev Getter of the delay between queuing and execution
-   * @return The delay in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getDelay() external view override returns (uint256) {
     return _delay;
   }
 
-  /**
-   * @dev Getter of grace period constant
-   * @return grace period in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getGracePeriod() external view override returns (uint256) {
     return _gracePeriod;
   }
 
-  /**
-   * @dev Getter of minimum delay constant
-   * @return minimum delay in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getMinimumDelay() external view override returns (uint256) {
     return _minimumDelay;
   }
 
-  /**
-   * @dev Getter of maximum delay constant
-   * @return maximum delay in seconds
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getMaximumDelay() external view override returns (uint256) {
     return _maximumDelay;
   }
