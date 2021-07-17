@@ -74,4 +74,20 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     emit FxChildUpdate(_fxChild, fxChild);
     _fxChild = fxChild;
   }
+
+  /**
+   * @dev Get the address currently stored as fxRootSender
+   * @return fxRootSender contract originating a cross-chain tranasaction - likely the aave governance executor
+   **/
+  function getFxRootSender() external view returns (address) {
+    return _fxRootSender;
+  }
+
+  /**
+   * @dev Get the address currently stored as fxChild
+   * @return fxChild the address of the contract used to foward cross-chain transactions on Polygon
+   **/
+  function getFxChild() external view returns (address) {
+    return _fxChild;
+  }
 }
