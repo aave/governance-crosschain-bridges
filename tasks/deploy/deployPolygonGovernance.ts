@@ -36,6 +36,7 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
       guardian: '0xbb2f3ba4a63982ed6d93c190c28b15cbba0b6af3',
     };
 
+    // MUMBAI Deployment Params
     // const contractParams = {
     //   fxRootSender: '0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA',
     //   fxChild: '0xCf73231F28B7331BBe3124B907840A94851f9f11',
