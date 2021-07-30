@@ -49,3 +49,5 @@ export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
   [ePolygonNetwork.matic]: 2 * GWEI,
   [eXDaiNetwork.xdai]: 1 * GWEI,
 };
+
+export const ALCHEMY_POLYGON_BETA_RPC = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;

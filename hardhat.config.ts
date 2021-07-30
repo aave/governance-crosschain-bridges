@@ -2,7 +2,11 @@ import { HardhatUserConfig } from 'hardhat/types';
 import { accounts } from './helpers/test-wallets';
 import { eEthereumNetwork, eNetwork, ePolygonNetwork, eXDaiNetwork } from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
-import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
+import {
+  NETWORKS_RPC_URL,
+  NETWORKS_DEFAULT_GAS,
+  ALCHEMY_POLYGON_BETA_RPC,
+} from './helper-hardhat-config';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
@@ -22,6 +26,8 @@ if (!SKIP_LOAD) {
   require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
+  require('./tasks/governance/mock-polygon-test');
+  require('./tasks/governance/mock-mainnet-proposal');
 }
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
@@ -30,6 +36,7 @@ const HARDFORK = 'istanbul';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+const POLYGON_FORK = process.env.POLYGON_FORK === 'true';
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const TENDERLY_PROJECT = process.env.TENDERLY_PROJECT || '';
 const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
@@ -50,10 +57,15 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 });
 
 const mainnetFork = MAINNET_FORK
-  ? {
-      blockNumber: 12012081,
-      url: NETWORKS_RPC_URL['main'],
-    }
+  ? POLYGON_FORK
+    ? {
+        blockNumber: 17398999,
+        url: ALCHEMY_POLYGON_BETA_RPC,
+      }
+    : {
+        blockNumber: 12823291,
+        url: NETWORKS_RPC_URL['main'],
+      }
   : undefined;
 
 // export hardhat config
@@ -108,6 +120,13 @@ const config: HardhatUserConfig = {
       chainId: BUIDLEREVM_CHAINID,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
+      url: 'http://localhost:8545',
+    },
+    localPolygon: {
+      blockGasLimit: 9500000,
+      gas: 9500000,
+      gasPrice: 8000000000,
+      chainId: BUIDLEREVM_CHAINID,
       url: 'http://localhost:8545',
     },
     ganache: {
