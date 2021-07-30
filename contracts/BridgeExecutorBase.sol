@@ -119,7 +119,6 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     return _queuedActions[actionHash];
   }
 
-  /// @inheritdoc IBridgeExecutor
   function receiveFunds() external payable {}
 
   /// @inheritdoc IBridgeExecutor
