@@ -29,6 +29,7 @@ if (!SKIP_LOAD) {
   require('./tasks/governance/mock-polygon-test');
   require('./tasks/governance/mock-polygon-test-delegate');
   require('./tasks/governance/mock-mainnet-proposal');
+  require('./tasks/governance/mock-mainnet-proposal-delegate');
 }
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
