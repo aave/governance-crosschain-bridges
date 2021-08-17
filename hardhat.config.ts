@@ -27,6 +27,7 @@ if (!SKIP_LOAD) {
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
   require('./tasks/governance/mock-polygon-test');
+  require('./tasks/governance/mock-polygon-test-delegate');
   require('./tasks/governance/mock-mainnet-proposal');
 }
 
@@ -74,6 +75,7 @@ const config: HardhatUserConfig = {
     compilers: [
       { version: '0.7.5', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.7.3', settings: { optimizer: { enabled: true, runs: 200 } } },
+      { version: '0.6.12', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.5.2', settings: { optimizer: { enabled: true, runs: 200 } } },
     ],
   },
