@@ -2,8 +2,6 @@
 pragma solidity 0.7.5;
 pragma abicoder v2;
 
-import "hardhat/console.sol";
-
 interface IFxStateSender {
   function sendMessageToChild(address _receiver, bytes calldata _data) external;
 }
