@@ -62,7 +62,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 const mainnetFork = MAINNET_FORK
   ? POLYGON_FORK
     ? {
-        blockNumber: 17398999,
+        blockNumber: 18119000,
         url: ALCHEMY_POLYGON_BETA_RPC,
       }
     : {
