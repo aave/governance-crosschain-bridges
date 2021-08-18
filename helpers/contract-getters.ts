@@ -25,7 +25,7 @@ export const getAaveGovContract = async (
   return aaveGovContract;
 };
 
-export const deployExecutorContract = async (signer: Signer): Promise<Executor> => {
+export const deployExecutorContract = async (signer: Signer, params?: any): Promise<Executor> => {
   const executorFactory = new Executor__factory(signer);
   const admin = '0xec568fffba86c094cf06b22134b23074dfe2252c';
   const delay = 86400;
@@ -45,39 +45,47 @@ export const deployExecutorContract = async (signer: Signer): Promise<Executor> 
     propositionThreshold,
     voteDuration,
     voteDifferential,
-    minimumQuorum
+    minimumQuorum,
+    params
   );
   await shortExecutor.deployTransaction.wait();
   return shortExecutor;
 };
 
-export const deployCustomPolygonMapping = async (signer: Signer): Promise<CustomPolygonMapping> => {
+export const deployCustomPolygonMapping = async (
+  signer: Signer,
+  params?: any
+): Promise<CustomPolygonMapping> => {
   const customPolygonMappingFactory = new CustomPolygonMapping__factory(signer);
-  const customPolygonMapping = await customPolygonMappingFactory.deploy();
+  const customPolygonMapping = await customPolygonMappingFactory.deploy(params);
   await customPolygonMapping.deployTransaction.wait();
   return customPolygonMapping;
 };
 
-export const deployPolygonMarketUpdate = async (signer: Signer): Promise<PolygonMarketUpdate> => {
+export const deployPolygonMarketUpdate = async (
+  signer: Signer,
+  params?: any
+): Promise<PolygonMarketUpdate> => {
   const polygonMarketUpdateFactory = new PolygonMarketUpdate__factory(signer);
-  const polygonMarketUpdate = await polygonMarketUpdateFactory.deploy();
+  const polygonMarketUpdate = await polygonMarketUpdateFactory.deploy(params);
   await polygonMarketUpdate.deployTransaction.wait();
   return polygonMarketUpdate;
 };
 
 export const deployFxRoot = async (
   stateSenderAddress: tEthereumAddress,
-  signer: Signer
+  signer: Signer,
+  params?: any
 ): Promise<FxRoot> => {
   const fxRootFactory = new FxRoot__factory(signer);
-  const fxRoot = await fxRootFactory.deploy(stateSenderAddress);
+  const fxRoot = await fxRootFactory.deploy(stateSenderAddress, params);
   await fxRoot.deployTransaction.wait();
   return fxRoot;
 };
 
-export const deployFxChild = async (signer: Signer): Promise<FxChild> => {
+export const deployFxChild = async (signer: Signer, params?: any): Promise<FxChild> => {
   const fxChildFactory = new FxChild__factory(signer);
-  const fxChild = await fxChildFactory.deploy();
+  const fxChild = await fxChildFactory.deploy(params);
   await fxChild.deployTransaction.wait();
   return fxChild;
 };
@@ -90,7 +98,8 @@ export const deployPolygonBridgeExecutor = async (
   minimumDelay: BigNumber,
   maximumDelay: BigNumber,
   guardian: tEthereumAddress,
-  signer: Signer
+  signer: Signer,
+  params?: any
 ): Promise<PolygonBridgeExecutor> => {
   const polygonBridgeExecutorFactory = new PolygonBridgeExecutor__factory(signer);
   const polygonBridgeExecutor = await polygonBridgeExecutorFactory.deploy(
@@ -100,7 +109,8 @@ export const deployPolygonBridgeExecutor = async (
     gracePeriod,
     minimumDelay,
     maximumDelay,
-    guardian
+    guardian,
+    params
   );
   await polygonBridgeExecutor.deployTransaction.wait();
   return polygonBridgeExecutor;

@@ -9,7 +9,8 @@ export const deployArbitrumBridgeExecutor = async (
   minimumDelay: BigNumber,
   maximumDelay: BigNumber,
   guardian: tEthereumAddress,
-  signer: Signer
+  signer: Signer,
+  params?: any
 ): Promise<ArbitrumBridgeExecutor> => {
   const arbBridgeExecutorFactory = new ArbitrumBridgeExecutor__factory(signer);
   const arbitrumBridgeExecutor = await arbBridgeExecutorFactory.deploy(
@@ -18,7 +19,8 @@ export const deployArbitrumBridgeExecutor = async (
     gracePeriod,
     minimumDelay,
     maximumDelay,
-    guardian
+    guardian,
+    params
   );
   await arbitrumBridgeExecutor.deployTransaction.wait();
   return arbitrumBridgeExecutor;

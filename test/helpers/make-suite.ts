@@ -87,6 +87,8 @@ const testEnv: TestEnv = {
   proposalActions: {} as ProposalActions[],
 } as TestEnv;
 
+const overrides = { gasLimit: 5000000, gasPrice: 80000000000 };
+
 const setUpSigners = async (): Promise<void> => {
   const { aaveWhale1, aaveWhale2, aaveWhale3, aaveGovOwner } = testEnv;
   aaveWhale1.address = '0x26a78d5b6d7a7aceedd1e6ee3229b372a624d8b7';
@@ -94,27 +96,35 @@ const setUpSigners = async (): Promise<void> => {
   aaveWhale3.address = '0x7d439999E63B75618b9C6C69d6EFeD0C2Bc295c8';
   aaveGovOwner.address = '0x61910EcD7e8e942136CE7Fe7943f956cea1CC2f7';
 
+  const deadSigner = await getImpersonatedSigner('0x000000000000000000000000000000000000dead');
   aaveWhale1.signer = await getImpersonatedSigner(aaveWhale1.address);
   aaveWhale2.signer = await getImpersonatedSigner(aaveWhale2.address);
   aaveWhale3.signer = await getImpersonatedSigner(aaveWhale3.address);
   aaveGovOwner.signer = await getImpersonatedSigner(aaveGovOwner.address);
 
-  await DRE.network.provider.send('hardhat_setBalance', [
-    aaveWhale1.address,
-    '0x1000000000000000000',
-  ]);
-  await DRE.network.provider.send('hardhat_setBalance', [
-    aaveWhale2.address,
-    '0x1000000000000000000',
-  ]);
-  await DRE.network.provider.send('hardhat_setBalance', [
-    aaveWhale3.address,
-    '0x1000000000000000000',
-  ]);
-  await DRE.network.provider.send('hardhat_setBalance', [
-    aaveGovOwner.address,
-    '0x100000000000000000',
-  ]);
+  await deadSigner.sendTransaction({
+    to: aaveWhale1.address,
+    value: DRE.ethers.BigNumber.from('50000000000000000000'),
+    ...overrides,
+  });
+
+  await deadSigner.sendTransaction({
+    to: aaveWhale2.address,
+    value: DRE.ethers.BigNumber.from('50000000000000000000'),
+    ...overrides,
+  });
+
+  await deadSigner.sendTransaction({
+    to: aaveWhale3.address,
+    value: DRE.ethers.BigNumber.from('50000000000000000000'),
+    ...overrides,
+  });
+
+  await deadSigner.sendTransaction({
+    to: aaveGovOwner.address,
+    value: DRE.ethers.BigNumber.from('50000000000000000000'),
+    ...overrides,
+  });
 };
 
 const createGovernanceContracts = async (): Promise<void> => {
@@ -123,14 +133,18 @@ const createGovernanceContracts = async (): Promise<void> => {
   // connect to existing Aave Gov and deploy a new executor (for shorter delays)
   const aaveGovContractAddress = '0xEC568fffba86c094cf06b22134B23074DFE2252c';
   testEnv.aaveGovContract = await getAaveGovContract(aaveGovContractAddress, aaveGovOwner.signer);
-  testEnv.shortExecutor = await deployExecutorContract(aaveGovOwner.signer);
+  testEnv.shortExecutor = await deployExecutorContract(aaveGovOwner.signer, overrides);
 };
 
 const deployPolygonBridgeContracts = async (): Promise<void> => {
   const { aaveWhale1, aaveGovOwner } = testEnv;
-  testEnv.customPolygonMapping = await deployCustomPolygonMapping(aaveWhale1.signer);
-  testEnv.fxChild = await deployFxChild(aaveWhale1.signer);
-  testEnv.fxRoot = await deployFxRoot(testEnv.customPolygonMapping.address, aaveWhale1.signer);
+  testEnv.customPolygonMapping = await deployCustomPolygonMapping(aaveWhale1.signer, overrides);
+  testEnv.fxChild = await deployFxChild(aaveWhale1.signer, overrides);
+  testEnv.fxRoot = await deployFxRoot(
+    testEnv.customPolygonMapping.address,
+    aaveWhale1.signer,
+    overrides
+  );
 
   testEnv.polygonBridgeExecutor = await deployPolygonBridgeExecutor(
     testEnv.shortExecutor.address,
@@ -140,9 +154,10 @@ const deployPolygonBridgeContracts = async (): Promise<void> => {
     BigNumber.from(15),
     BigNumber.from(500),
     aaveGovOwner.address,
-    aaveGovOwner.signer
+    aaveGovOwner.signer,
+    overrides
   );
-  testEnv.polygonMarketUpdate = await deployPolygonMarketUpdate(aaveWhale1.signer);
+  testEnv.polygonMarketUpdate = await deployPolygonMarketUpdate(aaveWhale1.signer, overrides);
 };
 
 const deployArbitrumBridgeContracts = async (): Promise<void> => {
@@ -156,7 +171,8 @@ const deployArbitrumBridgeContracts = async (): Promise<void> => {
     BigNumber.from(15),
     BigNumber.from(500),
     aaveGovOwner.address,
-    aaveGovOwner.signer
+    aaveGovOwner.signer,
+    overrides
   );
 };
 

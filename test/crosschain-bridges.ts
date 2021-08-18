@@ -34,7 +34,7 @@ import {
   triggerWhaleVotes,
   queueProposal,
 } from './helpers/governance-helpers';
-import { PolygonBridgeExecutor__factory, PolygonMessageSender__factory } from '../typechain';
+import { PolygonBridgeExecutor__factory } from '../typechain';
 
 chai.use(solidity);
 
@@ -54,8 +54,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   const dummyAddress = '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9';
   const dummyUint = 10203040;
   const dummyString = 'Hello';
-  const overrides = { gasLimit: 5000000 };
-  let polygonMessageSender;
+  const overrides = { gasLimit: 5000000, gasPrice: 80000000000 };
 
   before(async () => {
     const { ethers } = DRE;
@@ -73,16 +72,22 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     } = testEnv;
 
     // Authorize new executor
-    const authorizeExecutorTx = await aaveGovContract.authorizeExecutors([shortExecutor.address]);
+    const authorizeExecutorTx = await aaveGovContract.authorizeExecutors(
+      [shortExecutor.address],
+      overrides
+    );
     await expect(authorizeExecutorTx).to.emit(aaveGovContract, 'ExecutorAuthorized');
 
-    await customPolygonMapping.register(fxRoot.address, fxChild.address);
-    await waitForTx(await fxRoot.setFxChild(fxChild.address));
+    await waitForTx(
+      await customPolygonMapping.register(fxRoot.address, fxChild.address, overrides)
+    );
+    await waitForTx(await fxRoot.setFxChild(fxChild.address, overrides));
 
     // Fund Polygon Bridge
     await waitForTx(
       await polygonBridgeExecutor.connect(aaveWhale1.signer).receiveFunds({
         value: DRE.ethers.BigNumber.from('100000000000000000010'),
+        ...overrides,
       })
     );
 
@@ -201,6 +206,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     const proposal16Actions = await createArbitrumBridgeTest(aaveWhale2.address, testEnv);
     testEnv.proposalActions.push(proposal16Actions);
 
+    console.log('1. Creating Proposals');
+
     // Create Polygon Proposals
     for (let i = 0; i < 15; i++) {
       proposals[i] = await createProposal(
@@ -212,10 +219,13 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         ['sendMessageToChild(address,bytes)'],
         [testEnv.proposalActions[i].encodedRootCalldata],
         [false],
-        '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
+        '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949',
+        overrides
       );
       await expectProposalState(aaveGovContract, proposals[i].id, proposalStates.PENDING);
     }
+
+    console.log('2. Voting on Proposals');
 
     // Vote on Proposals
     for (let i = 0; i < 15; i++) {
@@ -223,7 +233,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         aaveGovContract,
         [aaveWhale1.signer, aaveWhale2.signer, aaveWhale3.signer],
         proposals[i].id,
-        true
+        true,
+        overrides
       );
       await expectProposalState(aaveGovContract, proposals[i].id, proposalStates.ACTIVE);
     }
@@ -231,22 +242,24 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     // Advance Block to End of Voting
     await advanceBlockTo(proposals[14].endBlock.add(1));
 
+    console.log('3. Queueing Proposals');
+
     // Queue Proposals
-    await queueProposal(aaveGovContract, proposals[0].id);
-    await queueProposal(aaveGovContract, proposals[1].id);
-    await queueProposal(aaveGovContract, proposals[2].id);
-    await queueProposal(aaveGovContract, proposals[3].id);
-    await queueProposal(aaveGovContract, proposals[4].id);
-    await queueProposal(aaveGovContract, proposals[5].id);
-    await queueProposal(aaveGovContract, proposals[6].id);
-    await queueProposal(aaveGovContract, proposals[7].id);
-    await queueProposal(aaveGovContract, proposals[8].id);
-    await queueProposal(aaveGovContract, proposals[9].id);
-    await queueProposal(aaveGovContract, proposals[10].id);
-    await queueProposal(aaveGovContract, proposals[11].id);
-    await queueProposal(aaveGovContract, proposals[12].id);
-    await queueProposal(aaveGovContract, proposals[13].id);
-    const queuedProposal16 = await queueProposal(aaveGovContract, proposals[14].id);
+    await queueProposal(aaveGovContract, proposals[0].id, overrides);
+    await queueProposal(aaveGovContract, proposals[1].id, overrides);
+    await queueProposal(aaveGovContract, proposals[2].id, overrides);
+    await queueProposal(aaveGovContract, proposals[3].id, overrides);
+    await queueProposal(aaveGovContract, proposals[4].id, overrides);
+    await queueProposal(aaveGovContract, proposals[5].id, overrides);
+    await queueProposal(aaveGovContract, proposals[6].id, overrides);
+    await queueProposal(aaveGovContract, proposals[7].id, overrides);
+    await queueProposal(aaveGovContract, proposals[8].id, overrides);
+    await queueProposal(aaveGovContract, proposals[9].id, overrides);
+    await queueProposal(aaveGovContract, proposals[10].id, overrides);
+    await queueProposal(aaveGovContract, proposals[11].id, overrides);
+    await queueProposal(aaveGovContract, proposals[12].id, overrides);
+    await queueProposal(aaveGovContract, proposals[13].id, overrides);
+    const queuedProposal16 = await queueProposal(aaveGovContract, proposals[14].id, overrides);
 
     await expectProposalState(aaveGovContract, proposals[14].id, proposalStates.QUEUED);
 
@@ -255,6 +268,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     const { timestamp } = currentBlock;
     const fastForwardTime = queuedProposal16.executionTime.sub(timestamp).toNumber();
     await advanceBlock(timestamp + fastForwardTime + 10);
+
+    console.log('4. Ready for Tests\n');
   });
   describe('Executor - Check Deployed State', async function () {
     it('Check Grace Period', async () => {
