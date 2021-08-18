@@ -15,6 +15,7 @@ import '@nomiclabs/hardhat-etherscan';
 import '@typechain/hardhat';
 import '@tenderly/hardhat-tenderly';
 import 'solidity-coverage';
+import 'hardhat-gas-reporter';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 if (!SKIP_LOAD) {
@@ -34,7 +35,7 @@ if (!SKIP_LOAD) {
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const DEFAULT_GAS_MUL = 5;
-const HARDFORK = 'istanbul';
+const HARDFORK = 'london';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
@@ -65,7 +66,7 @@ const mainnetFork = MAINNET_FORK
         url: ALCHEMY_POLYGON_BETA_RPC,
       }
     : {
-        blockNumber: 12823291,
+        blockNumber: 13050000,
         url: NETWORKS_RPC_URL['main'],
       }
   : undefined;
@@ -88,6 +89,9 @@ const config: HardhatUserConfig = {
     username: TENDERLY_USERNAME,
     forkNetwork: '137',
   },
+  gasReporter: {
+    currency: 'USD',
+  },
   networks: {
     coverage: {
       url: 'http://localhost:8555',
@@ -102,7 +106,7 @@ const config: HardhatUserConfig = {
     mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     xdai: getCommonNetworkConfig(eXDaiNetwork.xdai, 100),
     hardhat: {
-      hardfork: 'istanbul',
+      hardfork: 'london',
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
       gas: DEFAULT_BLOCK_GAS_LIMIT,
       gasPrice: 8000000000,
@@ -116,7 +120,7 @@ const config: HardhatUserConfig = {
       forking: mainnetFork,
     },
     buidlerevm_docker: {
-      hardfork: 'istanbul',
+      hardfork: 'london',
       blockGasLimit: 9500000,
       gas: 9500000,
       gasPrice: 8000000000,

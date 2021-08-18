@@ -99,10 +99,22 @@ const setUpSigners = async (): Promise<void> => {
   aaveWhale3.signer = await getImpersonatedSigner(aaveWhale3.address);
   aaveGovOwner.signer = await getImpersonatedSigner(aaveGovOwner.address);
 
-  await aaveWhale1.signer.sendTransaction({
-    to: aaveGovOwner.address,
-    value: DRE.ethers.BigNumber.from('20225952773035674962'),
-  });
+  await DRE.network.provider.send('hardhat_setBalance', [
+    aaveWhale1.address,
+    '0x1000000000000000000',
+  ]);
+  await DRE.network.provider.send('hardhat_setBalance', [
+    aaveWhale2.address,
+    '0x1000000000000000000',
+  ]);
+  await DRE.network.provider.send('hardhat_setBalance', [
+    aaveWhale3.address,
+    '0x1000000000000000000',
+  ]);
+  await DRE.network.provider.send('hardhat_setBalance', [
+    aaveGovOwner.address,
+    '0x100000000000000000',
+  ]);
 };
 
 const createGovernanceContracts = async (): Promise<void> => {

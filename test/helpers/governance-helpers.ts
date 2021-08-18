@@ -20,11 +20,12 @@ export const createProposal = async (
   signatures: string[],
   calldatas: Bytes[] | string[],
   withDelegatecalls: boolean[],
-  ipfsHash: string
+  ipfsHash: string,
+  params?: any
 ) => {
   const proposalTx = await aaveGovernanceV2
     .connect(signer)
-    .create(executor, targets, values, signatures, calldatas, withDelegatecalls, ipfsHash);
+    .create(executor, targets, values, signatures, calldatas, withDelegatecalls, ipfsHash, params);
   // await expect(proposalTx).to.emit(aaveGovernanceV2, 'ProposalCreated');
   const proposalTxReceipt = await proposalTx.wait();
   const proposalLog = aaveGovernanceV2.interface.parseLog(proposalTxReceipt.logs[0]);
@@ -38,18 +39,23 @@ export const triggerWhaleVotes = async (
   aaveGovernanceV2: AaveGovernanceV2,
   whales: Signer[],
   proposalId: BigNumber,
-  yesOrNo: boolean
+  yesOrNo: boolean,
+  params?: any
 ): Promise<void> => {
   const vote = async (signer: Signer) => {
-    const tx = await aaveGovernanceV2.connect(signer).submitVote(proposalId, yesOrNo);
+    const tx = await aaveGovernanceV2.connect(signer).submitVote(proposalId, yesOrNo, params);
     await tx.wait();
   };
   const promises = whales.map(vote);
   await Promise.all(promises);
 };
 
-export const queueProposal = async (aaveGovernanceV2: AaveGovernanceV2, proposalId: BigNumber) => {
-  const queueTx = await aaveGovernanceV2.queue(proposalId);
+export const queueProposal = async (
+  aaveGovernanceV2: AaveGovernanceV2,
+  proposalId: BigNumber,
+  params?: any
+) => {
+  const queueTx = await aaveGovernanceV2.queue(proposalId, params);
   // await expect(queueTx).to.emit(aaveGovernanceV2, 'ProposalQueued');
   const queueTxReceipt = await queueTx.wait();
   const queueLog = aaveGovernanceV2.interface.parseLog(queueTxReceipt.logs[1]);

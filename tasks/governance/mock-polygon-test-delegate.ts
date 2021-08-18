@@ -13,6 +13,8 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     await localBRE.run('set-DRE');
     const { ethers } = localBRE;
 
+    const marketUpdateContractAddress = `0x5b494b94faf0bb63254dba26f17483bcf57f6d6a`;
+
     // 1. Impersonate and fund fxChild address
     console.log(`1. Impersonate and fund fxChild address`);
     const fxChild = await getImpersonatedSigner('0x8397259c983751DAf40400790063935a11afa28a');
@@ -23,16 +25,11 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     ]);
     console.log(`fxChild Balance: ${await fxChild.getBalance()}\n`);
 
-    // 2. Deploy Market Update Contract
-    console.log(`2. Deploy Market Update Contract \n`);
-    const marketUpdateFactory = new MarketUpdate__factory(fxChild);
-    const marketUpdateContract = await marketUpdateFactory.deploy();
-
     // 3. Create proposal
     // - instantiate contract
     // - encode action
     // - send queue actions transaction
-    console.log(`3. Create and queue actionsSet`);
+    console.log(`2. Create and queue actionsSet`);
     const polygonBridgeExecutor = PolygonBridgeExecutor__factory.connect(
       '0x60966EA42764c7c538Af9763Bc11860eB2556E6B',
       fxChild
@@ -47,7 +44,7 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     const withDelegatecalls: boolean[] = [];
 
     // execute update
-    targets.push(marketUpdateContract.address);
+    targets.push(marketUpdateContractAddress);
     values.push(0);
     signatures.push('executeUpdate()');
     calldatas.push(emptyBytes);
@@ -76,7 +73,7 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     console.log(`Execution Time: ${executionTime.toString()}`);
 
     // 4. fast foward to executionTime
-    console.log('\n4. Advance time....');
+    console.log('\n3. Advance time....');
     let currentBlockNumber = await ethers.provider.getBlockNumber();
     let currentBlock = await ethers.provider.getBlock(currentBlockNumber);
     let currentTimeStamp = currentBlock.timestamp;
@@ -89,7 +86,7 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     console.log(`Current Timestamp: ${currentTimeStamp}`);
 
     // 5. execute actions set
-    console.log('\n5. Executing Action Set & Decode Logs');
+    console.log('\n4. Executing Action Set & Decode Logs');
     const executeTransaction = await polygonBridgeExecutor.execute(actionsSetId);
     const executeReceipt = await executeTransaction.wait();
 

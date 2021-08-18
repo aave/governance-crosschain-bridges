@@ -56,8 +56,10 @@ task('verify-template', 'verify contract on etherscan')
 
       const contractInstance = await ContractFactory.attach(contractaddress);
       let libs;
-      if (parsedLibraries && parsedLibraries.libraries) {
-        libs = JSON.stringify(parsedLibraries.libraries);
+      if (parsedLibraries) {
+        if (parsedLibraries.libraries) {
+          libs = JSON.stringify(parsedLibraries.libraries);
+        }
       } else {
         libs = '';
       }

@@ -38,6 +38,7 @@ task('deploy', 'deploy contract - add contract name and params as arguements')
         contractSigner = getDefaultSigner(signer);
       }
 
+      console.log(`Signer ${await contractSigner.getAddress()}`);
       let parsedLibraries;
       if (libraries || librariesfile) {
         parsedLibraries = await parseLibraries(libraries, librariesfile);
@@ -69,12 +70,9 @@ task('deploy', 'deploy contract - add contract name and params as arguements')
       }
 
       const contractInstance = await deployContract(paramsArray, ContractFactory, contractSigner);
+
       if (verify) {
-        await verifyContract(
-          contractInstance.address,
-          paramsArray,
-          parsedLibraries.libraries ? JSON.stringify(parsedLibraries.libraries) : ''
-        );
+        await verifyContract('0x5B494b94FaF0BB63254Dba26F17483BCF57F6d6A', []);
       }
     }
   );

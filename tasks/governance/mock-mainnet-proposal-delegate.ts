@@ -8,7 +8,6 @@ import {
   triggerWhaleVotes,
   queueProposal,
 } from '../../test/helpers/governance-helpers';
-import { PolygonBridgeExecutor, PolygonMessageSender__factory } from '../../typechain';
 
 dotenv.config({ path: '../../.env' });
 
@@ -28,10 +27,7 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
   const aaveGovContract = await getAaveGovContract(aaveGovContractAddress, aaveWhale1Signer);
   const aaveShortExecutorAddress = '0xee56e2b3d491590b5b31738cc34d5232f378a8d5';
 
-  console.log(`1. Deploy Polygon Message Sender`);
-  const polygonMessageSenderFactory = new PolygonMessageSender__factory(aaveWhale1Signer);
-  const polygonMessageSender = await polygonMessageSenderFactory.deploy();
-  console.log(`Polygon Message Sender Address: ${polygonMessageSender.address}\n`);
+  const polygonMessageSenderAddress = '0xf442C0faE2E9A157cD0202BD63bf9b932D3aa4C8';
 
   const emptyBytes: Bytes = [];
 
@@ -41,12 +37,15 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
     aaveGovContract,
     aaveWhale1Signer,
     aaveShortExecutorAddress,
-    [polygonMessageSender.address],
+    [polygonMessageSenderAddress],
     [BigNumber.from(0)],
     ['sendMessage()'],
     [emptyBytes],
     [true],
-    '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
+    '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949',
+    {
+      gasPrice: 55000000000,
+    }
   );
   console.log(`Created proposal with id: ${proposalEvent.id}`);
 
@@ -56,7 +55,10 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
     aaveGovContract,
     [aaveWhale1Signer, aaveWhale2Signer, aaveWhale3Signer],
     proposalEvent.id,
-    true
+    true,
+    {
+      gasPrice: 55000000000,
+    }
   );
   console.log(`Voting Complete`);
 
@@ -66,7 +68,9 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
 
   // Queue Proposals
   console.log(`\n5. Queueing Proposal`);
-  const queuedProposal = await queueProposal(aaveGovContract, proposalEvent.id);
+  const queuedProposal = await queueProposal(aaveGovContract, proposalEvent.id, {
+    gasPrice: 55000000000,
+  });
   console.log(`Proposal Queued`);
 
   // Advance Block to Execution
@@ -76,7 +80,9 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
   const fastForwardTime = queuedProposal.executionTime.sub(timestamp).toNumber();
   await advanceBlock(timestamp + fastForwardTime + 10);
 
-  const executeTransaction = await aaveGovContract.execute(proposalEvent.id);
+  const executeTransaction = await aaveGovContract.execute(proposalEvent.id, {
+    gasPrice: 55000000000,
+  });
   const executionReceipt = await executeTransaction.wait();
 
   // check event from stateSender - should be the first event in the logs
@@ -91,10 +97,11 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
   const stateSyncAddress = '0x28e4f3a7f651294b9564800b2d01f35189a5bfbe';
   if (ethers.utils.getAddress(stateSyncAddress) !== executionReceipt.logs[0].address) {
     console.log(`ERROR - wrong stateSync address`);
+  } else {
+    console.log(
+      `PASS - confirmed emitting address (stateSender): ${executionReceipt.logs[0].address}`
+    );
   }
-  console.log(
-    `PASS - confirmed emitting address (stateSender): ${executionReceipt.logs[0].address}`
-  );
 
   // 2. check the third topic / 2nd indexed param is the fxChild
   const fxChildAddress = `0x8397259c983751DAf40400790063935a11afa28a`;
@@ -104,8 +111,9 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
   );
   if (ethers.utils.getAddress(fxChildAddress) !== fxChildStateSync[0]) {
     console.log(`ERROR - wrong fxChild address`);
+  } else {
+    console.log(`Pass - confirmed 'receiver' address (fxChild): ${fxChildStateSync[0]}`);
   }
-  console.log(`Pass - confirmed 'receiver' address (fxChild): ${fxChildStateSync[0]}`);
 
   // 3. confirm the data is an encoding of
   const targets: string[] = [];
@@ -114,7 +122,7 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
   const calldatas: Bytes[] = [];
   const withDelegatecalls: boolean[] = [];
 
-  const marketUpdateContractAddress = '0x000000000000000000000000000000000000dead';
+  const marketUpdateContractAddress = '0x5b494b94faf0bb63254dba26f17483bcf57f6d6a';
 
   // execute update
   targets.push(marketUpdateContractAddress);
@@ -135,10 +143,21 @@ task('mock-mainnet-proposal-delegate', 'Create Proposal').setAction(async (_, lo
     [aaveShortExecutorAddress, polygonBridgeExecutorAddress, encodedData]
   );
 
+  // event data logged as bytes
   const decodeEncodedData = ethers.utils.defaultAbiCoder.decode(
     ['bytes'],
     executionReceipt.logs[0].data
   );
+
+  //bytes object contains address, address, bytes - this mimics FxChild Decode
+  const doubleDecoded = ethers.utils.defaultAbiCoder.decode(
+    ['address', 'address', 'bytes'],
+    decodeEncodedData[0]
+  );
+
+  // The following line logs the encoded data that is sent to processMessageFromRoot
+  // that is decoded into targets[], values[], etc. (this should match the encoded value sent in the polygon test)
+  //console.log(doubleDecoded[2]);
 
   if (doubleEncodedData !== decodeEncodedData[0]) {
     console.log(`ERROR - state sender encoded data incorrect`);

@@ -34,7 +34,7 @@ import {
   triggerWhaleVotes,
   queueProposal,
 } from './helpers/governance-helpers';
-import { PolygonBridgeExecutor__factory } from '../typechain';
+import { PolygonBridgeExecutor__factory, PolygonMessageSender__factory } from '../typechain';
 
 chai.use(solidity);
 
@@ -55,6 +55,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   const dummyUint = 10203040;
   const dummyString = 'Hello';
   const overrides = { gasLimit: 5000000 };
+  let polygonMessageSender;
 
   before(async () => {
     const { ethers } = DRE;
@@ -255,7 +256,6 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     const fastForwardTime = queuedProposal16.executionTime.sub(timestamp).toNumber();
     await advanceBlock(timestamp + fastForwardTime + 10);
   });
-
   describe('Executor - Check Deployed State', async function () {
     it('Check Grace Period', async () => {
       const { polygonBridgeExecutor } = testEnv;

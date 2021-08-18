@@ -10,7 +10,7 @@ contract PolygonMessageSender {
 
   address constant FX_ROOT_ADDRESS = 0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2;
   address constant POLYGON_BRIDGE_EXECUTOR = 0x60966EA42764c7c538Af9763Bc11860eB2556E6B;
-  address constant MARKET_UPDATE = 0x000000000000000000000000000000000000dEaD;
+  address constant MARKET_UPDATE = 0x5B494b94FaF0BB63254Dba26F17483BCF57F6d6A;
   string constant functionSignature = 'executeUpdate()';
 
   event UpdateSuccess(address sender);
