@@ -1,4 +1,4 @@
-import { Signer, BigNumber } from 'ethers';
+import { Signer, BigNumber, Bytes } from 'ethers';
 import { tEthereumAddress } from '../../helpers/types';
 import { AaveGovernanceV2 } from '../../typechain';
 import { expect } from 'chai';
@@ -18,7 +18,7 @@ export const createProposal = async (
   targets: tEthereumAddress[],
   values: BigNumber[],
   signatures: string[],
-  calldatas: string[],
+  calldatas: Bytes[] | string[],
   withDelegatecalls: boolean[],
   ipfsHash: string
 ) => {

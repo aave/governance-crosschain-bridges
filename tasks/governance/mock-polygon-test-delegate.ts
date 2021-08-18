@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import dotenv from 'dotenv';
-import { BigNumber } from 'ethers';
+import { BigNumber, Bytes } from 'ethers';
 import { DRE, advanceTimeAndBlock, getImpersonatedSigner } from '../../helpers/misc-utils';
 
 import { PolygonBridgeExecutor__factory, MarketUpdate__factory } from '../../typechain';
@@ -38,22 +38,19 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
       fxChild
     );
 
-    const emptyEncodedData = ethers.utils.defaultAbiCoder.encode(
-      ['address'],
-      [ethers.utils.getAddress('0x0000000000000000000000000000000000000000')]
-    );
+    const emptyBytes: Bytes = [];
 
     const targets: string[] = [];
     const values: number[] = [];
     const signatures: string[] = [];
-    const calldatas: string[] = [];
+    const calldatas: Bytes[] = [];
     const withDelegatecalls: boolean[] = [];
 
     // execute update
     targets.push(marketUpdateContract.address);
     values.push(0);
     signatures.push('executeUpdate()');
-    calldatas.push(emptyEncodedData);
+    calldatas.push(emptyBytes);
     withDelegatecalls.push(true);
 
     const encodedData = ethers.utils.defaultAbiCoder.encode(
