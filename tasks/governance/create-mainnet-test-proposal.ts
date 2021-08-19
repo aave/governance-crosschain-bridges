@@ -17,6 +17,8 @@ task(
   const aaveWhaleAddreess = '0x26a78d5b6d7a7aceedd1e6ee3229b372a624d8b7';
   let contractSigner = await getImpersonatedSigner(aaveWhaleAddreess);
 
+  const overrides = { gasPrice: 55000000000 };
+
   if (DRE.network.name.includes('main')) {
     console.log(`Running on Mainnet`);
     contractSigner = getDefaultSigner('ozd');
@@ -39,10 +41,7 @@ task(
     ['sendMessage()'],
     [emptyBytes],
     [true],
-    '0xcdd7b9da4e4e5f8bcec42fe333438bfb6fcb5eb00aa4b418fb8ededd7f8f2b12',
-    {
-      gasPrice: 55000000000,
-    }
+    '0xcdd7b9da4e4e5f8bcec42fe333438bfb6fcb5eb00aa4b418fb8ededd7f8f2b12'
   );
 
   console.log(`Created proposal with id: ${proposalEvent.id}`);

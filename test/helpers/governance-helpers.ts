@@ -23,9 +23,26 @@ export const createProposal = async (
   ipfsHash: string,
   params?: any
 ) => {
-  const proposalTx = await aaveGovernanceV2
-    .connect(signer)
-    .create(executor, targets, values, signatures, calldatas, withDelegatecalls, ipfsHash, params);
+  let proposalTx;
+  if (params) {
+    proposalTx = await aaveGovernanceV2
+      .connect(signer)
+      .create(
+        executor,
+        targets,
+        values,
+        signatures,
+        calldatas,
+        withDelegatecalls,
+        ipfsHash,
+        params
+      );
+  } else {
+    proposalTx = await aaveGovernanceV2
+      .connect(signer)
+      .create(executor, targets, values, signatures, calldatas, withDelegatecalls, ipfsHash);
+  }
+
   // await expect(proposalTx).to.emit(aaveGovernanceV2, 'ProposalCreated');
   const proposalTxReceipt = await proposalTx.wait();
   console.log(`Proposal creation transactionHash: ${proposalTxReceipt.transactionHash}`);
