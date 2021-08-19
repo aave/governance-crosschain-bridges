@@ -252,3 +252,7 @@ OPTIONS:
 verify-template: verify contract on etherscan
 
 This wraps the default 'verify' task to enable some flexibility in how params and libraries are provided.
+
+
+## License
+[BSD-3-Clause](./LICENSE.md)
