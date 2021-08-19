@@ -28,6 +28,7 @@ export const createProposal = async (
     .create(executor, targets, values, signatures, calldatas, withDelegatecalls, ipfsHash, params);
   // await expect(proposalTx).to.emit(aaveGovernanceV2, 'ProposalCreated');
   const proposalTxReceipt = await proposalTx.wait();
+  console.log(`Proposal creation transactionHash: ${proposalTxReceipt.transactionHash}`);
   const proposalLog = aaveGovernanceV2.interface.parseLog(proposalTxReceipt.logs[0]);
   return aaveGovernanceV2.interface.decodeEventLog(
     proposalLog.eventFragment,

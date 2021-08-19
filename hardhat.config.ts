@@ -27,6 +27,7 @@ if (!SKIP_LOAD) {
   require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
+  require('./tasks/governance/create-mainnet-test-proposal');
   require('./tasks/governance/mock-polygon-test');
   require('./tasks/governance/mock-polygon-test-delegate');
   require('./tasks/governance/mock-mainnet-proposal');
