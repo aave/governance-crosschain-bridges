@@ -41,7 +41,7 @@ task(
     ['sendMessage()'],
     [emptyBytes],
     [true],
-    '0xcdd7b9da4e4e5f8bcec42fe333438bfb6fcb5eb00aa4b418fb8ededd7f8f2b12'
+    '0xb48b4e4c293b6cd05ed1d31f9283838cc7d495ad51ef356a50d51613e9e7d9ab'
   );
 
   console.log(`Created proposal with id: ${proposalEvent.id}`);
