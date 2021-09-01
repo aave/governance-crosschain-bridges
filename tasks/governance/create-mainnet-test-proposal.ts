@@ -15,13 +15,14 @@ task(
   const { ethers } = hre;
 
   const aaveWhaleAddreess = '0x26a78d5b6d7a7aceedd1e6ee3229b372a624d8b7';
-  let contractSigner = await getImpersonatedSigner(aaveWhaleAddreess);
+  // let contractSigner = await getImpersonatedSigner(aaveWhaleAddreess);
+  // const overrides = { gasPrice: 55000000000 };
 
-  const overrides = { gasPrice: 55000000000 };
-
+  let contractSigner;
   if (DRE.network.name.includes('main')) {
     console.log(`Running on Mainnet`);
     contractSigner = getDefaultSigner('ozd');
+    console.log(`Signer: ${await contractSigner.getAddress()}`);
   }
 
   const aaveGovContractAddress = '0xEC568fffba86c094cf06b22134B23074DFE2252c';
