@@ -121,6 +121,14 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
   function receiveFunds() external payable {}
 
+
+  /// @inheritdoc IBridgeExecutor
+  function updateGuardian(address guardian) external override onlyThis {
+    emit GuardianUpdate(_guardian, guardian);
+    _guardian = guardian;
+  }
+
+
   /// @inheritdoc IBridgeExecutor
   function updateDelay(uint256 delay) external override onlyThis {
     _validateDelay(delay);
