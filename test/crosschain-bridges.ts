@@ -692,7 +692,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
-    it('Execute Proposal 16 - successfully queue transaction - update governance', async () => {
+    it('Execute Proposal 16 - successfully queue transaction - update guardian', async () => {
       const {
         aaveGovContract,
         customPolygonMapping,
