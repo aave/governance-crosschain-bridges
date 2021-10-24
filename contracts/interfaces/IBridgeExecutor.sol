@@ -63,6 +63,13 @@ interface IBridgeExecutor {
    **/
   event NewAdmin(address newAdmin);
 
+    /**
+   * @dev emitted when a new guardian is set
+   * @param previousGuardian previous guardian
+   * @param newGuardian new guardian
+   **/
+  event GuardianUpdate(address previousGuardian, address newGuardian);
+
   /**
    * @dev emitted when a new delay (between queueing and execution) is set
    * @param previousDelay previous delay
@@ -124,6 +131,12 @@ interface IBridgeExecutor {
    * @return true if underlying action of actionHash is queued
    **/
   function isActionQueued(bytes32 actionHash) external view returns (bool);
+
+  /**
+   * @dev Update guardian
+   * @param guardian address of the new guardian
+   **/
+  function updateGuardian(address guardian) external;
 
   /**
    * @dev Update the delay

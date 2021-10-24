@@ -73,6 +73,9 @@ const config: HardhatUserConfig = {
     username: TENDERLY_USERNAME,
     forkNetwork: '137',
   },
+  mocha: {
+    timeout: 100000,
+  },
   networks: {
     coverage: {
       url: 'http://localhost:8555',
