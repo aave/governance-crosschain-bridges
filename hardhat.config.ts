@@ -11,6 +11,8 @@ import '@nomiclabs/hardhat-etherscan';
 import '@typechain/hardhat';
 import '@tenderly/hardhat-tenderly';
 import 'solidity-coverage';
+import 'hardhat-gas-reporter';
+import 'hardhat-contract-sizer';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 if (!SKIP_LOAD) {
@@ -26,7 +28,7 @@ if (!SKIP_LOAD) {
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const DEFAULT_GAS_MUL = 5;
-const HARDFORK = 'istanbul';
+const HARDFORK = 'london';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
@@ -75,6 +77,15 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 100000,
+  },
+  gasReporter: {
+    currency: 'USD',
+  },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: true,
   },
   networks: {
     coverage: {

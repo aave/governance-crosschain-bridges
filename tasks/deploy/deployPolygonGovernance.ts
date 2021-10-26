@@ -20,6 +20,7 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
     }
 
     console.log(`Signer: ${await contractSigner.getAddress()}`);
+    console.log(`Signer - Balance: ${(await contractSigner.getBalance()).toString()}`);
     const ContractFactory = await ethers.getContractFactory('PolygonBridgeExecutor');
     const constructorInputs = ContractFactory.interface.deploy.inputs;
 
@@ -33,19 +34,19 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
       gracePeriod: '259200',
       minimumDelay: '28800',
       maximumDelay: '604800',
-      guardian: '0xbb2f3ba4a63982ed6d93c190c28b15cbba0b6af3',
+      guardian: '0x1450F2898D6bA2710C98BE9CAF3041330eD5ae58',
     };
 
-    // MUMBAI Deployment Params
-    // const contractParams = {
-    //   fxRootSender: '0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA',
-    //   fxChild: '0xCf73231F28B7331BBe3124B907840A94851f9f11',
-    //   delay: '172800',
-    //   gracePeriod: '259200',
-    //   minimumDelay: '28800',
-    //   maximumDelay: '604800',
-    //   guardian: '0xbb2f3ba4a63982ed6d93c190c28b15cbba0b6af3',
-    // };
+    // // MUMBAI Deployment Params
+    // // const contractParams = {
+    // //   fxRootSender: '0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA',
+    // //   fxChild: '0xCf73231F28B7331BBe3124B907840A94851f9f11',
+    // //   delay: '172800',
+    // //   gracePeriod: '259200',
+    // //   minimumDelay: '28800',
+    // //   maximumDelay: '604800',
+    // //   guardian: '0xbb2f3ba4a63982ed6d93c190c28b15cbba0b6af3',
+    // // };
 
     let paramsArray: any[] = [];
     if (constructorInputs.length > 0) {
@@ -53,9 +54,9 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
       printDefinedParams(constructorInputs, paramsArray);
     }
 
-    console.log('  - Balance:', await contractSigner.getBalance());
-
     const contractInstance = await deployContract(paramsArray, ContractFactory, contractSigner);
+
+    console.log(`Contract Address: ${contractInstance.address}`);
 
     if (verify) {
       const jsonLibs = '{}';
