@@ -62,16 +62,16 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
   },
 });
 
-const mainnetFork = MAINNET_FORK
-  ? POLYGON_FORK
-    ? {
-        blockNumber: 20683896, //18588667  18119000
-        url: ALCHEMY_POLYGON_BETA_RPC,
-      }
-    : {
-        blockNumber: 13130225,
-        url: NETWORKS_RPC_URL['main'],
-      }
+const mainnetFork = POLYGON_FORK
+  ? {
+      blockNumber: 20683896, //18588667  18119000
+      url: ALCHEMY_POLYGON_BETA_RPC,
+    }
+  : MAINNET_FORK
+  ? {
+      blockNumber: 13130225,
+      url: NETWORKS_RPC_URL['main'],
+    }
   : undefined;
 
 // export hardhat config
