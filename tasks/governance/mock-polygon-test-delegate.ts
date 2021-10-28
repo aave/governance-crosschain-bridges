@@ -13,26 +13,208 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     await localBRE.run('set-DRE');
     const { ethers } = localBRE;
 
-    const marketUpdateContractAddress = `0x5b494b94faf0bb63254dba26f17483bcf57f6d6a`;
+    const guardianAddress = '0x1450F2898D6bA2710C98BE9CAF3041330eD5ae58';
+    const polygonBridgeExecutorAddress = '0x4146874AFc659aae01bb6D53705B9BEAca2dFB40';
+    const daiAddress = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063';
 
-    // 1. Impersonate and fund fxChild address
-    console.log(`1. Impersonate and fund fxChild address`);
-    const fxChild = await getImpersonatedSigner('0x8397259c983751DAf40400790063935a11afa28a');
-    console.log(`fxChild Balance: ${await fxChild.getBalance()}`);
+    // multi-sig address
+    const multiSigAddress = '0xBb2F3BA4a63982eD6D93c190c28B15CBBA0B6AF3';
+    const multiSibAbi = require('../../abis/MultiSigWalletWithDailyLimit.json');
+    const multiSigContract = new ethers.Contract(multiSigAddress, multiSibAbi, ethers.provider);
+
+    const multiSigSigners = await Promise.all(
+      [
+        '0x30fe242a69d7694a931791429815db792e24cf97',
+        '0xe7a4f2b1772603170111bc633cbcf1acebd60bce',
+        '0xce990b1f86e954746ad3a57f5aa6cfa9cc0c3348',
+      ].map(async (address) => {
+        return await getImpersonatedSigner(address);
+      })
+    );
+
+    // lending pool address provider
+    const lendingPoolAddressProviderAddress = '0xd05e3E715d945B59290df0ae8eF85c1BdB684744';
+    const LendingPoolAddressProviderAbi = require('../../abis/LendingPoolAddressProvider.json');
+    const lendingPoolAddressProvider = new ethers.Contract(
+      lendingPoolAddressProviderAddress,
+      LendingPoolAddressProviderAbi,
+      ethers.provider
+    );
+
+    // lending pool address provider registry
+    const lendingPoolAddressProviderRegistryAddress = '0x3ac4e9aa29940770aeC38fe853a4bbabb2dA9C19';
+    const LendingPoolAddressProviderRegistryAbi = require('../../abis/LendingPoolAddressesProviderRegistry.json');
+    const lendingPoolAddressProviderRegistry = new ethers.Contract(
+      lendingPoolAddressProviderRegistryAddress,
+      LendingPoolAddressProviderRegistryAbi,
+      ethers.provider
+    );
+
+    // Transfer Market Admin Rights
+    // 1. Transfer EmergencyPoolAdmin in LendingPoolAddressProvider
+    // 2. Transfer PoolAdmin in LendingPoolAddressProvider
+    // 2. Transfer Ownership of LendingPoolAddressProvider
+    // 3. Transfer Ownership of LendingPoolAddressProviderRegistry
+
+    console.log(`Impersonating multisig to transfer market admin rights...`);
+    // 1
+    const emergencyAdminUpdateTx = await lendingPoolAddressProvider.populateTransaction.setEmergencyAdmin(
+      guardianAddress
+    );
+    const multiSigEmergencyAdminTx = await multiSigContract
+      .connect(multiSigSigners[0])
+      .submitTransaction(lendingPoolAddressProviderAddress, 0, emergencyAdminUpdateTx.data);
+    const multiSigEmergencyAdminReceipt = await multiSigEmergencyAdminTx.wait();
+    const multiSigEmergencyAdminTxId = multiSigEmergencyAdminReceipt.events[0].args[0];
+
+    let confirmation2 = await multiSigContract
+      .connect(multiSigSigners[1])
+      .confirmTransaction(multiSigEmergencyAdminTxId);
+    await confirmation2.wait();
+
+    let confirmation3 = await multiSigContract
+      .connect(multiSigSigners[2])
+      .confirmTransaction(multiSigEmergencyAdminTxId);
+    await confirmation3.wait();
+
+    const emergencyAdmin = await lendingPoolAddressProvider.getEmergencyAdmin();
+
+    if (emergencyAdmin.toLowerCase() === guardianAddress.toLowerCase()) {
+      console.log(`SUCCESS: Emergency Admin successfully updated`);
+    } else {
+      console.log(`ERROR: Emergency Admin update failed`);
+    }
+
+    // 2
+    const poolAdminUpdateTx = await lendingPoolAddressProvider.populateTransaction.setPoolAdmin(
+      polygonBridgeExecutorAddress
+    );
+    const multiSigPoolAdminTx = await multiSigContract
+      .connect(multiSigSigners[0])
+      .submitTransaction(lendingPoolAddressProviderAddress, 0, poolAdminUpdateTx.data);
+    const multiSigPoolAdminReceipt = await multiSigPoolAdminTx.wait();
+    const multiSigPoolAdminTxId = multiSigPoolAdminReceipt.events[0].args[0];
+
+    confirmation2 = await multiSigContract
+      .connect(multiSigSigners[1])
+      .confirmTransaction(multiSigPoolAdminTxId);
+    await confirmation2.wait();
+
+    confirmation3 = await multiSigContract
+      .connect(multiSigSigners[2])
+      .confirmTransaction(multiSigPoolAdminTxId);
+    await confirmation3.wait();
+
+    const poolAdmin = await lendingPoolAddressProvider.getPoolAdmin();
+
+    if (poolAdmin.toLowerCase() === polygonBridgeExecutorAddress.toLowerCase()) {
+      console.log(`SUCCESS: Pool Admin successfully updated`);
+    } else {
+      console.log(`ERROR: Pool Admin update failed`);
+    }
+
+    // 3
+    const transferAddressProviderTx = await lendingPoolAddressProvider.populateTransaction.transferOwnership(
+      polygonBridgeExecutorAddress
+    );
+    const multiSigTransferAddressProviderTx = await multiSigContract
+      .connect(multiSigSigners[0])
+      .submitTransaction(lendingPoolAddressProviderAddress, 0, transferAddressProviderTx.data);
+    const multiSigTransferAddressProviderReceipt = await multiSigTransferAddressProviderTx.wait();
+    const multiSigTransferAddressProviderTxId =
+      multiSigTransferAddressProviderReceipt.events[0].args[0];
+
+    confirmation2 = await multiSigContract
+      .connect(multiSigSigners[1])
+      .confirmTransaction(multiSigTransferAddressProviderTxId);
+    await confirmation2.wait();
+
+    confirmation3 = await multiSigContract
+      .connect(multiSigSigners[2])
+      .confirmTransaction(multiSigTransferAddressProviderTxId);
+    await confirmation3.wait();
+
+    const lendingPoolAddressProviderOwner = await lendingPoolAddressProvider.owner();
+
+    if (
+      lendingPoolAddressProviderOwner.toLowerCase() === polygonBridgeExecutorAddress.toLowerCase()
+    ) {
+      console.log(`SUCCESS: LendingPoolAddressProvider Owner successfully updated`);
+    } else {
+      console.log(`ERROR: LendingPoolAddressProvider Owner update failed`);
+    }
+
+    // 4
+    const multiSigTransferAddressProviderRegistryTx = await multiSigContract
+      .connect(multiSigSigners[0])
+      .submitTransaction(
+        lendingPoolAddressProviderRegistryAddress,
+        0,
+        transferAddressProviderTx.data
+      );
+    const multiSigTransferAddressProviderRegistryReceipt = await multiSigTransferAddressProviderRegistryTx.wait();
+    const multiSigTransferAddressProviderRegistryTxId =
+      multiSigTransferAddressProviderRegistryReceipt.events[0].args[0];
+
+    confirmation2 = await multiSigContract
+      .connect(multiSigSigners[1])
+      .confirmTransaction(multiSigTransferAddressProviderRegistryTxId);
+    await confirmation2.wait();
+
+    confirmation3 = await multiSigContract
+      .connect(multiSigSigners[2])
+      .confirmTransaction(multiSigTransferAddressProviderRegistryTxId);
+    await confirmation3.wait();
+
+    const lendingPoolAddressProviderRegistryOwner = await lendingPoolAddressProviderRegistry.owner();
+
+    if (
+      lendingPoolAddressProviderRegistryOwner.toLowerCase() ===
+      polygonBridgeExecutorAddress.toLowerCase()
+    ) {
+      console.log(`SUCCESS: LendingPoolAddressProviderRegistry Owner successfully updated`);
+    } else {
+      console.log(`ERROR: LendingPoolAddressProviderRegistry Owner update failed`);
+    }
+
+    console.log(`\nTesting admin rights of the deployed PolygonBridgeExecutor...`);
+    // Now the PolygonBridge is the market owner and admin, test an update
+    // 4. Deploy a market update contract
+    // 5. Impersonate the FxChild and register a delegate call to the market update contract
+    // 6. Fastforward to execution time, execute and confirm success
+
+    // 4
+    let marketUpdate;
+    try {
+      const marketUpdateFactory = new MarketUpdate__factory(multiSigSigners[0]);
+      marketUpdate = await marketUpdateFactory.deploy();
+      await marketUpdate.deployed();
+      console.log(`1. MarketUpdate contract deployed at ${marketUpdate.address}`);
+    } catch (err) {
+      console.log(`ERROR: MarketUpdate deployment failed`);
+      console.log(err);
+      process.exit(1);
+    }
+
+    // 5
+    console.log(`2. Impersonate and fund fxChild address`);
+    const fxChildAddress = '0x8397259c983751DAf40400790063935a11afa28a';
+    const fxChildSigner = await getImpersonatedSigner(fxChildAddress);
+    console.log(`fxChild Balance: ${await fxChildSigner.getBalance()}`);
     await localBRE.network.provider.send('hardhat_setBalance', [
-      '0x8397259c983751DAf40400790063935a11afa28a',
+      fxChildAddress,
       '0x2808984000000000',
     ]);
-    console.log(`fxChild Balance: ${await fxChild.getBalance()}\n`);
+    console.log(`fxChild Balance: ${await fxChildSigner.getBalance()}\n`);
 
-    // 3. Create proposal
+    // 6. Create proposal
     // - instantiate contract
     // - encode action
     // - send queue actions transaction
-    console.log(`2. Create and queue actionsSet`);
+    console.log(`3. Create and queue actionsSet`);
     const polygonBridgeExecutor = PolygonBridgeExecutor__factory.connect(
-      '0x60966EA42764c7c538Af9763Bc11860eB2556E6B',
-      fxChild
+      polygonBridgeExecutorAddress,
+      fxChildSigner
     );
 
     const emptyBytes: Bytes = [];
@@ -44,7 +226,7 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     const withDelegatecalls: boolean[] = [];
 
     // execute update
-    targets.push(marketUpdateContractAddress);
+    targets.push(marketUpdate.address);
     values.push(0);
     signatures.push('executeUpdate()');
     calldatas.push(emptyBytes);
@@ -73,7 +255,7 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     console.log(`Execution Time: ${executionTime.toString()}`);
 
     // 4. fast foward to executionTime
-    console.log('\n3. Advance time....');
+    console.log('\n4. Advance time....');
     let currentBlockNumber = await ethers.provider.getBlockNumber();
     let currentBlock = await ethers.provider.getBlock(currentBlockNumber);
     let currentTimeStamp = currentBlock.timestamp;
@@ -86,11 +268,11 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     console.log(`Current Timestamp: ${currentTimeStamp}`);
 
     // 5. execute actions set
-    console.log('\n4. Executing Action Set & Decode Logs');
+    console.log('\n5. Executing Action Set & Decode Logs');
     const executeTransaction = await polygonBridgeExecutor.execute(actionsSetId);
     const executeReceipt = await executeTransaction.wait();
 
-    const lendingPoolConfiguratorAddress = '0xd63B6B5E0F043e9779C784Ee1c14fFcBffB98b70';
+    const lendingPoolConfiguratorAddress = '0x26db2B833021583566323E3b8985999981b9F1F3';
     const LendingPoolConfiguratorAbi = require('../../abis/LendingPoolConfigurator.json');
     const LendingPoolConfigurator = new ethers.Contract(
       lendingPoolConfiguratorAddress,
@@ -98,11 +280,11 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
       ethers.provider
     );
 
-    const lendingPoolAddressProviderAddress = '0x240de965908e06a76e1937310627b709b5045bd6';
-    const LendingPoolAddressProviderAbi = require('../../abis/LendingPoolAddressProvider.json');
-    const lendingPoolAddressProvider = new ethers.Contract(
-      lendingPoolAddressProviderAddress,
-      LendingPoolAddressProviderAbi,
+    const AaveProtocolDataProviderAddress = '0x7551b5D2763519d4e37e8B81929D336De671d46d';
+    const AaveProtocolDataProviderAbi = require('../../abis/AaveProtocolDataProvider.json');
+    const aaveProtocolDataProvider = new ethers.Contract(
+      AaveProtocolDataProviderAddress,
+      AaveProtocolDataProviderAbi,
       ethers.provider
     );
 
@@ -127,7 +309,9 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
       `\tInput - ${rawExecutionLog2.eventFragment.inputs[1].name}: ${rawExecutionLog2.args[1]}`
     );
 
-    console.log(`\nRead From Contract...`);
+    console.log(`\nRead Updated State From Market...`);
+    const daiReserveData = await aaveProtocolDataProvider.getReserveConfigurationData(daiAddress);
+    console.log(`\tDai Borrowing Enabled: ${daiReserveData.borrowingEnabled}`);
     const newPoolAdmin = await lendingPoolAddressProvider.getPoolAdmin();
     console.log(`\tNew Pool Admin: ${newPoolAdmin}`);
     const newOwner = await lendingPoolAddressProvider.owner();

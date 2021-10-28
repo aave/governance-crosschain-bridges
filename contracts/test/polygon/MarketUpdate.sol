@@ -4,13 +4,13 @@ pragma solidity 0.6.12;
 import './interfaces/ILendingPoolConfigurator.sol';
 import './interfaces/ILendingPoolAddressesProvider.sol';
 import './interfaces/Ownable.sol';
+import 'hardhat/console.sol';
 
 contract MarketUpdate {
+  address constant LENDING_POOL_CONFIGURATOR = 0x26db2B833021583566323E3b8985999981b9F1F3;
+  address constant LENDING_POOL_ADDRESSES_PROVIDER = 0xd05e3E715d945B59290df0ae8eF85c1BdB684744;
 
-  address constant LENDING_POOL_CONFIGURATOR = 0xd63B6B5E0F043e9779C784Ee1c14fFcBffB98b70;
-  address constant LENDING_POOL_ADDRESSES_PROVIDER = 0x240dE965908E06a76e1937310627B709b5045bd6;
-
-  address constant MOCK_DAI_ADDRESS = 0xD7e274803263467A5804Da5B023B276B86a2aF49;
+  address constant DAI_ADDRESS = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063;
   address constant NEXT_ADMIN = 0x000000000000000000000000000000000000dEaD;
   address constant NEXT_OWNER = 0x0000000000000000000000000000000000000001;
 
@@ -18,9 +18,10 @@ contract MarketUpdate {
 
   function executeUpdate() external {
     ILendingPoolConfigurator configurator = ILendingPoolConfigurator(LENDING_POOL_CONFIGURATOR);
-    configurator.disableBorrowingOnReserve(MOCK_DAI_ADDRESS);
+    configurator.disableBorrowingOnReserve(DAI_ADDRESS);
 
-    ILendingPoolAddressesProvider provider = ILendingPoolAddressesProvider(LENDING_POOL_ADDRESSES_PROVIDER);
+    ILendingPoolAddressesProvider provider =
+      ILendingPoolAddressesProvider(LENDING_POOL_ADDRESSES_PROVIDER);
     provider.setPoolAdmin(NEXT_ADMIN);
 
     Ownable providerOwnable = Ownable(LENDING_POOL_ADDRESSES_PROVIDER);
