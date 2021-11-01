@@ -283,6 +283,14 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const { polygonBridgeExecutor } = testEnv;
       expect(await polygonBridgeExecutor.getMaximumDelay()).to.be.equal(BigNumber.from(500));
     });
+    it('Check Guardian', async () => {
+      const { polygonBridgeExecutor, aaveGovOwner } = testEnv;
+      expect(await polygonBridgeExecutor.getGuardian()).to.be.equal(aaveGovOwner.address);
+    });
+    it('Check ActionSet Count', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.getActionsSetCount()).to.be.equal(BigNumber.from(0));
+    });
     it('Check Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
       expect(await polygonBridgeExecutor.getDelay()).to.be.equal(BigNumber.from(60));
@@ -477,6 +485,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         )
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
+
+      expect(await polygonBridgeExecutor.getActionsSetCount()).to.be.equal(BigNumber.from(1));
     });
     it('Execute Proposal 2 - successfully queue transaction - actions fail on execution (failed transaction)', async () => {
       const { ethers } = DRE;
@@ -954,6 +964,10 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         .to.emit(polygonBridgeExecutor, 'GuardianUpdate')
         .withArgs(aaveGovOwner.address, dummyAddress);
     });
+    it('Check guardian getter', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      expect(await polygonBridgeExecutor.getGuardian()).to.be.equal(dummyAddress);
+    });
     it('Get State of Action Set 2 - Action Set Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(0);
@@ -967,9 +981,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Cancel Action Set 2 - successful cancellation', async () => {
       const { polygonBridgeExecutor } = testEnv;
       const dummySigner = await getImpersonatedSigner(dummyAddress);
-      await DRE.network.provider.send("hardhat_setBalance", [
+      await DRE.network.provider.send('hardhat_setBalance', [
         dummyAddress,
-        "0xFFFFFFFFFFFFFFFFFFFFF",
+        '0xFFFFFFFFFFFFFFFFFFFFF',
       ]);
       await expect(polygonBridgeExecutor.connect(dummySigner).cancel(3))
         .to.emit(polygonBridgeExecutor, 'ActionsSetCanceled')
