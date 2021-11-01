@@ -176,18 +176,12 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     return _maximumDelay;
   }
 
-  /**
-   * @dev Get guardian address
-   * @return guardian address
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getGuardian() external view override returns (address) {
     return _guardian;
   }
 
-  /**
-   * @dev Get ActionSet count
-   * @return current count of action sets processed
-   **/
+  /// @inheritdoc IBridgeExecutor
   function getActionsSetCount() external view override returns (uint256) {
     return _actionsSetCounter;
   }
