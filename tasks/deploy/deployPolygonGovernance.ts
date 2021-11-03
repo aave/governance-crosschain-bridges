@@ -20,6 +20,7 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
     }
 
     console.log(`Signer: ${await contractSigner.getAddress()}`);
+    console.log('Balance:', (await contractSigner.getBalance()).toString());
     const ContractFactory = await ethers.getContractFactory('PolygonBridgeExecutor');
     const constructorInputs = ContractFactory.interface.deploy.inputs;
 
@@ -33,7 +34,7 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
       gracePeriod: '259200',
       minimumDelay: '28800',
       maximumDelay: '604800',
-      guardian: '0xbb2f3ba4a63982ed6d93c190c28b15cbba0b6af3',
+      guardian: '0x1450F2898D6bA2710C98BE9CAF3041330eD5ae58',
     };
 
     // MUMBAI Deployment Params
@@ -53,12 +54,10 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
       printDefinedParams(constructorInputs, paramsArray);
     }
 
-    console.log('  - Balance:', await contractSigner.getBalance());
-
     const contractInstance = await deployContract(paramsArray, ContractFactory, contractSigner);
 
-    if (verify) {
-      const jsonLibs = '{}';
-      await verifyContract(contractInstance.address, paramsArray, jsonLibs);
-    }
+    // if (verify) {
+    //   const jsonLibs = '{}';
+    //   await verifyContract(contractInstance.address, paramsArray, jsonLibs);
+    // }
   });
