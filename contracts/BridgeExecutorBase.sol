@@ -121,13 +121,11 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
   function receiveFunds() external payable {}
 
-
   /// @inheritdoc IBridgeExecutor
   function updateGuardian(address guardian) external override onlyThis {
     emit GuardianUpdate(_guardian, guardian);
     _guardian = guardian;
   }
-
 
   /// @inheritdoc IBridgeExecutor
   function updateDelay(uint256 delay) external override onlyThis {
@@ -176,6 +174,16 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   /// @inheritdoc IBridgeExecutor
   function getMaximumDelay() external view override returns (uint256) {
     return _maximumDelay;
+  }
+
+  /// @inheritdoc IBridgeExecutor
+  function getGuardian() external view override returns (address) {
+    return _guardian;
+  }
+
+  /// @inheritdoc IBridgeExecutor
+  function getActionsSetCount() external view override returns (uint256) {
+    return _actionsSetCounter;
   }
 
   /**

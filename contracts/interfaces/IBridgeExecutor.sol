@@ -63,7 +63,7 @@ interface IBridgeExecutor {
    **/
   event NewAdmin(address newAdmin);
 
-    /**
+  /**
    * @dev emitted when a new guardian is set
    * @param previousGuardian previous guardian
    * @param newGuardian new guardian
@@ -185,4 +185,16 @@ interface IBridgeExecutor {
    * @return maximum delay in seconds
    **/
   function getMaximumDelay() external view returns (uint256);
+
+  /**
+   * @dev Get guardian address
+   * @return guardian address
+   **/
+  function getGuardian() external view returns (address);
+
+  /**
+   * @dev Get ActionSet count
+   * @return current count of action sets processed
+   **/
+  function getActionsSetCount() external view returns (uint256);
 }
