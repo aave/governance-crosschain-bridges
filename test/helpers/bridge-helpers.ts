@@ -560,6 +560,41 @@ export const createBridgeTest15 = async (testEnv: TestEnv): Promise<ProposalActi
   return proposalActions;
 };
 
+export const createBridgeTest16 = async (
+  newGuardian: tEthereumAddress,
+  testEnv: TestEnv
+): Promise<ProposalActions> => {
+  const { ethers } = DRE;
+  const { polygonBridgeExecutor } = testEnv;
+  const proposalActions = new ProposalActions();
+
+  // push the first transaction fields into action arrays
+  const encodedAddress = ethers.utils.defaultAbiCoder.encode(['address'], [newGuardian]);
+  proposalActions.targets.push(polygonBridgeExecutor.address);
+  proposalActions.values.push(BigNumber.from(0));
+  proposalActions.signatures.push('updateGuardian(address)');
+  proposalActions.calldatas.push(encodedAddress);
+  proposalActions.withDelegatecalls.push(false);
+
+  proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
+    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    [
+      proposalActions.targets,
+      proposalActions.values,
+      proposalActions.signatures,
+      proposalActions.calldatas,
+      proposalActions.withDelegatecalls,
+    ]
+  );
+
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'bytes'],
+    [polygonBridgeExecutor.address, proposalActions.encodedActions]
+  );
+
+  return proposalActions;
+};
+
 export const createArbitrumBridgeTest = async (
   dummyAddress: tEthereumAddress,
   testEnv: TestEnv

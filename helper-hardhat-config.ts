@@ -32,7 +32,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.buidlerevm]: 'http://localhost:8545',
   [eEthereumNetwork.tenderlyMain]: `https://rpc.tenderly.co/fork/${TENDERLY_FORK}`,
   [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
-  [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
+  [ePolygonNetwork.matic]: `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eXDaiNetwork.xdai]: 'https://rpc.xdaichain.com/',
 };
 

@@ -95,6 +95,9 @@ const config: HardhatUserConfig = {
   gasReporter: {
     currency: 'USD',
   },
+  mocha: {
+    timeout: 100000,
+  },
   networks: {
     coverage: {
       url: 'http://localhost:8555',
@@ -148,9 +151,6 @@ const config: HardhatUserConfig = {
         count: 20,
       },
     },
-  },
-  mocha: {
-    timeout: 50000,
   },
 };
 

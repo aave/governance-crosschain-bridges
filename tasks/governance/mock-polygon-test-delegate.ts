@@ -317,15 +317,15 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     const newOwner = await lendingPoolAddressProvider.owner();
     console.log(`\tNew Owner: ${newOwner}`);
 
-    console.log(`\n Check Getters`);
+    console.log(`\nCheck Getters`);
     const guardianFromContract = await polygonBridgeExecutor.getGuardian();
     if (guardianFromContract.toLowerCase() === guardianAddress.toLowerCase()) {
-      console.log(`SUCCESS: Guardian address is as expected`);
+      console.log(`SUCCESS: Guardian address is as expected - ${guardianFromContract}`);
     } else {
-      console.log(`ERROR: Returned guardian address is incorrect`);
+      console.log(`ERROR: Returned guardian address is incorrect - ${guardianFromContract}`);
     }
     const actionSetCount = await polygonBridgeExecutor.getActionsSetCount();
-    if (actionSetCount === 1) {
+    if (actionSetCount.eq(BigNumber.from(1))) {
       console.log(`SUCCESS: ActionSet count correct`);
     } else {
       console.log(`ERROR: ActionSet count incorrect`);
