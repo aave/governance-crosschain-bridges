@@ -14,7 +14,7 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     const { ethers } = localBRE;
 
     const guardianAddress = '0x1450F2898D6bA2710C98BE9CAF3041330eD5ae58';
-    const polygonBridgeExecutorAddress = '0x4146874AFc659aae01bb6D53705B9BEAca2dFB40';
+    const polygonBridgeExecutorAddress = '0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772';
     const daiAddress = '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063';
 
     // multi-sig address
@@ -316,5 +316,19 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     console.log(`\tNew Pool Admin: ${newPoolAdmin}`);
     const newOwner = await lendingPoolAddressProvider.owner();
     console.log(`\tNew Owner: ${newOwner}`);
+
+    console.log(`\n Check Getters`);
+    const guardianFromContract = await polygonBridgeExecutor.getGuardian();
+    if (guardianFromContract.toLowerCase() === guardianAddress.toLowerCase()) {
+      console.log(`SUCCESS: Guardian address is as expected`);
+    } else {
+      console.log(`ERROR: Returned guardian address is incorrect`);
+    }
+    const actionSetCount = await polygonBridgeExecutor.getActionsSetCount();
+    if (actionSetCount === 1) {
+      console.log(`SUCCESS: ActionSet count correct`);
+    } else {
+      console.log(`ERROR: ActionSet count incorrect`);
+    }
   }
 );
