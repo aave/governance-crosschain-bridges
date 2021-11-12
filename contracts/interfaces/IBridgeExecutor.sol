@@ -51,19 +51,6 @@ interface IBridgeExecutor {
   event ActionsSetCanceled(uint256 id);
 
   /**
-   * @dev emitted when a new bridge is set
-   * @param bridge address of the new admin
-   * @param initiatorChange address of the creator of this change
-   **/
-  event NewBridge(address bridge, address indexed initiatorChange);
-
-  /**
-   * @dev emitted when a new admin is set
-   * @param newAdmin address of the new admin
-   **/
-  event NewAdmin(address newAdmin);
-
-  /**
    * @dev emitted when a new guardian is set
    * @param previousGuardian previous guardian
    * @param newGuardian new guardian
