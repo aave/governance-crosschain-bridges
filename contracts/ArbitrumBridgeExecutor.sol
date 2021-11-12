@@ -57,7 +57,7 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
 
   /**
    * @dev get the current address of ethereumGovernanceExecutor
-   * @return ethereumGovernanceExecutor the address of the Ethereum Governance Executor contract
+   * @return the address of the Ethereum Governance Executor contract
    **/
   function getEthereumGovernanceExecutor() external view returns (address) {
     return _ethereumGovernanceExecutor;

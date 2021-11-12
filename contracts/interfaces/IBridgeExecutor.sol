@@ -40,7 +40,7 @@ interface IBridgeExecutor {
    * @dev emitted when an ActionsSet is executed successfully
    * @param id Id of the ActionsSet
    * @param initiatorExecution address that triggered the ActionsSet execution
-   * @param returnedData address that triggered the ActionsSet execution
+   * @param returnedData returned data from the ActionsSet execution
    **/
   event ActionsSetExecuted(uint256 id, address indexed initiatorExecution, bytes[] returnedData);
 
@@ -107,7 +107,7 @@ interface IBridgeExecutor {
   /**
    * @dev Get the current state of an ActionsSet
    * @param actionsSetId id of the ActionsSet
-   * @return The current state if the ActionsSet
+   * @return The current state of the ActionsSet
    **/
   function getCurrentState(uint256 actionsSetId) external view returns (ActionsSetState);
 
