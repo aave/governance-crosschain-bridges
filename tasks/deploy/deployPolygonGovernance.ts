@@ -28,7 +28,7 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
      * uncomment following line to override params with hardhcoded parameters
      */
     const contractParams = {
-      fxRootSender: '0xee56e2b3d491590b5b31738cc34d5232f378a8d5',
+      fxRootSender: '0x30Fe242a69D7694a931791429815DB792E24cF97',
       fxChild: '0x8397259c983751DAf40400790063935a11afa28a',
       delay: '172800',
       gracePeriod: '259200',

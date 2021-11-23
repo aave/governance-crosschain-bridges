@@ -67,6 +67,14 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     const multiSigEmergencyAdminReceipt = await multiSigEmergencyAdminTx.wait();
     const multiSigEmergencyAdminTxId = multiSigEmergencyAdminReceipt.events[0].args[0];
 
+    console.log('Emergency Admin');
+    console.log(emergencyAdminUpdateTx.data);
+
+    const transaction6 = await multiSigContract.transactions(6);
+    console.log(transaction6.data);
+    console.log(transaction6.destination);
+    console.log(transaction6.value);
+
     let confirmation2 = await multiSigContract
       .connect(multiSigSigners[1])
       .confirmTransaction(multiSigEmergencyAdminTxId);
@@ -94,6 +102,14 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
       .submitTransaction(lendingPoolAddressProviderAddress, 0, poolAdminUpdateTx.data);
     const multiSigPoolAdminReceipt = await multiSigPoolAdminTx.wait();
     const multiSigPoolAdminTxId = multiSigPoolAdminReceipt.events[0].args[0];
+
+    console.log('pool admin update');
+    console.log(poolAdminUpdateTx.data);
+
+    const transaction7 = await multiSigContract.transactions(7);
+    console.log(transaction7.data);
+    console.log(transaction7.destination);
+    console.log(transaction7.value);
 
     confirmation2 = await multiSigContract
       .connect(multiSigSigners[1])
@@ -123,6 +139,13 @@ task('mock-polygon-test-delegate', 'Queue and Execute ActionsSet of Dummy Market
     const multiSigTransferAddressProviderReceipt = await multiSigTransferAddressProviderTx.wait();
     const multiSigTransferAddressProviderTxId =
       multiSigTransferAddressProviderReceipt.events[0].args[0];
+
+    console.log('transfer provider owner');
+    console.log(transferAddressProviderTx.data);
+    const transaction5 = await multiSigContract.transactions(5);
+    console.log(transaction5.data);
+    console.log(transaction5.destination);
+    console.log(transaction5.value);
 
     confirmation2 = await multiSigContract
       .connect(multiSigSigners[1])
