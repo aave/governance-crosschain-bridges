@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.7.5;
 pragma abicoder v2;
 
@@ -57,7 +57,7 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
 
   /**
    * @dev get the current address of ethereumGovernanceExecutor
-   * @return ethereumGovernanceExecutor the address of the Ethereum Governance Executor contract
+   * @return the address of the Ethereum Governance Executor contract
    **/
   function getEthereumGovernanceExecutor() external view returns (address) {
     return _ethereumGovernanceExecutor;

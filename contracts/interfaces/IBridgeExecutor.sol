@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.7.5;
 pragma abicoder v2;
 
@@ -40,7 +40,7 @@ interface IBridgeExecutor {
    * @dev emitted when an ActionsSet is executed successfully
    * @param id Id of the ActionsSet
    * @param initiatorExecution address that triggered the ActionsSet execution
-   * @param returnedData address that triggered the ActionsSet execution
+   * @param returnedData returned data from the ActionsSet execution
    **/
   event ActionsSetExecuted(uint256 id, address indexed initiatorExecution, bytes[] returnedData);
 
@@ -49,19 +49,6 @@ interface IBridgeExecutor {
    * @param id Id of the ActionsSet
    **/
   event ActionsSetCanceled(uint256 id);
-
-  /**
-   * @dev emitted when a new bridge is set
-   * @param bridge address of the new admin
-   * @param initiatorChange address of the creator of this change
-   **/
-  event NewBridge(address bridge, address indexed initiatorChange);
-
-  /**
-   * @dev emitted when a new admin is set
-   * @param newAdmin address of the new admin
-   **/
-  event NewAdmin(address newAdmin);
 
   /**
    * @dev emitted when a new guardian is set
@@ -120,7 +107,7 @@ interface IBridgeExecutor {
   /**
    * @dev Get the current state of an ActionsSet
    * @param actionsSetId id of the ActionsSet
-   * @return The current state if the ActionsSet
+   * @return The current state of the ActionsSet
    **/
   function getCurrentState(uint256 actionsSetId) external view returns (ActionsSetState);
 
