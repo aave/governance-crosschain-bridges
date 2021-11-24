@@ -301,6 +301,12 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const hash = ethers.utils.formatBytes32String('hello');
       expect(await polygonBridgeExecutor.isActionQueued(hash)).to.be.false;
     });
+    it('Get State of Actions 0 - Actions Queued', async () => {
+      const { polygonBridgeExecutor } = testEnv;
+      await expect(polygonBridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        'INVALID_ACTION_ID'
+      );
+    });
   });
   describe('Executor - Failed Deployments', async function () {
     it('Delay > Maximum Delay', async () => {

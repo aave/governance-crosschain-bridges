@@ -101,7 +101,7 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
   /// @inheritdoc IBridgeExecutor
   function getCurrentState(uint256 actionsSetId) public view override returns (ActionsSetState) {
-    require(_actionsSetCounter >= actionsSetId, 'INVALID_ACTION_ID');
+    require(_actionsSetCounter > actionsSetId, 'INVALID_ACTION_ID');
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     if (actionsSet.canceled) {
       return ActionsSetState.Canceled;
