@@ -123,21 +123,21 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
 
   /// @inheritdoc IBridgeExecutor
   function updateGuardian(address guardian) external override onlyThis {
-    _guardian = guardian;
     emit GuardianUpdate(_guardian, guardian);
+    _guardian = guardian;
   }
 
   /// @inheritdoc IBridgeExecutor
   function updateDelay(uint256 delay) external override onlyThis {
     _validateDelay(delay);
-    _delay = delay;
     emit DelayUpdate(_delay, delay);
+    _delay = delay;
   }
 
   /// @inheritdoc IBridgeExecutor
   function updateGracePeriod(uint256 gracePeriod) external override onlyThis {
-    _gracePeriod = gracePeriod;
     emit GracePeriodUpdate(_gracePeriod, gracePeriod);
+    _gracePeriod = gracePeriod;
   }
 
   /// @inheritdoc IBridgeExecutor

@@ -51,8 +51,8 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
    * @param ethereumGovernanceExecutor the address of the Ethereum Governance Executor contract
    **/
   function updateEthereumGovernanceExecutor(address ethereumGovernanceExecutor) external onlyThis {
-    _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
     emit EthereumGovernanceExecutorUpdate(_ethereumGovernanceExecutor, ethereumGovernanceExecutor);
+    _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
   }
 
   /**
