@@ -1,5 +1,7 @@
 import {
+  eArbitrumNetwork,
   eEthereumNetwork,
+  eOptimismNetwork,
   ePolygonNetwork,
   eXDaiNetwork,
   iParamsPerNetwork,
@@ -34,6 +36,10 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [ePolygonNetwork.mumbai]: 'https://rpc-mumbai.maticvigil.com',
   [ePolygonNetwork.matic]: 'https://rpc-mainnet.matic.network',
   [eXDaiNetwork.xdai]: 'https://rpc.xdaichain.com/',
+  [eArbitrumNetwork.arbitrum]: `https://arb1.arbitrum.io/rpc`,
+  [eArbitrumNetwork.arbitrumTestnet]: `https://rinkeby.arbitrum.io/rpc`,
+  [eOptimismNetwork.main]: `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eOptimismNetwork.testnet]: `https://opt-kovan.g.alchemy.com/v2/${ALCHEMY_KEY}`,
 };
 
 export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {

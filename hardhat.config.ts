@@ -1,6 +1,13 @@
 import { HardhatUserConfig } from 'hardhat/types';
 import { accounts } from './helpers/test-wallets';
-import { eEthereumNetwork, eNetwork, ePolygonNetwork, eXDaiNetwork } from './helpers/types';
+import {
+  eArbitrumNetwork,
+  eEthereumNetwork,
+  eNetwork,
+  eOptimismNetwork,
+  ePolygonNetwork,
+  eXDaiNetwork,
+} from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
 import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
 import dotenv from 'dotenv';
@@ -39,7 +46,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
   hardfork: HARDFORK,
   blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
   gasMultiplier: DEFAULT_GAS_MUL,
-  gasPrice: NETWORKS_DEFAULT_GAS[networkName],
+  gasPrice: NETWORKS_DEFAULT_GAS[networkName] || undefined,
   chainId: networkId,
   accounts: {
     mnemonic: MNEMONIC,
@@ -89,6 +96,13 @@ const config: HardhatUserConfig = {
     matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     xdai: getCommonNetworkConfig(eXDaiNetwork.xdai, 100),
+    [eArbitrumNetwork.arbitrum]: getCommonNetworkConfig(eArbitrumNetwork.arbitrum, 42161),
+    [eArbitrumNetwork.arbitrumTestnet]: getCommonNetworkConfig(
+      eArbitrumNetwork.arbitrumTestnet,
+      421611
+    ),
+    [eOptimismNetwork.main]: getCommonNetworkConfig(eOptimismNetwork.main, 10),
+    [eOptimismNetwork.testnet]: getCommonNetworkConfig(eOptimismNetwork.testnet, 69),
     hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
