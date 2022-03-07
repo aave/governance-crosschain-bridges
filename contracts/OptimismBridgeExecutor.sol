@@ -6,12 +6,13 @@ import './interfaces/ICrossDomainMessenger.sol';
 import './L2BridgeExecutor.sol';
 
 contract OptimismBridgeExecutor is L2BridgeExecutor {
-  ICrossDomainMessenger private immutable _ovmL2CrossDomainMessenger;
+  address private immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
 
   modifier onlyEthereumGovernanceExecutor() override {
     require(
-      msg.sender == address(_ovmL2CrossDomainMessenger) &&
-        _ovmL2CrossDomainMessenger.xDomainMessageSender() == _ethereumGovernanceExecutor,
+      msg.sender == OVM_L2_CROSS_DOMAIN_MESSENGER &&
+        ICrossDomainMessenger(OVM_L2_CROSS_DOMAIN_MESSENGER).xDomainMessageSender() ==
+        _ethereumGovernanceExecutor,
       'UNAUTHORIZED_EXECUTOR'
     );
     _;
@@ -35,14 +36,6 @@ contract OptimismBridgeExecutor is L2BridgeExecutor {
       guardian
     )
   {
-    _ovmL2CrossDomainMessenger = ICrossDomainMessenger(ovmL2CrossDomainMessenger);
-  }
-
-  /**
-   * @dev Get the address currently stored as OvmL2CrossDomainMessenger
-   * @return the address of the contract used to forward cross-chain transactions on Optimism
-   **/
-  function getOvmL2CrossDomainMessenger() external view returns (address) {
-    return address(_ovmL2CrossDomainMessenger);
+    OVM_L2_CROSS_DOMAIN_MESSENGER = ovmL2CrossDomainMessenger;
   }
 }
