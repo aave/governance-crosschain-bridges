@@ -2,19 +2,13 @@
 pragma solidity 0.7.5;
 pragma abicoder v2;
 
-import './interfaces/IL2CrossDomainMessenger.sol';
-import './BridgeExecutorBase.sol';
+import './interfaces/ICrossDomainMessenger.sol';
+import './L2BridgeExecutor.sol';
 
-contract OptimismBridgeExecutor is BridgeExecutorBase {
-  IL2CrossDomainMessenger private _ovmL2CrossDomainMessenger;
-  address private _ethereumGovernanceExecutor;
+contract OptimismBridgeExecutor is L2BridgeExecutor {
+  ICrossDomainMessenger private immutable _ovmL2CrossDomainMessenger;
 
-  event EthereumGovernanceExecutorUpdate(
-    address previousEthereumGovernanceExecutor,
-    address newEthereumGovernanceExecutor
-  );
-
-  modifier onlyEthereumGovernanceExecutor() {
+  modifier onlyEthereumGovernanceExecutor() override {
     require(
       msg.sender == address(_ovmL2CrossDomainMessenger) &&
         _ovmL2CrossDomainMessenger.xDomainMessageSender() == _ethereumGovernanceExecutor,
@@ -31,44 +25,17 @@ contract OptimismBridgeExecutor is BridgeExecutorBase {
     uint256 minimumDelay,
     uint256 maximumDelay,
     address guardian
-  ) BridgeExecutorBase(delay, gracePeriod, minimumDelay, maximumDelay, guardian) {
-    _ovmL2CrossDomainMessenger = IL2CrossDomainMessenger(ovmL2CrossDomainMessenger);
-    _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
-  }
-
-  /**
-   * @dev Queue the cross-chain message in the BridgeExecutor
-   * @param targets list of contracts called by each action's associated transaction
-   * @param values list of value in wei for each action's  associated transaction
-   * @param signatures list of function signatures (can be empty) to be used when created the callData
-   * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
-   **/
-  function queue(
-    address[] memory targets,
-    uint256[] memory values,
-    string[] memory signatures,
-    bytes[] memory calldatas,
-    bool[] memory withDelegatecalls
-  ) external onlyEthereumGovernanceExecutor {
-    _queue(targets, values, signatures, calldatas, withDelegatecalls);
-  }
-
-  /**
-   * @dev Update the address of the Ethereum Governance Executor contract responsible for sending cross-chain transactions
-   * @param ethereumGovernanceExecutor the address of the Ethereum Governance Executor contract
-   **/
-  function updateEthereumGovernanceExecutor(address ethereumGovernanceExecutor) external onlyThis {
-    emit EthereumGovernanceExecutorUpdate(_ethereumGovernanceExecutor, ethereumGovernanceExecutor);
-    _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
-  }
-
-  /**
-   * @dev get the current address of ethereumGovernanceExecutor
-   * @return the address of the Ethereum Governance Executor contract
-   **/
-  function getEthereumGovernanceExecutor() external view returns (address) {
-    return _ethereumGovernanceExecutor;
+  )
+    L2BridgeExecutor(
+      ethereumGovernanceExecutor,
+      delay,
+      gracePeriod,
+      minimumDelay,
+      maximumDelay,
+      guardian
+    )
+  {
+    _ovmL2CrossDomainMessenger = ICrossDomainMessenger(ovmL2CrossDomainMessenger);
   }
 
   /**
