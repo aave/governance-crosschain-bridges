@@ -29,7 +29,10 @@ if (!SKIP_LOAD) {
   require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
+  require('./tasks/l2/l2');
 }
+
+require('dotenv').config();
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const DEFAULT_GAS_MUL = 5;
@@ -73,7 +76,10 @@ const config: HardhatUserConfig = {
     ],
   },
   etherscan: {
-    apiKey: ETHERSCAN_KEY,
+    apiKey: {
+      optimisticEthereum: ETHERSCAN_KEY,
+      arbitrumOne: ETHERSCAN_KEY,
+    },
   },
   tenderly: {
     project: TENDERLY_PROJECT,

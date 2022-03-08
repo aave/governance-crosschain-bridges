@@ -69,19 +69,9 @@ export const latestBlock = async () => await DRE.ethers.provider.getBlockNumber(
 
 export const advanceBlockTo = async (target: number) => {
   const currentBlock = await latestBlock();
-  const start = Date.now();
-  let notified;
-  let increase = 10;
-  if (target < currentBlock)
-    throw Error(`Target block #(${target}) is lower than current block #(${currentBlock})`);
-  while ((await latestBlock()) < target) {
-    if (!notified && Date.now() - start >= 5000) {
-      notified = true;
-      console.log(`advanceBlockTo: Advancing too many blocks is causing this test to be slow.'`);
-    }
-    await advanceBlock(start + increase);
-    increase += 10;
-  }
+  const diff = DRE.ethers.BigNumber.from(target - currentBlock).toHexString();
+  const diff_clean = `0x${diff.substring(2).replace(/^0+/, '')}`;
+  await DRE.network.provider.send('hardhat_mine', [diff_clean, '0xa']);
 };
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);

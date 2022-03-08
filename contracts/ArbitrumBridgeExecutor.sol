@@ -3,10 +3,14 @@ pragma solidity 0.7.5;
 pragma abicoder v2;
 
 import './L2BridgeExecutor.sol';
+import './dependencies/utilities/AddressAliasHelper.sol';
 
 contract ArbitrumBridgeExecutor is L2BridgeExecutor {
   modifier onlyEthereumGovernanceExecutor() override {
-    require(msg.sender == _ethereumGovernanceExecutor, 'UNAUTHORIZED_EXECUTOR');
+    require(
+      AddressAliasHelper.undoL1ToL2Alias(msg.sender) == _ethereumGovernanceExecutor,
+      'UNAUTHORIZED_EXECUTOR'
+    );
     _;
   }
 
