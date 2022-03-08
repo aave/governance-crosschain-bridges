@@ -71,7 +71,7 @@ export const advanceBlockTo = async (target: number) => {
   const currentBlock = await latestBlock();
   const diff = DRE.ethers.BigNumber.from(target - currentBlock).toHexString();
   const diff_clean = `0x${diff.substring(2).replace(/^0+/, '')}`;
-  await DRE.network.provider.send('hardhat_mine', [diff_clean, '0xa']);
+  await DRE.network.provider.send('hardhat_mine', [diff_clean]);
 };
 
 export const waitForTx = async (tx: ContractTransaction) => await tx.wait(1);

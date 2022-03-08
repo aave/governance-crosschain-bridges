@@ -21,9 +21,13 @@ const OVM_L2_MESSENGER = '0x4200000000000000000000000000000000000007';
 const OPTIMISM_GOV_EXECUTOR = '0x78FD22A13d0B71e55DD0f0075189f97375db0BDc';
 const OPTIMISM_GREETER = '0xA5595A5664C59e405Af3455040aE759aF4C225a4';
 
-const ARBITRUM_GOV_EXECUTOR = '0x78FD22A13d0B71e55DD0f0075189f97375db0BDc';
+/*const ARBITRUM_GOV_EXECUTOR = '0x78FD22A13d0B71e55DD0f0075189f97375db0BDc';
 const ARBITRUM_GREETER = '0x8FEf5DC0795145dC5FAe06353d7Cd289558888D9';
-const INBOX = '0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f';
+const INBOX = '0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f';*/
+
+const ARBITRUM_GOV_EXECUTOR = '0x30cC3bDA5364EBa4be490CcEC3Efea9c1CafF970';
+const ARBITRUM_GREETER = '0x09fb7ea896fc5abbae891fd9021e9b9c626ea5bb';
+const INBOX = '0x578BAde599406A8fE3d24Fd7f7211c0911F5B29e';
 
 const ETHEREUM_GOV_EXECUTOR = '0x7a1285a7381A3099bfe6706549859316e6F90e6a'; // Our deployer not the real
 const GUARDIAN = '0x7a1285a7381A3099bfe6706549859316e6F90e6a';
@@ -182,7 +186,7 @@ task('test-arbitrum-gov-bridge', 'Queue arbitrum proposal').setAction(async (_, 
 
   const [deployer] = await ethers.getSigners();
   const MAX_SUBMISSION_COST = ethers.BigNumber.from(121776195858).mul(5);
-  const MAX_GAS = 100000;
+  const MAX_GAS = 2000000;
   const GAS_PRICE_BID = parseUnits('0.5', 9);
 
   const greeter = Greeter__factory.connect(ARBITRUM_GREETER, deployer);
@@ -215,7 +219,7 @@ task('test-arbitrum-gov-bridge', 'Queue arbitrum proposal').setAction(async (_, 
     GAS_PRICE_BID,
     encoded,
     {
-      value: MAX_SUBMISSION_COST, //.add(GAS_PRICE_BID.mul(MAX_GAS)),
+      value: MAX_SUBMISSION_COST.add(GAS_PRICE_BID.mul(MAX_GAS)),
     }
   );
 
@@ -237,7 +241,7 @@ task('test-arbitrum-execute-retryable', 'Execute the retryable ticket from above
       return;
     }
 
-    const seqNum = BigNumber.from(367902);
+    const seqNum = BigNumber.from(204492);
     const chainId = BigNumber.from((await deployer.provider.getNetwork()).chainId);
 
     const computeL2Hash = (chainId: BigNumber, seqNum: BigNumber) => {

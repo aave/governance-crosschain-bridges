@@ -13,7 +13,7 @@ import {
   deployContract,
 } from '../../helpers/task-helpers';
 
-task('deploy', 'deploy contract - add contract name and params as arguements')
+task('deploy-contract', 'deploy contract - add contract name and params as arguements')
   .addParam('contract', 'Name of contract to deploy')
   .addOptionalParam('params', 'JSON string of contract params - defaults to CLI')
   .addOptionalParam('paramsfile', 'Path to a TS file with params defined as default export')

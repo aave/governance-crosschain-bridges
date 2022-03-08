@@ -14,6 +14,7 @@ export type eNetwork =
 export enum eEthereumNetwork {
   kovan = 'kovan',
   ropsten = 'ropsten',
+  rinkeby = 'rinkeby',
   goerli = 'goerli',
   main = 'main',
   coverage = 'coverage',
@@ -44,6 +45,7 @@ export enum eOptimismNetwork {
 export enum EthereumNetworkNames {
   kovan = 'kovan',
   ropsten = 'ropsten',
+  rinkeby = 'rinkeby',
   goerli = 'goerli',
   main = 'main',
   matic = 'matic',
@@ -74,6 +76,7 @@ export interface iEthereumParamsPerNetwork<eNetwork> {
   [eEthereumNetwork.buidlerevm]: eNetwork;
   [eEthereumNetwork.kovan]: eNetwork;
   [eEthereumNetwork.ropsten]: eNetwork;
+  [eEthereumNetwork.rinkeby]: eNetwork;
   [eEthereumNetwork.goerli]: eNetwork;
   [eEthereumNetwork.main]: eNetwork;
   [eEthereumNetwork.hardhat]: eNetwork;

@@ -1,4 +1,5 @@
-import { HardhatUserConfig } from 'hardhat/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { task, HardhatUserConfig } from 'hardhat/config';
 import { accounts } from './helpers/test-wallets';
 import {
   eArbitrumNetwork,
@@ -13,11 +14,12 @@ import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config'
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
-import '@nomiclabs/hardhat-ethers';
+import 'hardhat-deploy';
+import 'hardhat-deploy-ethers';
 import '@nomiclabs/hardhat-etherscan';
-import '@typechain/hardhat';
 import '@tenderly/hardhat-tenderly';
 import 'solidity-coverage';
+import { ethers } from 'hardhat';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
 if (!SKIP_LOAD) {
@@ -67,7 +69,19 @@ const mainnetFork = MAINNET_FORK
   : undefined;
 
 // export hardhat config
-const config: HardhatUserConfig = {
+export default {
+  typechain: {
+    outDir: 'typechain',
+    target: 'ethers-v5',
+  },
+  namedAccounts: {
+    deployer: 0,
+  },
+  verify: {
+    etherscan: {
+      apiKey: ETHERSCAN_KEY,
+    },
+  },
   solidity: {
     compilers: [
       { version: '0.7.5', settings: { optimizer: { enabled: true, runs: 200 } } },
@@ -96,6 +110,7 @@ const config: HardhatUserConfig = {
     },
     kovan: getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
     ropsten: getCommonNetworkConfig(eEthereumNetwork.ropsten, 3),
+    rinkeby: getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
     goerli: getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
     main: getCommonNetworkConfig(eEthereumNetwork.main, 1),
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 5),
@@ -144,5 +159,3 @@ const config: HardhatUserConfig = {
     },
   },
 };
-
-export default config;
