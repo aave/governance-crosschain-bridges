@@ -6,7 +6,7 @@ import './interfaces/ICrossDomainMessenger.sol';
 import './L2BridgeExecutor.sol';
 
 contract OptimismBridgeExecutor is L2BridgeExecutor {
-  address private immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
+  address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
 
   modifier onlyEthereumGovernanceExecutor() override {
     require(
