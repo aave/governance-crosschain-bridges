@@ -20,3 +20,5 @@ coverage.json
 .coverage_contracts
 
 .DS_Store
+
+deployments/

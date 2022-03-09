@@ -7,8 +7,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy, execute, log, read } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  console.log(`Deployer: ${deployer} used in TEST deployment`);
-
   const optimisticGov = await deployments.getOrNull('OptimisticGov');
 
   if (optimisticGov) {
@@ -17,12 +15,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     await deploy('OptimisticGov', {
       args: [
         ADDRESSES['OVM_L2_MESSENGER'],
-        deployer, //ADDRESSES['ETHEREUM_GOV_EXECUTOR'],
+        ADDRESSES['ETHEREUM_GOV_EXECUTOR'],
         CONSTANTS['DELAY'],
         CONSTANTS['GRACE_PERIOD'],
         CONSTANTS['MIN_DELAY'],
         CONSTANTS['MAX_DELAY'],
-        deployer, //ADDRESSES['GUARDIAN'],
+        ADDRESSES['OVM_GUARDIAN'],
       ],
       contract: 'OptimismBridgeExecutor',
       from: deployer,

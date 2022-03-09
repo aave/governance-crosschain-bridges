@@ -7,8 +7,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy, execute, log, read } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  console.log(`Deployer: ${deployer} used in TEST deployment`);
-
   const arbiGov = await deployments.getOrNull('ArbitrumGov');
 
   if (arbiGov) {
@@ -16,12 +14,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   } else {
     await deploy('ArbitrumGov', {
       args: [
-        deployer, //ADDRESSES['ETHEREUM_GOV_EXECUTOR'],
+        ADDRESSES['ETHEREUM_GOV_EXECUTOR'],
         CONSTANTS['DELAY'],
         CONSTANTS['GRACE_PERIOD'],
         CONSTANTS['MIN_DELAY'],
         CONSTANTS['MAX_DELAY'],
-        deployer, //ADDRESSES['GUARDIAN'],
+        ADDRESSES['ARB_GUARDIAN'],
       ],
       contract: 'ArbitrumBridgeExecutor',
       from: deployer,

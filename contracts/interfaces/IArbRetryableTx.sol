@@ -6,4 +6,6 @@ interface IArbRetryableTx {
   function redeem(bytes32 ticketId) external;
 
   function getLifetime() external view returns (uint256);
+
+  function getSubmissionPrice(uint256 calldataSize) external view returns (uint256, uint256);
 }
