@@ -23,7 +23,7 @@ interface IBridgeExecutor {
    * @param values list of value in wei for each action's  associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
    * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the taget, else calls the target
+   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
    * @param executionTime the time these actions can be executed
    **/
   event ActionsSetQueued(
@@ -138,13 +138,13 @@ interface IBridgeExecutor {
   function updateGracePeriod(uint256 gracePeriod) external;
 
   /**
-   * @dev Set the minimum allowed delay between queing and exection
+   * @dev Set the minimum allowed delay between queuing and execution
    * @param minimumDelay The minimum delay in seconds
    **/
   function updateMinimumDelay(uint256 minimumDelay) external;
 
   /**
-   * @dev Set the maximum allowed delay between queing and exection
+   * @dev Set the maximum allowed delay between queuing and execution
    * @param maximumDelay The maximum delay in seconds
    **/
   function updateMaximumDelay(uint256 maximumDelay) external;

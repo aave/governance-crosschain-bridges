@@ -53,8 +53,8 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   }
 
   /**
-   * @dev Update the expected address of contract originating a cross-chain tranasaction
-   * @param fxRootSender contract originating a cross-chain tranasaction - likely the aave governance executor
+   * @dev Update the expected address of contract originating a cross-chain transaction
+   * @param fxRootSender contract originating a cross-chain transaction - likely the aave governance executor
    **/
   function updateFxRootSender(address fxRootSender) external onlyThis {
     emit FxRootSenderUpdate(_fxRootSender, fxRootSender);
@@ -63,7 +63,7 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
 
   /**
    * @dev Update the address of the FxChild contract
-   * @param fxChild the address of the contract used to foward cross-chain transactions on Polygon
+   * @param fxChild the address of the contract used to forward cross-chain transactions on Polygon
    **/
   function updateFxChild(address fxChild) external onlyThis {
     emit FxChildUpdate(_fxChild, fxChild);
@@ -72,7 +72,7 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
 
   /**
    * @dev Get the address currently stored as fxRootSender
-   * @return fxRootSender contract originating a cross-chain tranasaction - likely the aave governance executor
+   * @return fxRootSender contract originating a cross-chain transaction - likely the aave governance executor
    **/
   function getFxRootSender() external view returns (address) {
     return _fxRootSender;
@@ -80,7 +80,7 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
 
   /**
    * @dev Get the address currently stored as fxChild
-   * @return fxChild the address of the contract used to foward cross-chain transactions on Polygon
+   * @return fxChild the address of the contract used to forward cross-chain transactions on Polygon
    **/
   function getFxChild() external view returns (address) {
     return _fxChild;
