@@ -27,7 +27,6 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
     bytes calldata _message,
     uint32 _gasLimit
   ) external override {
-    console.log('pasa por L2Messenger');
     MockOvmL1CrossDomainMessenger(l1Messenger).redirect(_target, _message, _gasLimit);
   }
 
@@ -36,9 +35,6 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
     bytes calldata _message,
     uint32 _gasLimit
   ) external {
-    console.log('llega a L2Messenger');
-    console.log(_target);
-    console.logBytes(_message);
     _target.call{gas: _gasLimit}(_message);
   }
 }

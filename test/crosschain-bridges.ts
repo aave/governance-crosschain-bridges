@@ -210,11 +210,11 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
      * Arbitrum -- Create Proposal Actions 17
      * Update Ethereum Governance Executor in the Arbitrum Governance contract
      */
-    console.log('arbtest');
+    // console.log('arbtest');
     const proposal17Actions = await createArbitrumBridgeTest(aaveWhale2.address, testEnv);
     testEnv.proposalActions.push(proposal17Actions);
-    console.log(proposal17Actions);
-    console.log('arbtest done');
+    // console.log(proposal17Actions);
+    // console.log('arbtest done');
 
     /**
      * Optimism -- Create Proposal Actions 18
@@ -223,8 +223,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     const proposal18Actions = await createOptimismBridgeTest(aaveWhale2.address, testEnv);
     testEnv.proposalActions.push(proposal18Actions);
 
-    console.log('LENGTH');
-    console.log(testEnv.proposalActions.length);
+    // console.log('LENGTH');
+    // console.log(testEnv.proposalActions.length);
     // Create Polygon Proposals
     for (let i = 0; i < 16; i++) {
       proposals[i] = await createProposal(
@@ -242,20 +242,20 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Create Arbitrum Proposal
-    console.log('PARAMS');
-    console.log(
-      aaveGovContract.address,
-      aaveWhale1.address,
-      shortExecutor.address,
-      [testEnv.arbitrumInbox.address],
-      [BigNumber.from(0)],
-      [
-        'function createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)',
-      ],
-      [testEnv.proposalActions[16].encodedRootCalldata],
-      [false],
-      '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
-    );
+    // console.log('PARAMS');
+    // console.log(
+    //   aaveGovContract.address,
+    //   aaveWhale1.address,
+    //   shortExecutor.address,
+    //   [testEnv.arbitrumInbox.address],
+    //   [BigNumber.from(0)],
+    //   [
+    //     'function createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)',
+    //   ],
+    //   [testEnv.proposalActions[16].encodedRootCalldata],
+    //   [false],
+    //   '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
+    // );
     proposals[16] = await createProposal(
       aaveGovContract,
       aaveWhale1.signer,
@@ -270,7 +270,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
     );
     await expectProposalState(aaveGovContract, proposals[16].id, proposalStates.PENDING);
-    console.log('e');
+    // console.log('e');
 
     // Create Optimism proposal
     proposals[17] = await createProposal(
@@ -329,7 +329,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     await advanceBlock(timestamp + fastForwardTime + 10);
   });
 
-  describe('Executor - Check Deployed State', async function () {
+  describe.only('Executor - Check Deployed State', async function () {
     it('Check Grace Period', async () => {
       const { polygonBridgeExecutor } = testEnv;
       expect(await polygonBridgeExecutor.getGracePeriod()).to.be.equal(BigNumber.from(1000));
@@ -459,7 +459,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       );
     });
   });
-  describe('ArbitrumBridgeExecutor Authorization', async function () {
+  describe.skip('ArbitrumBridgeExecutor Authorization', async function () {
     it('Unauthorized Transaction - Call Bridge Receiver From Non-EthereumGovernanceExecutor Address', async () => {
       const { arbitrumBridgeExecutor } = testEnv;
       const { targets, values, signatures, calldatas, withDelegatecalls } =
@@ -495,7 +495,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       ).to.be.revertedWith('UNAUTHORIZED_ORIGIN_ONLY_THIS');
     });
   });
-  describe('BridgeExecutorBase - Validate Delay Logic', async function () {
+  describe.only('BridgeExecutorBase - Validate Delay Logic', async function () {
     it('Delay > Maximum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
       const polygonBridgeExecutorSigner = await getImpersonatedSigner(
@@ -787,7 +787,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
   });
-  describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
+  describe.only('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 17 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
       const { ethers } = DRE;
       const {
@@ -800,13 +800,13 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         optimismL2Messenger,
       } = testEnv;
 
-      console.log('EXECUTE\n\n');
+      // console.log('EXECUTE\n\n');
 
-      console.log('inbox address: ', arbitrumInbox.address);
+      // console.log('inbox address: ', arbitrumInbox.address);
 
-      console.log(await aaveGovContract.getProposalById(proposals[16].id));
+      // console.log(await aaveGovContract.getProposalById(proposals[16].id));
 
-      console.log('tesssssssssssssssssssst');
+      // console.log('tesssssssssssssssssssst');
 
       // const proposalActions = new ProposalActions();
 

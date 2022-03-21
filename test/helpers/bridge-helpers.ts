@@ -619,7 +619,7 @@ export const createArbitrumBridgeTest = async (
     proposalActions.calldatas,
     proposalActions.withDelegatecalls,
   ]);
-  console.log(encodedQueue);
+  // console.log(encodedQueue);
 
   const retryableTicket = {
     destAddr: arbitrumBridgeExecutor.address,
@@ -658,7 +658,7 @@ export const createArbitrumBridgeTest = async (
   // ]);
   // console.log('EQUAL?')
   // console.log(proposalActions.encodedRootCalldata == encodedRootCalldata);
-  console.log(proposalActions);
+  // console.log(proposalActions);
 
   return proposalActions;
 };
