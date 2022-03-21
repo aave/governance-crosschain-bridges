@@ -130,3 +130,10 @@ export const notFalsyOrZeroAddress = (address: tEthereumAddress | null | undefin
   }
   return isAddress(address) && !isZeroAddress(address);
 };
+
+export const setCode = async (address: tEthereumAddress, bytecode: string): Promise<void> => {
+  await DRE.network.provider.request({
+    method: 'hardhat_setCode',
+    params: [address, bytecode],
+  });
+};
