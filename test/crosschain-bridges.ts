@@ -41,7 +41,6 @@ import {
 } from './helpers/governance-helpers';
 import { PolygonBridgeExecutor__factory } from '../typechain';
 import { ZERO_ADDRESS } from '../helpers/constants';
-import { applyL1ToL2Alias } from '../tasks/l2/arbitrum';
 
 chai.use(solidity);
 
