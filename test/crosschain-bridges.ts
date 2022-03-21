@@ -39,6 +39,7 @@ import {
 } from './helpers/governance-helpers';
 import { PolygonBridgeExecutor__factory } from '../typechain';
 import { ZERO_ADDRESS } from '../helpers/constants';
+import { applyL1ToL2Alias } from '../tasks/l2/arbitrum';
 
 chai.use(solidity);
 
@@ -401,13 +402,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('ArbitrumBridgeExecutor Authorization', async function () {
     it('Unauthorized Transaction - Call Bridge Receiver From Non-FxChild Address', async () => {
       const { arbitrumBridgeExecutor } = testEnv;
-      const {
-        targets,
-        values,
-        signatures,
-        calldatas,
-        withDelegatecalls,
-      } = testEnv.proposalActions[0];
+      const { targets, values, signatures, calldatas, withDelegatecalls } =
+        testEnv.proposalActions[0];
       await expect(
         arbitrumBridgeExecutor.queue(targets, values, signatures, calldatas, withDelegatecalls)
       ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
@@ -453,14 +449,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         polygonBridgeExecutor,
       } = testEnv;
 
-      const {
-        targets,
-        values,
-        signatures,
-        calldatas,
-        withDelegatecalls,
-        encodedActions,
-      } = testEnv.proposalActions[0];
+      const { targets, values, signatures, calldatas, withDelegatecalls, encodedActions } =
+        testEnv.proposalActions[0];
 
       const encodedSyncData = ethers.utils.defaultAbiCoder.encode(
         ['address', 'address', 'bytes'],
@@ -503,13 +493,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         polygonBridgeExecutor,
         shortExecutor,
       } = testEnv;
-      const {
-        targets,
-        values,
-        signatures,
-        calldatas,
-        withDelegatecalls,
-      } = testEnv.proposalActions[1];
+      const { targets, values, signatures, calldatas, withDelegatecalls } =
+        testEnv.proposalActions[1];
 
       const blockNumber = await ethers.provider.getBlockNumber();
       const block = await await ethers.provider.getBlock(blockNumber);
@@ -728,26 +713,24 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Execute Proposal 17 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
       const { ethers } = DRE;
       const { shortExecutor, arbitrumBridgeExecutor, aaveWhale1 } = testEnv;
-      const {
-        targets,
-        values,
-        signatures,
-        calldatas,
-        withDelegatecalls,
-      } = testEnv.proposalActions[16];
+      const { targets, values, signatures, calldatas, withDelegatecalls } =
+        testEnv.proposalActions[16];
 
       const blockNumber = await ethers.provider.getBlockNumber();
       const block = await await ethers.provider.getBlock(blockNumber);
       const blocktime = block.timestamp;
       const expectedExecutionTime = blocktime + 61;
 
+      const offsetShortExecutor = applyL1ToL2Alias(shortExecutor.address);
+
       await aaveWhale1.signer.sendTransaction({
-        to: shortExecutor.address,
+        to: offsetShortExecutor,
         value: BigNumber.from('1000000000000000000'),
       });
 
       testEnv.proposalActions[16].executionTime = expectedExecutionTime;
-      const shortExecutorSigner = await getImpersonatedSigner(shortExecutor.address);
+
+      const shortExecutorSigner = await getImpersonatedSigner(offsetShortExecutor);
       const tx = await arbitrumBridgeExecutor
         .connect(shortExecutorSigner)
         .queue(targets, values, signatures, calldatas, withDelegatecalls);
@@ -763,14 +746,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('Confirm ActionSet State - Bridge Executor', async function () {
     it('Confirm ActionsSet 0 State', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      const {
-        targets,
-        values,
-        signatures,
-        calldatas,
-        withDelegatecalls,
-        executionTime,
-      } = testEnv.proposalActions[0];
+      const { targets, values, signatures, calldatas, withDelegatecalls, executionTime } =
+        testEnv.proposalActions[0];
 
       const actionsSet = await polygonBridgeExecutor.getActionsSetById(0);
       expect(actionsSet.targets).to.be.eql(targets);
@@ -785,14 +762,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Confirm ActionsSet 1 State', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      const {
-        targets,
-        values,
-        signatures,
-        calldatas,
-        withDelegatecalls,
-        executionTime,
-      } = testEnv.proposalActions[1];
+      const { targets, values, signatures, calldatas, withDelegatecalls, executionTime } =
+        testEnv.proposalActions[1];
 
       const actionsSet = await polygonBridgeExecutor.getActionsSetById(1);
 
