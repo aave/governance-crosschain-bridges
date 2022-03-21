@@ -3,6 +3,7 @@ import { BigNumber, ethers } from 'ethers';
 import { formatUnits, hexDataLength, parseUnits } from 'ethers/lib/utils';
 import { task } from 'hardhat/config';
 import { NETWORKS_RPC_URL } from '../../helper-hardhat-config';
+import { applyL1ToL2Alias } from '../../helpers/arbitrum-helpers';
 import { ADDRESSES } from '../../helpers/gov-constants';
 
 import { DRE } from '../../helpers/misc-utils';
@@ -33,13 +34,6 @@ const computeRetryableHash = (chainId: BigNumber, seqNum: BigNumber, type: numbe
       ethers.utils.zeroPad(computeL2Hash(chainId, seqNum), 32),
       ethers.utils.zeroPad(BigNumber.from(type).toHexString(), 32),
     ])
-  );
-};
-
-export const applyL1ToL2Alias = (l1Address: string) => {
-  const offset = BigNumber.from('0x1111000000000000000000000000000000001111');
-  return ethers.utils.getAddress(
-    BigNumber.from(l1Address).add(offset).mod(BigNumber.from(2).pow(160)).toHexString()
   );
 };
 

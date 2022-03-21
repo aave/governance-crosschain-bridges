@@ -1,6 +1,17 @@
 import { Signer, BigNumber } from 'ethers';
-import { ArbitrumBridgeExecutor, ArbitrumBridgeExecutor__factory } from '../typechain';
+import {
+  ArbitrumBridgeExecutor,
+  ArbitrumBridgeExecutor__factory,
+  MockInbox,
+  MockInbox__factory,
+} from '../typechain';
 import { tEthereumAddress } from './types';
+
+export const deployInbox = async (signer: Signer): Promise<MockInbox> => {
+  const mockInbox = await new MockInbox__factory(signer).deploy();
+  await mockInbox.deployTransaction.wait();
+  return mockInbox;
+};
 
 export const deployArbitrumBridgeExecutor = async (
   ethereumExecutor: tEthereumAddress,
