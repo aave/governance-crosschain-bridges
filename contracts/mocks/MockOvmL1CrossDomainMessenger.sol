@@ -4,8 +4,6 @@ pragma solidity 0.7.5;
 import '../interfaces/ICrossDomainMessenger.sol';
 import './MockOvmL2CrossDomainMessenger.sol';
 
-import 'hardhat/console.sol';
-
 contract MockOvmL1CrossDomainMessenger is ICrossDomainMessenger {
   address private sender;
   address private l2Messenger;

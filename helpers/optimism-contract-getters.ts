@@ -18,8 +18,6 @@ export const deployOvmMessengers = async (
   await l2Messenger.deployTransaction.wait();
   await l1Messenger.setL2Messenger(l2Messenger.address);
   await l2Messenger.setL1Messenger(l1Messenger.address);
-  console.log(await l1Messenger.xDomainMessageSender())
-  console.log(await l2Messenger.xDomainMessageSender())
   return [l1Messenger, l2Messenger];
 };
 

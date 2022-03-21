@@ -9,9 +9,10 @@ import {
   getImpersonatedSigner,
   evmSnapshot,
   evmRevert,
+  increaseTime,
 } from '../helpers/misc-utils';
 
-import { makeSuite, ProposalActions, setupTestEnvironment, TestEnv } from './helpers/make-suite';
+import { makeSuite, setupTestEnvironment, TestEnv } from './helpers/make-suite';
 import {
   createBridgeTest1,
   createBridgeTest2,
@@ -210,11 +211,8 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
      * Arbitrum -- Create Proposal Actions 17
      * Update Ethereum Governance Executor in the Arbitrum Governance contract
      */
-    // console.log('arbtest');
     const proposal17Actions = await createArbitrumBridgeTest(aaveWhale2.address, testEnv);
     testEnv.proposalActions.push(proposal17Actions);
-    // console.log(proposal17Actions);
-    // console.log('arbtest done');
 
     /**
      * Optimism -- Create Proposal Actions 18
@@ -223,8 +221,6 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     const proposal18Actions = await createOptimismBridgeTest(aaveWhale2.address, testEnv);
     testEnv.proposalActions.push(proposal18Actions);
 
-    // console.log('LENGTH');
-    // console.log(testEnv.proposalActions.length);
     // Create Polygon Proposals
     for (let i = 0; i < 16; i++) {
       proposals[i] = await createProposal(
@@ -242,35 +238,18 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Create Arbitrum Proposal
-    // console.log('PARAMS');
-    // console.log(
-    //   aaveGovContract.address,
-    //   aaveWhale1.address,
-    //   shortExecutor.address,
-    //   [testEnv.arbitrumInbox.address],
-    //   [BigNumber.from(0)],
-    //   [
-    //     'function createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)',
-    //   ],
-    //   [testEnv.proposalActions[16].encodedRootCalldata],
-    //   [false],
-    //   '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
-    // );
     proposals[16] = await createProposal(
       aaveGovContract,
       aaveWhale1.signer,
       shortExecutor.address,
       [testEnv.arbitrumInbox.address],
       [BigNumber.from(0)],
-      [
-        'function createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)',
-      ],
+      ['createRetryableTicket(address,uint256,uint256,address,address,uint256,uint256,bytes)'],
       [testEnv.proposalActions[16].encodedRootCalldata],
-      [true],
+      [false],
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949'
     );
     await expectProposalState(aaveGovContract, proposals[16].id, proposalStates.PENDING);
-    // console.log('e');
 
     // Create Optimism proposal
     proposals[17] = await createProposal(
@@ -298,7 +277,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     }
 
     // Advance Block to End of Voting
-    await advanceBlockTo(proposals[15].endBlock.add(1));
+    await advanceBlockTo(proposals[17].endBlock.add(1));
 
     // Queue Proposals
     await queueProposal(aaveGovContract, proposals[0].id);
@@ -320,16 +299,15 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     await queueProposal(aaveGovContract, proposals[16].id);
     const queuedProposal18 = await queueProposal(aaveGovContract, proposals[17].id);
 
-    await expectProposalState(aaveGovContract, proposals[15].id, proposalStates.QUEUED);
+    await expectProposalState(aaveGovContract, proposals[17].id, proposalStates.QUEUED);
 
     // advance to execution
     const currentBlock = await ethers.provider.getBlock(await ethers.provider.getBlockNumber());
     const { timestamp } = currentBlock;
-    const fastForwardTime = queuedProposal18.executionTime.sub(timestamp).toNumber();
-    await advanceBlock(timestamp + fastForwardTime + 10);
+    await increaseTime(queuedProposal18.executionTime.sub(timestamp).toNumber());
   });
 
-  describe.only('Executor - Check Deployed State', async function () {
+  describe('Executor - Check Deployed State', async function () {
     it('Check Grace Period', async () => {
       const { polygonBridgeExecutor } = testEnv;
       expect(await polygonBridgeExecutor.getGracePeriod()).to.be.equal(BigNumber.from(1000));
@@ -459,7 +437,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       );
     });
   });
-  describe.skip('ArbitrumBridgeExecutor Authorization', async function () {
+  describe('ArbitrumBridgeExecutor Authorization', async function () {
     it('Unauthorized Transaction - Call Bridge Receiver From Non-EthereumGovernanceExecutor Address', async () => {
       const { arbitrumBridgeExecutor } = testEnv;
       const { targets, values, signatures, calldatas, withDelegatecalls } =
@@ -495,7 +473,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       ).to.be.revertedWith('UNAUTHORIZED_ORIGIN_ONLY_THIS');
     });
   });
-  describe.only('BridgeExecutorBase - Validate Delay Logic', async function () {
+  describe('BridgeExecutorBase - Validate Delay Logic', async function () {
     it('Delay > Maximum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
       const polygonBridgeExecutorSigner = await getImpersonatedSigner(
@@ -787,89 +765,40 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         .to.emit(aaveGovContract, 'ProposalExecuted');
     });
   });
-  describe.only('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
+  describe('Queue - ArbitrumBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 17 - successfully queue Arbitrum transaction - duplicate polygon actions', async () => {
       const { ethers } = DRE;
-      const {
-        aaveGovOwner,
-        aaveGovContract,
-        shortExecutor,
-        arbitrumInbox,
-        optimismBridgeExecutor,
-        arbitrumBridgeExecutor,
-        optimismL2Messenger,
-      } = testEnv;
+      const { aaveGovContract, shortExecutor, arbitrumBridgeExecutor } = testEnv;
 
-      // console.log('EXECUTE\n\n');
+      const { targets, values, signatures, calldatas, withDelegatecalls } =
+        testEnv.proposalActions[16];
 
-      // console.log('inbox address: ', arbitrumInbox.address);
-
-      // console.log(await aaveGovContract.getProposalById(proposals[16].id));
-
-      // console.log('tesssssssssssssssssssst');
-
-      // const proposalActions = new ProposalActions();
-
-      // // push the first transaction fields into action arrays
-      // const encodedAddress = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyAddress]);
-      // proposalActions.targets.push(arbitrumBridgeExecutor.address);
-      // proposalActions.values.push(BigNumber.from(0)); // TODO
-      // proposalActions.signatures.push('updateEthereumGovernanceExecutor(address)');
-      // proposalActions.calldatas.push(encodedAddress);
-      // proposalActions.withDelegatecalls.push(false);
-
-      // const encodedQueue = arbitrumBridgeExecutor.interface.encodeFunctionData('queue', [
-      //   proposalActions.targets,
-      //   proposalActions.values,
-      //   proposalActions.signatures,
-      //   proposalActions.calldatas,
-      //   proposalActions.withDelegatecalls,
-      // ]);
-
-      // const retryableTicket = {
-      //   destAddr: arbitrumBridgeExecutor.address,
-      //   arbTxCallValue: 0,
-      //   maxSubmissionCost: 0,
-      //   submissionRefundAddress: ZERO_ADDRESS,
-      //   valueRefundAddress: ZERO_ADDRESS,
-      //   maxGas: BigNumber.from(200000).mul(3),
-      //   gasPriceBid: 0,
-      //   data: encodedQueue,
-      // };
-
-      // await arbitrumInbox
-      //   .connect(aaveGovOwner.signer)
-      //   .createRetryableTicket(
-      //     retryableTicket.destAddr,
-      //     retryableTicket.arbTxCallValue,
-      //     retryableTicket.maxSubmissionCost,
-      //     retryableTicket.submissionRefundAddress,
-      //     retryableTicket.valueRefundAddress,
-      //     retryableTicket.maxGas,
-      //     retryableTicket.gasPriceBid,
-      //     retryableTicket.data
-      //   );
+      // expectedExecutionTime
+      const blockNumber = await ethers.provider.getBlockNumber();
+      const block = await await ethers.provider.getBlock(blockNumber);
+      const blocktime = block.timestamp;
+      const expectedExecutionTime = blocktime + 61;
 
       await expect(aaveGovContract.execute(proposals[16].id, overrides))
-        // .to.emit(customPolygonMapping, 'StateSynced')
-        // .to.emit(fxChild, 'NewFxMessage')
-        // .to.emit(polygonBridgeExecutor, 'ActionsSetQueued')
+        .to.emit(arbitrumBridgeExecutor, 'ActionsSetQueued')
+        .withArgs(
+          0,
+          targets,
+          values,
+          signatures,
+          calldatas,
+          withDelegatecalls,
+          expectedExecutionTime
+        )
         .to.emit(shortExecutor, 'ExecutedAction')
         .to.emit(aaveGovContract, 'ProposalExecuted');
-        
-      process.exit();
     });
   });
   describe('Queue - OptimismBridgeExecutor through Ethereum Aave Governance', async function () {
     it('Execute Proposal 18 - successfully queue Optimism transaction - duplicate polygon actions', async () => {
       const { ethers } = DRE;
-      const {
-        aaveGovContract,
-        shortExecutor,
-        optimismBridgeExecutor,
-        optimismL2Messenger,
-        aaveWhale1,
-      } = testEnv;
+      const { aaveGovContract, shortExecutor, optimismBridgeExecutor, optimismL2Messenger } =
+        testEnv;
 
       const { targets, values, signatures, calldatas, withDelegatecalls } =
         testEnv.proposalActions[17];
@@ -1026,10 +955,10 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   });
   describe('Execute Action Sets - Aave Arbitrum Governance', async function () {
     it('Execute Action Set 0 - update ethereum governance executor', async () => {
-      const { optimismBridgeExecutor, shortExecutor, aaveWhale2 } = testEnv;
+      const { arbitrumBridgeExecutor, shortExecutor, aaveWhale2 } = testEnv;
 
-      await expect(optimismBridgeExecutor.execute(0))
-        .to.emit(optimismBridgeExecutor, 'EthereumGovernanceExecutorUpdate')
+      await expect(arbitrumBridgeExecutor.execute(0))
+        .to.emit(arbitrumBridgeExecutor, 'EthereumGovernanceExecutorUpdate')
         .withArgs(
           DRE.ethers.utils.getAddress(shortExecutor.address),
           DRE.ethers.utils.getAddress(aaveWhale2.address)

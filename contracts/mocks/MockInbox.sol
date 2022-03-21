@@ -4,8 +4,6 @@ pragma solidity >=0.7.0;
 import '../interfaces/IInbox.sol';
 import '../dependencies/arbitrum/AddressAliasHelper.sol';
 
-import 'hardhat/console.sol';
-
 contract MockInbox is IInbox {
   uint256 public messageNum;
 
@@ -69,10 +67,6 @@ contract MockInbox is IInbox {
     uint256, // gasPriceBid
     bytes calldata data
   ) external payable override returns (uint256) {
-    console.log('createRetryableTicket');
-    console.log(destAddr);
-    console.logBytes(data);
-    console.log(address(this), AddressAliasHelper.undoL1ToL2Alias(address(this)));
     bool success;
     (success, ) = destAddr.call{gas: maxGas}(data);
     return messageNum;

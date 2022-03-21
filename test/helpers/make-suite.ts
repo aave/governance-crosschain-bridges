@@ -6,6 +6,8 @@ import { solidity } from 'ethereum-waffle';
 
 import { tEthereumAddress } from '../../helpers/types';
 import { deployArbitrumBridgeExecutor, deployInbox } from '../../helpers/arbitrum-contract-getters';
+import { applyL1ToL2Alias } from '../../helpers/arbitrum-helpers';
+
 import {
   deployOptimismBridgeExecutor,
   deployOvmMessengers,
@@ -149,13 +151,6 @@ const deployPolygonBridgeContracts = async (): Promise<void> => {
     aaveGovOwner.signer
   );
   testEnv.polygonMarketUpdate = await deployPolygonMarketUpdate(aaveWhale1.signer);
-};
-
-const applyL1ToL2Alias = (l1Address: string) => {
-  const offset = BigNumber.from('0x1111000000000000000000000000000000001111');
-  return ethers.utils.getAddress(
-    BigNumber.from(l1Address).add(offset).mod(BigNumber.from(2).pow(160)).toHexString()
-  );
 };
 
 const deployArbitrumBridgeContracts = async (): Promise<void> => {

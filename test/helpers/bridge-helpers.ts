@@ -619,7 +619,6 @@ export const createArbitrumBridgeTest = async (
     proposalActions.calldatas,
     proposalActions.withDelegatecalls,
   ]);
-  // console.log(encodedQueue);
 
   const retryableTicket = {
     destAddr: arbitrumBridgeExecutor.address,
@@ -645,20 +644,6 @@ export const createArbitrumBridgeTest = async (
       retryableTicket.data,
     ]
   );
-
-  // proposalActions.encodedRootCalldata = arbitrumInbox.interface.encodeFunctionData('createRetryableTicket', [
-  //   retryableTicket.destAddr,
-  //   retryableTicket.arbTxCallValue,
-  //   retryableTicket.maxSubmissionCost,
-  //   retryableTicket.submissionRefundAddress,
-  //   retryableTicket.valueRefundAddress,
-  //   retryableTicket.maxGas,
-  //   retryableTicket.gasPriceBid,
-  //   retryableTicket.data,
-  // ]);
-  // console.log('EQUAL?')
-  // console.log(proposalActions.encodedRootCalldata == encodedRootCalldata);
-  // console.log(proposalActions);
 
   return proposalActions;
 };
@@ -686,13 +671,11 @@ export const createOptimismBridgeTest = async (
     proposalActions.calldatas,
     proposalActions.withDelegatecalls,
   ]);
-  // console.log(encodedQueue);
 
   proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
     ['address', 'bytes', 'uint32'],
     [optimismBridgeExecutor.address, encodedQueue, 1500000]
   );
-  // console.log(proposalActions);
 
   return proposalActions;
 };
