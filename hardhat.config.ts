@@ -60,6 +60,7 @@ const mainnetFork = MAINNET_FORK
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
+      { version: '0.8.10', settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true } },
       { version: '0.7.5', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.7.3', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.5.2', settings: { optimizer: { enabled: true, runs: 200 } } },
