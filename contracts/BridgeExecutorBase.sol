@@ -280,11 +280,11 @@ abstract contract BridgeExecutorBase is IExecutorBase {
      * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
      **/
     function _queue(
-        address[] calldata targets,
-        uint256[] calldata values,
-        string[] calldata signatures,
-        bytes[] calldata calldatas,
-        bool[] calldata withDelegatecalls
+        address[] memory targets,
+        uint256[] memory values,
+        string[] memory signatures,
+        bytes[] memory calldatas,
+        bool[] memory withDelegatecalls
     ) internal {
         if (targets.length == 0) revert EmptyTargets();
         uint256 targetsLength = targets.length;
