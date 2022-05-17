@@ -4,7 +4,8 @@
   "description": "governance bridge repo",
   "main": "index.js",
   "scripts": {
-    "test": "MAINNET_FORK=true hardhat test",
+    "test": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile && MAINNET_FORK=true hardhat test",
+    "quick-test": "MAINNET_FORK=true hardhat test",
     "run-env": "npm i && tail -f /dev/null",
     "hardhat": "hardhat",
     "hardhat:kovan": "hardhat --network kovan",
