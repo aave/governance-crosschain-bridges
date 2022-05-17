@@ -8,6 +8,7 @@
     "deploy:gov-bridge:arbitrum-testnet": "hardhat deploy --tags 'ArbitrumGov,Greeter' --network arbitrum-testnet",
     "run-env": "npm i && tail -f /dev/null",
     "test": "hardhat test",
+    "test-fork": "MAINNET_FORK=true hardhat test test/fork/crosschain-bridges.spec.ts",
     "clean": "hardhat clean",
     "hardhat": "hardhat",
     "hardhat:kovan": "hardhat --network kovan",

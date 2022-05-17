@@ -10,9 +10,9 @@ import {
   evmSnapshot,
   evmRevert,
   increaseTime,
-} from '../helpers/misc-utils';
+} from '../../helpers/misc-utils';
 
-import { makeSuite, setupTestEnvironment, TestEnv } from './helpers/make-suite';
+import { makeSuite, setupTestEnvironment, TestEnv } from '../helpers/make-suite';
 import {
   createBridgeTest1,
   createBridgeTest2,
@@ -32,15 +32,15 @@ import {
   createBridgeTest16,
   createArbitrumBridgeTest,
   createOptimismBridgeTest,
-} from './helpers/bridge-helpers';
+} from '../helpers/bridge-helpers';
 import {
   expectProposalState,
   createProposal,
   triggerWhaleVotes,
   queueProposal,
-} from './helpers/governance-helpers';
-import { PolygonBridgeExecutor__factory } from '../typechain';
-import { ZERO_ADDRESS } from '../helpers/constants';
+} from '../helpers/governance-helpers';
+import { PolygonBridgeExecutor__factory } from '../../typechain';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 
 chai.use(solidity);
 
