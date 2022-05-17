@@ -16,6 +16,7 @@ dotenv.config({ path: '../.env' });
 
 import '@typechain/hardhat';
 import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-waffle';
 import '@typechain/ethers-v5';
 import 'hardhat-deploy';
 import '@tenderly/hardhat-tenderly';

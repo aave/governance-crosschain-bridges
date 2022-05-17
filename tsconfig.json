@@ -1,13 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es2019",
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
     "noImplicitAny": false,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "useUnknownInCatchVariables": false
   },
-  "include": ["scripts", "test", "deploy", "tasks"],
-  "files": ["./hardhat.config.ts"]
+  "include": ["./scripts", "./test", "./deploy", "./tasks"],
+  "files": [
+    "./hardhat.config.ts",
+    "./modules/tenderly/tenderly.d.ts",
+    "node_modules/@nomiclabs/buidler-ethers/src/type-extensions.d.ts",
+    "node_modules/buidler-typechain/src/type-extensions.d.ts",
+    "node_modules/@nomiclabs/buidler-waffle/src/type-extensions.d.ts",
+    "node_modules/@nomiclabs/buidler-etherscan/src/type-extensions.d.ts"
+  ]
 }
