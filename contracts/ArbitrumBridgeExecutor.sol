@@ -33,7 +33,7 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
    * @param values list of value in wei for each action's  associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
    * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the taget, else calls the target
+   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
    **/
   function queue(
     address[] calldata targets,
