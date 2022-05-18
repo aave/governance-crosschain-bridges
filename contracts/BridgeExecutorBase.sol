@@ -5,7 +5,7 @@ import {IExecutorBase} from './interfaces/IExecutorBase.sol';
 
 /**
  * @title BridgeExecutorBase
- * @author Lens Protocol & Aave
+ * @author Aave
  *
  * @notice This is an abstract contract that implements basic governance executor functionality.
  * It does not implement an external queue function, this should instead be done in the inheriting

@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 /**
  * @title IExecutorBase
- * @author Lens Protocol & Aave
+ * @author Aave
  *
  * @notice This is the interface for the ExecutorBase abstract contract. It does not define
  * an external action set queueing function, as that should be implemented in contracts
