@@ -470,7 +470,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         optimismBridgeExecutor
           .connect(aaveWhale1.signer)
           .updateEthereumGovernanceExecutor(aaveWhale1.address)
-      ).to.be.revertedWith('UNAUTHORIZED_ORIGIN_ONLY_THIS');
+      ).to.be.revertedWith('OnlyCallableByThis()');
     });
   });
   describe('BridgeExecutorBase - Validate Delay Logic', async function () {
