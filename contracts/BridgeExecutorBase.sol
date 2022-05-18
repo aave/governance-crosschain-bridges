@@ -1,12 +1,18 @@
-// SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.7.5;
-pragma abicoder v2;
+// SPDX-License-Identifier: AGPL-3.0-only
+pragma solidity 0.8.10;
 
-import './dependencies/utilities/SafeMath.sol';
-import './interfaces/IBridgeExecutor.sol';
+import {IExecutorBase} from './interfaces/IExecutorBase.sol';
 
-abstract contract BridgeExecutorBase is IBridgeExecutor {
-  using SafeMath for uint256;
+/**
+ * @title BridgeExecutorBase
+ * @author Aave
+ *
+ * @notice This is an abstract contract that implements basic governance executor functionality.
+ * It does not implement an external queue function, this should instead be done in the inheriting
+ * contract with proper access control.
+ */
+abstract contract BridgeExecutorBase is IExecutorBase {
+  uint256 constant MINIMUM_GRACE_PERIOD = 10 minutes;
 
   uint256 private _delay;
   uint256 private _gracePeriod;
@@ -19,15 +25,24 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
   mapping(bytes32 => bool) private _queuedActions;
 
   modifier onlyGuardian() {
-    require(msg.sender == _guardian, 'ONLY_BY_GUARDIAN');
+    if (msg.sender != _guardian) revert NotGuardian();
     _;
   }
 
   modifier onlyThis() {
-    require(msg.sender == address(this), 'UNAUTHORIZED_ORIGIN_ONLY_THIS');
+    if (msg.sender != address(this)) revert OnlyCallableByThis();
     _;
   }
 
+  /**
+   * @notice The constructor sets the initial parameters.
+   *
+   * @param delay The delay before which a queued proposal can be executed.
+   * @param gracePeriod The time period after a delay during which a proposal can be executed.
+   * @param minimumDelay The minimum bound a delay can be set to, this is a precaution.
+   * @param maximumDelay The maximum bound a delay can be set to, this is a precaution.
+   * @param guardian The guardian address, which can cancel queued proposals. Can be zero.
+   */
   constructor(
     uint256 delay,
     uint256 gracePeriod,
@@ -35,27 +50,32 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     uint256 maximumDelay,
     address guardian
   ) {
-    require(delay >= minimumDelay, 'DELAY_SHORTER_THAN_MINIMUM');
-    require(delay <= maximumDelay, 'DELAY_LONGER_THAN_MAXIMUM');
-    _delay = delay;
-    _gracePeriod = gracePeriod;
-    _minimumDelay = minimumDelay;
-    _maximumDelay = maximumDelay;
-    _guardian = guardian;
+    if (
+      gracePeriod < MINIMUM_GRACE_PERIOD ||
+      minimumDelay >= maximumDelay ||
+      delay < minimumDelay ||
+      delay > maximumDelay
+    ) revert InvalidInitParams();
+
+    _updateDelay(delay);
+    _updateGracePeriod(gracePeriod);
+    _updateMinimumDelay(minimumDelay);
+    _updateMaximumDelay(maximumDelay);
+    _updateGuardian(guardian);
   }
 
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function execute(uint256 actionsSetId) external payable override {
-    require(getCurrentState(actionsSetId) == ActionsSetState.Queued, 'ONLY_QUEUED_ACTIONS');
+    if (getCurrentState(actionsSetId) != ActionsSetState.Queued) revert OnlyQueuedActions();
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
-    require(block.timestamp >= actionsSet.executionTime, 'TIMELOCK_NOT_FINISHED');
+    if (block.timestamp < actionsSet.executionTime) revert TimelockNotFinished();
 
     actionsSet.executed = true;
     uint256 actionCount = actionsSet.targets.length;
 
     bytes[] memory returnedData = new bytes[](actionCount);
-    for (uint256 i = 0; i < actionCount; i++) {
+    for (uint256 i = 0; i < actionCount; ) {
       returnedData[i] = _executeTransaction(
         actionsSet.targets[i],
         actionsSet.values[i],
@@ -64,18 +84,22 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
         actionsSet.executionTime,
         actionsSet.withDelegatecalls[i]
       );
+      unchecked {
+        ++i;
+      }
     }
     emit ActionsSetExecuted(actionsSetId, msg.sender, returnedData);
   }
 
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function cancel(uint256 actionsSetId) external override onlyGuardian {
-    ActionsSetState state = getCurrentState(actionsSetId);
-    require(state == ActionsSetState.Queued, 'ONLY_BEFORE_EXECUTED');
+    if (getCurrentState(actionsSetId) != ActionsSetState.Queued) revert OnlyQueuedActions();
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     actionsSet.canceled = true;
-    for (uint256 i = 0; i < actionsSet.targets.length; i++) {
+
+    uint256 targetsLength = actionsSet.targets.length;
+    for (uint256 i = 0; i < targetsLength; ) {
       _cancelTransaction(
         actionsSet.targets[i],
         actionsSet.values[i],
@@ -84,120 +108,50 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
         actionsSet.executionTime,
         actionsSet.withDelegatecalls[i]
       );
+      unchecked {
+        ++i;
+      }
     }
 
     emit ActionsSetCanceled(actionsSetId);
   }
 
-  /// @inheritdoc IBridgeExecutor
-  function getActionsSetById(uint256 actionsSetId)
-    external
-    view
-    override
-    returns (ActionsSet memory)
-  {
-    return _actionsSets[actionsSetId];
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function getCurrentState(uint256 actionsSetId) public view override returns (ActionsSetState) {
-    require(_actionsSetCounter > actionsSetId, 'INVALID_ACTION_ID');
-    ActionsSet storage actionsSet = _actionsSets[actionsSetId];
-    if (actionsSet.canceled) {
-      return ActionsSetState.Canceled;
-    } else if (actionsSet.executed) {
-      return ActionsSetState.Executed;
-    } else if (block.timestamp > actionsSet.executionTime.add(_gracePeriod)) {
-      return ActionsSetState.Expired;
-    } else {
-      return ActionsSetState.Queued;
-    }
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function isActionQueued(bytes32 actionHash) public view override returns (bool) {
-    return _queuedActions[actionHash];
-  }
-
-  function receiveFunds() external payable {}
-
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function updateGuardian(address guardian) external override onlyThis {
-    emit GuardianUpdate(_guardian, guardian);
-    _guardian = guardian;
+    _updateGuardian(guardian);
   }
 
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function updateDelay(uint256 delay) external override onlyThis {
     _validateDelay(delay);
-    emit DelayUpdate(_delay, delay);
-    _delay = delay;
+    _updateDelay(delay);
   }
 
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function updateGracePeriod(uint256 gracePeriod) external override onlyThis {
-    emit GracePeriodUpdate(_gracePeriod, gracePeriod);
-    _gracePeriod = gracePeriod;
+    if (gracePeriod < MINIMUM_GRACE_PERIOD) revert GracePeriodTooShort();
+    _updateGracePeriod(gracePeriod);
   }
 
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function updateMinimumDelay(uint256 minimumDelay) external override onlyThis {
-    uint256 previousMinimumDelay = _minimumDelay;
-    _minimumDelay = minimumDelay;
+    if (minimumDelay >= _maximumDelay) revert MinimumDelayTooLong();
+    _updateMinimumDelay(minimumDelay);
     _validateDelay(_delay);
-    emit MinimumDelayUpdate(previousMinimumDelay, minimumDelay);
   }
 
-  /// @inheritdoc IBridgeExecutor
+  /// @inheritdoc IExecutorBase
   function updateMaximumDelay(uint256 maximumDelay) external override onlyThis {
-    uint256 previousMaximumDelay = _maximumDelay;
-    _maximumDelay = maximumDelay;
+    if (maximumDelay <= _minimumDelay) revert MaximumDelayTooShort();
+    _updateMaximumDelay(maximumDelay);
     _validateDelay(_delay);
-    emit MaximumDelayUpdate(previousMaximumDelay, maximumDelay);
   }
 
-  /// @inheritdoc IBridgeExecutor
-  function getDelay() external view override returns (uint256) {
-    return _delay;
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function getGracePeriod() external view override returns (uint256) {
-    return _gracePeriod;
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function getMinimumDelay() external view override returns (uint256) {
-    return _minimumDelay;
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function getMaximumDelay() external view override returns (uint256) {
-    return _maximumDelay;
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function getGuardian() external view override returns (address) {
-    return _guardian;
-  }
-
-  /// @inheritdoc IBridgeExecutor
-  function getActionsSetCount() external view override returns (uint256) {
-    return _actionsSetCounter;
-  }
-
-  /**
-   * @dev target.delegatecall cannot be provided a value directly and is sent
-   * with the entire available msg.value. In this instance, we only want each proposed action
-   * to execute with exactly the value defined in the proposal. By splitting executeDelegateCall
-   * into a seperate function, it can be called from this contract with a defined amout of value,
-   * reducing the risk that a delegatecall is executed with more value than intended
-   * @return success - boolean indicating it the delegate call was successfull
-   * @return resultdata - bytes returned by the delegate call
-   **/
+  /// @inheritdoc IExecutorBase
   function executeDelegateCall(address target, bytes calldata data)
     external
     payable
+    override
     onlyThis
     returns (bool, bytes memory)
   {
@@ -208,13 +162,101 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     return (success, resultData);
   }
 
+  /// @inheritdoc IExecutorBase
+  function receiveFunds() external payable override {}
+
+  /// @inheritdoc IExecutorBase
+  function getDelay() external view override returns (uint256) {
+    return _delay;
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getGracePeriod() external view override returns (uint256) {
+    return _gracePeriod;
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getMinimumDelay() external view override returns (uint256) {
+    return _minimumDelay;
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getMaximumDelay() external view override returns (uint256) {
+    return _maximumDelay;
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getGuardian() external view override returns (address) {
+    return _guardian;
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getActionsSetCount() external view override returns (uint256) {
+    return _actionsSetCounter;
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getActionsSetById(uint256 actionsSetId)
+    external
+    view
+    override
+    returns (ActionsSet memory)
+  {
+    return _actionsSets[actionsSetId];
+  }
+
+  /// @inheritdoc IExecutorBase
+  function getCurrentState(uint256 actionsSetId) public view override returns (ActionsSetState) {
+    if (_actionsSetCounter <= actionsSetId) revert InvalidActionsSetId();
+    ActionsSet storage actionsSet = _actionsSets[actionsSetId];
+    if (actionsSet.canceled) {
+      return ActionsSetState.Canceled;
+    } else if (actionsSet.executed) {
+      return ActionsSetState.Executed;
+    } else if (block.timestamp > actionsSet.executionTime + _gracePeriod) {
+      return ActionsSetState.Expired;
+    } else {
+      return ActionsSetState.Queued;
+    }
+  }
+
+  /// @inheritdoc IExecutorBase
+  function isActionQueued(bytes32 actionHash) public view override returns (bool) {
+    return _queuedActions[actionHash];
+  }
+
+  function _updateGuardian(address guardian) internal {
+    emit GuardianUpdate(_guardian, guardian);
+    _guardian = guardian;
+  }
+
+  function _updateDelay(uint256 delay) internal {
+    emit DelayUpdate(_delay, delay);
+    _delay = delay;
+  }
+
+  function _updateGracePeriod(uint256 gracePeriod) internal {
+    emit GracePeriodUpdate(_gracePeriod, gracePeriod);
+    _gracePeriod = gracePeriod;
+  }
+
+  function _updateMinimumDelay(uint256 minimumDelay) internal {
+    emit MinimumDelayUpdate(_minimumDelay, minimumDelay);
+    _minimumDelay = minimumDelay;
+  }
+
+  function _updateMaximumDelay(uint256 maximumDelay) internal {
+    emit MaximumDelayUpdate(_maximumDelay, maximumDelay);
+    _maximumDelay = maximumDelay;
+  }
+
   /**
-   * @dev Queue the ActionsSet - only callable by the BridgeMessageProvessor
+   * @dev Queue the ActionsSet
    * @param targets list of contracts called by each action's associated transaction
    * @param values list of value in wei for each action's  associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
    * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the taget, else calls the target
+   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
    **/
   function _queue(
     address[] memory targets,
@@ -223,33 +265,37 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
   ) internal {
-    require(targets.length != 0, 'INVALID_EMPTY_TARGETS');
-    require(
-      targets.length == values.length &&
-        targets.length == signatures.length &&
-        targets.length == calldatas.length &&
-        targets.length == withDelegatecalls.length,
-      'INCONSISTENT_PARAMS_LENGTH'
-    );
+    if (targets.length == 0) revert EmptyTargets();
+    uint256 targetsLength = targets.length;
+    if (
+      targetsLength != values.length ||
+      targetsLength != signatures.length ||
+      targetsLength != calldatas.length ||
+      targetsLength != withDelegatecalls.length
+    ) revert InconsistentParamsLength();
 
     uint256 actionsSetId = _actionsSetCounter;
-    uint256 executionTime = block.timestamp.add(_delay);
-    _actionsSetCounter++;
+    uint256 executionTime = block.timestamp + _delay;
+    unchecked {
+      ++_actionsSetCounter;
+    }
 
-    for (uint256 i = 0; i < targets.length; i++) {
-      bytes32 actionHash =
-        keccak256(
-          abi.encode(
-            targets[i],
-            values[i],
-            signatures[i],
-            calldatas[i],
-            executionTime,
-            withDelegatecalls[i]
-          )
-        );
-      require(!isActionQueued(actionHash), 'DUPLICATED_ACTION');
+    for (uint256 i = 0; i < targetsLength; ) {
+      bytes32 actionHash = keccak256(
+        abi.encode(
+          targets[i],
+          values[i],
+          signatures[i],
+          calldatas[i],
+          executionTime,
+          withDelegatecalls[i]
+        )
+      );
+      if (isActionQueued(actionHash)) revert DuplicateAction();
       _queuedActions[actionHash] = true;
+      unchecked {
+        ++i;
+      }
     }
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
@@ -279,10 +325,11 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     uint256 executionTime,
     bool withDelegatecall
   ) internal returns (bytes memory) {
-    require(address(this).balance >= value, 'NOT_ENOUGH_CONTRACT_BALANCE');
+    if (address(this).balance < value) revert InsufficientBalance();
 
-    bytes32 actionHash =
-      keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall));
+    bytes32 actionHash = keccak256(
+      abi.encode(target, value, signature, data, executionTime, withDelegatecall)
+    );
     _queuedActions[actionHash] = false;
 
     bytes memory callData;
@@ -311,14 +358,15 @@ abstract contract BridgeExecutorBase is IBridgeExecutor {
     uint256 executionTime,
     bool withDelegatecall
   ) internal {
-    bytes32 actionHash =
-      keccak256(abi.encode(target, value, signature, data, executionTime, withDelegatecall));
+    bytes32 actionHash = keccak256(
+      abi.encode(target, value, signature, data, executionTime, withDelegatecall)
+    );
     _queuedActions[actionHash] = false;
   }
 
   function _validateDelay(uint256 delay) internal view {
-    require(delay >= _minimumDelay, 'DELAY_SHORTER_THAN_MINIMUM');
-    require(delay <= _maximumDelay, 'DELAY_LONGER_THAN_MAXIMUM');
+    if (delay < _minimumDelay) revert DelayShorterThanMin();
+    if (delay > _maximumDelay) revert DelayLongerThanMax();
   }
 
   function _verifyCallResult(bool success, bytes memory returndata)

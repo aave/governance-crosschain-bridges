@@ -55,7 +55,7 @@
     "hardhat-dependency-compiler": "^1.1.2",
     "hardhat-deploy": "^0.10.6",
     "prettier": "^2.3.2",
-    "solidity-coverage": "^0.7.16",
+    "solidity-coverage": "^0.7.21",
     "tmp-promise": "^3.0.2",
     "ts-node": "^10.2.1",
     "tslint": "^6.1.3",
