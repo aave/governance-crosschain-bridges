@@ -29,10 +29,12 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
   }
 
   function redirect(
+    address _xDomainMessageSender,
     address _target,
     bytes calldata _message,
     uint32 _gasLimit
   ) external {
+    sender = _xDomainMessageSender;
     _target.call{gas: _gasLimit}(_message);
   }
 }
