@@ -19,7 +19,7 @@ The core contract is the `BridgeExecutorBase`, an abstract contract that contain
 
 The `BridgeExecutorBase` contract is implemented to facilitate the execution of sets of actions on other chains, after approval through Aave's governance process on Ethereum. Once the Ethereum governance process is completed, a cross-chain transaction can queue sets of actions for execution on the downstream chain. Once queued, these actions must wait for a certain `delay` prior to being executed. During the delay period a `guardian` address has the power to cancel the execution of these actions. If the delay period passes and the actions are not cancelled, the actions can be executed by anyone on the downstream chain.
 
-The `BridgeExecutorBase` is abstract and intentionally leaves the `_queue` function internal. This requires another contract to extend the `BridgeExecutorBase` to handle network specific logic, cross-chain transaction validation, and permissioning, prior to calling the internal `_queue` function. 
+The `BridgeExecutorBase` is abstract and intentionally leaves the `_queue` function internal. This requires another contract to extend the `BridgeExecutorBase` to handle network specific logic, cross-chain transaction validation, and permissioning, prior to calling the internal `_queue` function.
 
 ## Audit
 - MixBytes (8/12/21): [report](./audit/Aave-Governance-Crosschain-Bridges-Security-Audit-Report.pdf)
@@ -41,7 +41,7 @@ Follow the next steps to setup the repository:
 Terminal Window 1
 `docker-compose up`
 
-Once Terminal Window 1 Loaded - in a seperate terminal window - Terminal Window 2: 
+Once Terminal Window 1 Loaded - in a seperate terminal window - Terminal Window 2:
 `docker-compose exec contracts-env bash`
 
 In Terminal Window 2, run desired scripts from npm package file (i.e `npm run compile`)
@@ -52,7 +52,7 @@ In Terminal Window 2, run desired scripts from npm package file (i.e `npm run co
 
 This will compile the available smart contracts.
 
-## Polygon Governance Bridge 
+## Polygon Governance Bridge
 
 ### Polygon Governance Bridge Architecture
 
@@ -61,7 +61,7 @@ This will compile the available smart contracts.
 Additional documentation around the Polygon Bridging setup can be found at the links below:
 
 - [Polygon Docs `L1<>L2 Communication`](https://docs.matic.network/docs/develop/l1-l2-communication/state-transfer)
-- [FxPortal](https://github.com/jdkanani/fx-portal) 
+- [FxPortal](https://github.com/jdkanani/fx-portal)
 
 ### Test / Coverage
 
@@ -94,8 +94,8 @@ The script will:
 ### Bridge Contracts Functionality
 - The proposal is an encoded function call to the function `sendMessageToChild()` in `FxRoot`. The calldata for this proposal contains two encoded variables:
 - The first variable is the address of the contract that will decode and process this message on the Polygon chain. In this case, the receiver is the `PolygonBridgeExecutor` contract address.
-- The second variable is the data that will be decoded on the polygon chain. This field contains encoded bytes for the following fields targets[], values[], signatures[], calldatas[], and withDelegatecall[] 
-- When the proposal is executed, `sendMessageToChild()` in the `FxRoot` triggers `syncState()` on the `StateSender` contract which emits a `StateSync` event. 
+- The second variable is the data that will be decoded on the polygon chain. This field contains encoded bytes for the following fields targets[], values[], signatures[], calldatas[], and withDelegatecall[]
+- When the proposal is executed, `sendMessageToChild()` in the `FxRoot` triggers `syncState()` on the `StateSender` contract which emits a `StateSync` event.
 - Validators listening for this `StateSync` event then trigger the `onStateReceived()` in the `FxChild` contract on Polygon.
 - In `onStateReceived` the encoded data is passed along to a contract that implements the function `processMessageFromRoot` - which in this case is in the `PolygonBridgeExecutor` contract. In `processMessageFromRoot` the `PolygonBridgeExecutor` calls `_queue()` in the `BridgeExecutorBese` contract to queue the proposed actions for the appropriate execution time
 
@@ -135,10 +135,10 @@ In order to update the PolygonBridgeExecutor - the function `updateFxRootSender(
 
 ![aave-abitrum-governance-bridge-architecture](./ArbitrumBridgeArch.png)
 
-Additional documentation around the Polygon Bridging setup can be found at the links below:
+Additional documentation around the Arbitrum Bridging setup can be found at the links below:
 
 - [Arbitrum Docs `Messaging Between Layers`](https://developer.offchainlabs.com/docs/l1_l2_messages)
-- [Inside Arbitrum `Bridging`](https://github.com/jdkanani/fx-portal) 
+- [Inside Arbitrum `Bridging`](https://developer.offchainlabs.com/docs/inside_arbitrum#bridging)
 
 ### Arbitrum Bridge Contracts Functionality
 
@@ -171,7 +171,7 @@ After going through the Aave governance, the proposal payload will be a call to 
 ```
 
 From the function above, the key (non-gas related) bridging fields are `destAddr`, `data`, and `l2CallValue`. `destAddr` is the contract that will be called on Arbitrum. In this case it is the `ArbitrumBridgeExecutor` contract. The `data` is the encoded data for the cross chain transaction. In this case the `data` should be the encoded data for `queue(targets, values, signatures, calldatas, withDelegatecalls)`. `l2CallValue` is what will be sent over as the `msg.value` on L2. The rest of the fields pertain to gas management on Arbitrum and should be defined per Arbitrum documentation.
- 
+
 When this transaction is sent cross-chain, the `msg.sender` that send the message to the Arbitrum Inbox is retained. This means that the Aave governance executor contract will be the `msg.sender` when the `ArbitrumBridgeExecutor` is called on Arbitrum. For this reason, the Aave governance executor contract address should be provided to the `ArbitrumBridgeExecutor` contract in the constructor. This address will be saved and used to permission the queue function so that only calls from this address can successfully queue the ActionsSet in the `BridgeExecutorBase`.
 
 ### Deploying the ArbitrumBridgeExecutor
@@ -221,8 +221,8 @@ The parameters for the contract constructor can be set four different ways:
 1. use the option `--params` as a stringified JSON
 2. use the option `--paramsfile` to define the path to a ts file that has the parameters as the default export
 2. hardcode the params as a JSON in the contractparams variable in the deploy task
-    - you can use the --printparams option to get a template JSON of the params to copy and paste into the script and fill out 
-3. use the cli. By not setting contractparams you can 
+    - you can use the --printparams option to get a template JSON of the params to copy and paste into the script and fill out
+3. use the cli. By not setting contractparams you can
 
 To include the contract params as a string, pay close attentions to the quotations used to create the stringified JSON object. Below is a working example:
 
