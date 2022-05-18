@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.7.5;
-pragma abicoder v2;
+pragma solidity 0.8.10;
 
-import './BridgeExecutorBase.sol';
+import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
 
 contract ArbitrumBridgeExecutor is BridgeExecutorBase {
   address private _ethereumGovernanceExecutor;
@@ -34,14 +33,14 @@ contract ArbitrumBridgeExecutor is BridgeExecutorBase {
    * @param values list of value in wei for each action's  associated transaction
    * @param signatures list of function signatures (can be empty) to be used when created the callData
    * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the taget, else calls the target
+   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
    **/
   function queue(
-    address[] memory targets,
-    uint256[] memory values,
-    string[] memory signatures,
-    bytes[] memory calldatas,
-    bool[] memory withDelegatecalls
+    address[] calldata targets,
+    uint256[] calldata values,
+    string[] calldata signatures,
+    bytes[] calldata calldatas,
+    bool[] calldata withDelegatecalls
   ) external onlyEthereumGovernanceExecutor {
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
