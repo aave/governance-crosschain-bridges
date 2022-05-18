@@ -83,7 +83,7 @@ describe('L2BridgeExecutor', async function () {
 
     // ActionsSet
     expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('INVALID_ACTION_ID');
+    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
 
     // L2 Bridge parameters
     expect(await bridgeExecutor.getEthereumGovernanceExecutor()).to.be.equal(
@@ -105,7 +105,7 @@ describe('L2BridgeExecutor', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('INVALID_ACTION_ID');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
 
       const data = [
         [greeter.address],
@@ -141,7 +141,7 @@ describe('L2BridgeExecutor', async function () {
       expect(actionsSet[6]).to.be.eql(false);
       expect(actionsSet[7]).to.be.eql(false);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('TIMELOCK_NOT_FINISHED');
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('TimelockNotFinished()');
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
@@ -171,7 +171,7 @@ describe('L2BridgeExecutor', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+          'OnlyCallableByThis()'
         );
       }
     });
@@ -248,7 +248,7 @@ describe('L2BridgeExecutor', async function () {
     it('Update grace period', async () => {
       expect(await bridgeExecutor.getGracePeriod()).to.be.equal(GRACE_PERIOD);
 
-      const NEW_GRACE_PERIOD = 10;
+      const NEW_GRACE_PERIOD = 1200;
 
       const { data } = encodeSimpleActionsSet(
         bridgeExecutor.address,
@@ -365,10 +365,10 @@ describe('L2BridgeExecutor', async function () {
         encodeSimpleActionsSet(bridgeExecutor.address, 'updateMaximumDelay(uint256)', [DELAY - 1]),
       ];
       const errors = [
-        'DELAY_LONGER_THAN_MAXIMUM',
-        'DELAY_SHORTER_THAN_MINIMUM',
-        'DELAY_SHORTER_THAN_MINIMUM',
-        'DELAY_LONGER_THAN_MAXIMUM',
+        'DelayLongerThanMax()',
+        'DelayShorterThanMin()',
+        'DelayShorterThanMin()',
+        'DelayLongerThanMax()',
       ];
       for (const wrongConfig of wrongConfigs) {
         expect(
@@ -398,7 +398,7 @@ describe('L2BridgeExecutor', async function () {
     it('Tries to update the Ethereum Governance Executor without being itself', async () => {
       await expect(
         bridgeExecutor.updateEthereumGovernanceExecutor(ZERO_ADDRESS)
-      ).to.be.revertedWith('UNAUTHORIZED_ORIGIN_ONLY_THIS');
+      ).to.be.revertedWith('OnlyCallableByThis()');
     });
 
     it('Update the Ethereum Governance Executor', async () => {

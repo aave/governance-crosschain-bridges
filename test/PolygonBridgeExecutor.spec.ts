@@ -80,7 +80,7 @@ describe('PolygonBridgeExecutor', async function () {
 
     // ActionsSet
     expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('INVALID_ACTION_ID');
+    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
 
     // Polygon FxPortal parameters
     expect(await bridgeExecutor.getFxRootSender()).to.be.equal(fxRootSender.address);
@@ -116,7 +116,7 @@ describe('PolygonBridgeExecutor', async function () {
         bridgeExecutor
           .connect(fxChild)
           .processMessageFromRoot(mockStateId, fxRootSender.address, encodedData)
-      ).to.be.revertedWith('INVALID_EMPTY_TARGETS');
+      ).to.be.revertedWith('EmptyTargets()');
     });
 
     it('FxChild tries to queue an actions set with inconsistent params length (revert expected)', async () => {
@@ -140,7 +140,7 @@ describe('PolygonBridgeExecutor', async function () {
                 wrongData
               )
             )
-        ).to.be.revertedWith('INCONSISTENT_PARAMS_LENGTH');
+        ).to.be.revertedWith('InconsistentParamsLength()');
       }
     });
 
@@ -160,7 +160,7 @@ describe('PolygonBridgeExecutor', async function () {
         bridgeExecutor
           .connect(fxChild)
           .processMessageFromRoot(mockStateId, fxRootSender.address, encodedData)
-      ).to.be.revertedWith('DUPLICATED_ACTION');
+      ).to.be.revertedWith('DuplicateAction()');
     });
   });
 
@@ -177,7 +177,7 @@ describe('PolygonBridgeExecutor', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+          'OnlyCallableByThis()'
         );
       }
     });
@@ -248,7 +248,7 @@ describe('PolygonBridgeExecutor', async function () {
     it('Update grace period', async () => {
       expect(await bridgeExecutor.getGracePeriod()).to.be.equal(GRACE_PERIOD);
 
-      const NEW_GRACE_PERIOD = 10;
+      const NEW_GRACE_PERIOD = 1200;
 
       const mockStateId = 123456;
       const { data, encodedData } = encodeSimpleActionsSet(
@@ -350,10 +350,10 @@ describe('PolygonBridgeExecutor', async function () {
         encodeSimpleActionsSet(bridgeExecutor.address, 'updateMaximumDelay(uint256)', [DELAY - 1]),
       ];
       const errors = [
-        'DELAY_LONGER_THAN_MAXIMUM',
-        'DELAY_SHORTER_THAN_MINIMUM',
-        'DELAY_SHORTER_THAN_MINIMUM',
-        'DELAY_LONGER_THAN_MAXIMUM',
+        'DelayLongerThanMax()',
+        'DelayShorterThanMin()',
+        'DelayShorterThanMin()',
+        'DelayLongerThanMax()',
       ];
       for (const wrongConfig of wrongConfigs) {
         expect(
@@ -382,7 +382,7 @@ describe('PolygonBridgeExecutor', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'UNAUTHORIZED_ORIGIN_ONLY_THIS'
+          'OnlyCallableByThis()'
         );
       }
     });
