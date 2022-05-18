@@ -11,7 +11,9 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
     address newEthereumGovernanceExecutor
   );
 
-  modifier onlyEthereumGovernanceExecutor() virtual;
+  modifier onlyEthereumGovernanceExecutor() virtual {
+    _;
+  }
 
   constructor(
     address ethereumGovernanceExecutor,
