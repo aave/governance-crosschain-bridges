@@ -33,6 +33,7 @@ contract MockOvmL1CrossDomainMessenger is ICrossDomainMessenger {
     bytes calldata _message,
     uint32 _gasLimit
   ) external {
-    _target.call{gas: _gasLimit}(_message);
+    bool success;
+    (success, ) = _target.call{gas: _gasLimit}(_message);
   }
 }

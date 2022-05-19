@@ -35,6 +35,7 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
     uint32 _gasLimit
   ) external {
     sender = _xDomainMessageSender;
-    _target.call{gas: _gasLimit}(_message);
+    bool success;
+    (success, ) = _target.call{gas: _gasLimit}(_message);
   }
 }
