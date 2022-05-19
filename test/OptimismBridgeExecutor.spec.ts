@@ -122,6 +122,28 @@ describe('OptimismBridgeExecutor', async function () {
       );
     });
 
+    // TODO: This test does not work due to a Hardhat bug
+    it.skip('Tries to queue and actions set via Optimism L2 Messenger without being the Ethereum Governance Executor (revert expected)', async () => {
+      const greeter = await new Greeter__factory(user).deploy();
+
+      const NEW_MESSAGE = 'hello';
+
+      const { encodedData } = encodeSimpleActionsSet(
+        bridgeExecutor,
+        greeter.address,
+        'setMessage(string)',
+        [NEW_MESSAGE]
+      );
+
+      await expect(
+        ovmL1CrossDomainMessenger
+          .connect(user)
+          .sendMessage(bridgeExecutor.address, encodedData, OPTIMISM_GAS_LIMIT, {
+            gasLimit: 12000000,
+          })
+      ).to.be.revertedWith(ExecutorErrors.UnauthorizedEthereumExecutor);
+    });
+
     it('Queue and execute an actions set to set a message in Greeter', async () => {
       const greeter = await new Greeter__factory(user).deploy();
       expect(await greeter.message()).to.be.equal('');
