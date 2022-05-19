@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.5;
+pragma solidity 0.8.10;
 
 import {ICrossDomainMessenger} from '../interfaces/ICrossDomainMessenger.sol';
 import {MockOvmL1CrossDomainMessenger} from './MockOvmL1CrossDomainMessenger.sol';
+import {console} from 'hardhat/console.sol';
 
 contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
   address private sender;
@@ -27,6 +28,9 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
   ) external override {
     MockOvmL1CrossDomainMessenger(l1Messenger).redirect(_target, _message, _gasLimit);
   }
+  
+  // This error must be defined here or else Hardhat will not recognize the selector
+  error UnauthorizedEthereumExecutor();
 
   function redirect(
     address _xDomainMessageSender,
@@ -35,7 +39,11 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
     uint32 _gasLimit
   ) external {
     sender = _xDomainMessageSender;
-    bool success;
-    (success, ) = _target.call{gas: _gasLimit}(_message);
+    (bool success, bytes memory data) = _target.call{gas: _gasLimit}(_message);
+    if (!success) {
+      assembly {
+        revert(add(data, 32), mload(data))        
+      }
+    }
   }
 }

@@ -122,8 +122,7 @@ describe('OptimismBridgeExecutor', async function () {
       );
     });
 
-    // TODO: This test does not work due to a Hardhat bug
-    it.skip('Tries to queue and actions set via Optimism L2 Messenger without being the Ethereum Governance Executor (revert expected)', async () => {
+    it('Tries to queue and actions set via Optimism L2 Messenger without being the Ethereum Governance Executor (revert expected)', async () => {
       const greeter = await new Greeter__factory(user).deploy();
 
       const NEW_MESSAGE = 'hello';
