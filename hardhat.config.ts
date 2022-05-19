@@ -84,7 +84,7 @@ export default {
     compilers: [
       {
         version: '0.8.10',
-        settings: { optimizer: { enabled: true, runs: 200, details: { yul: true } }, viaIR: true },
+        settings: { optimizer: { enabled: true, runs: 200 } },
       },
       { version: '0.7.5', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.7.3', settings: { optimizer: { enabled: true, runs: 200 } } },
@@ -109,6 +109,8 @@ export default {
     coverage: {
       url: 'http://localhost:8555',
       chainId: COVERAGE_CHAINID,
+      throwOnTransactionFailures: true,
+      throwOnCallFailures: true,
     },
     kovan: {
       ...getCommonNetworkConfig(eEthereumNetwork.kovan, 42),

@@ -27,7 +27,7 @@
     "hardhat:arbitrum-testnet": "hardhat --network arbitrum-testnet",
     "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
     "console:fork": "MAINNET_FORK=true hardhat console",
-    "coverage": "npm run compile && hardhat coverage --testfiles test/emptyrun.coverage.ts && hardhat coverage --testfiles \"test/*.spec.ts\"",
+    "coverage": "npx hardhat coverage --testfiles  'test/*.spec.ts'",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
@@ -56,7 +56,7 @@
     "hardhat-dependency-compiler": "^1.1.2",
     "hardhat-deploy": "^0.10.6",
     "prettier": "^2.3.2",
-    "solidity-coverage": "^0.7.21",
+    "solidity-coverage": "^0.7.17",
     "tmp-promise": "^3.0.2",
     "ts-node": "^10.2.1",
     "tslint": "^6.1.3",
