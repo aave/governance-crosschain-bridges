@@ -33,6 +33,7 @@ const DELAY = 50;
 const MAXIMUM_DELAY = 100;
 const MINIMUM_DELAY = 1;
 const GRACE_PERIOD = 1000;
+const MINIMUM_GRACE_PERIOD = 10 * 60;
 
 const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const paramTypes = fn.split('(')[1].split(')')[0].split(',');
@@ -91,6 +92,74 @@ describe('BridgeExecutorBase', async function () {
     await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
       ExecutorErrors.InvalidActionsSetId
     );
+  });
+
+  context('Deployment', () => {
+    it('Tries to deploy the executor with grace period lower than the minimum (revert expected)', async () => {
+      await expect(
+        new SimpleBridgeExecutor__factory(user).deploy(
+          DELAY,
+          MINIMUM_GRACE_PERIOD - 1,
+          MINIMUM_DELAY,
+          MAXIMUM_DELAY,
+          guardian.address
+        )
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
+    });
+
+    it('Tries to deploy the executor with wrong delay bounds (revert expected)', async () => {
+      await expect(
+        new SimpleBridgeExecutor__factory(user).deploy(
+          DELAY,
+          GRACE_PERIOD,
+          MAXIMUM_DELAY,
+          MINIMUM_DELAY,
+          guardian.address
+        )
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
+
+      await expect(
+        new SimpleBridgeExecutor__factory(user).deploy(
+          DELAY,
+          GRACE_PERIOD,
+          MINIMUM_DELAY,
+          MINIMUM_DELAY,
+          guardian.address
+        )
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
+
+      await expect(
+        new SimpleBridgeExecutor__factory(user).deploy(
+          DELAY,
+          GRACE_PERIOD,
+          MINIMUM_DELAY,
+          MINIMUM_DELAY - 1,
+          guardian.address
+        )
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
+    });
+
+    it('Tries to deploy the executor with wrong delay (revert expected)', async () => {
+      await expect(
+        new SimpleBridgeExecutor__factory(user).deploy(
+          MINIMUM_DELAY - 1,
+          GRACE_PERIOD,
+          MINIMUM_DELAY,
+          MAXIMUM_DELAY,
+          guardian.address
+        )
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
+
+      await expect(
+        new SimpleBridgeExecutor__factory(user).deploy(
+          MAXIMUM_DELAY + 1,
+          GRACE_PERIOD,
+          MINIMUM_DELAY,
+          MAXIMUM_DELAY,
+          guardian.address
+        )
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
+    });
   });
 
   it('Receive funds', async () => {
@@ -156,6 +225,12 @@ describe('BridgeExecutorBase', async function () {
       expect(await bridgeExecutor.getGracePeriod()).to.be.equal(NEW_GRACE_PERIOD);
     });
 
+    it('Tries to update grace period with a value lower than the minimum (revert expected)', async () => {
+      await expect(
+        bridgeExecutor.connect(bridgeItself).updateGracePeriod(MINIMUM_GRACE_PERIOD - 1)
+      ).to.be.revertedWith(ExecutorErrors.GracePeriodTooShort);
+    });
+
     it('Update minimum delay', async () => {
       expect(await bridgeExecutor.getMinimumDelay()).to.be.equal(MINIMUM_DELAY);
 
@@ -168,6 +243,15 @@ describe('BridgeExecutorBase', async function () {
       expect(await bridgeExecutor.getMinimumDelay()).to.be.equal(NEW_MINIMUM_DELAY);
     });
 
+    it('Tries to update minimum delay with a value greater or equal than maximum delay (revert expected)', async () => {
+      await expect(
+        bridgeExecutor.connect(bridgeItself).updateMinimumDelay(MAXIMUM_DELAY)
+      ).to.be.revertedWith(ExecutorErrors.MinimumDelayTooLong);
+      await expect(
+        bridgeExecutor.connect(bridgeItself).updateMinimumDelay(MAXIMUM_DELAY + 1)
+      ).to.be.revertedWith(ExecutorErrors.MinimumDelayTooLong);
+    });
+
     it('Update maximum delay', async () => {
       expect(await bridgeExecutor.getMaximumDelay()).to.be.equal(MAXIMUM_DELAY);
 
@@ -178,6 +262,15 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(MAXIMUM_DELAY, NEW_MAXIMUM_DELAY);
 
       expect(await bridgeExecutor.getMaximumDelay()).to.be.equal(NEW_MAXIMUM_DELAY);
+    });
+
+    it('Tries to update maximum delay with a value lower or equal than minimum delay (revert expected)', async () => {
+      await expect(
+        bridgeExecutor.connect(bridgeItself).updateMaximumDelay(MINIMUM_DELAY)
+      ).to.be.revertedWith(ExecutorErrors.MaximumDelayTooShort);
+      await expect(
+        bridgeExecutor.connect(bridgeItself).updateMaximumDelay(MINIMUM_DELAY - 1)
+      ).to.be.revertedWith(ExecutorErrors.MaximumDelayTooShort);
     });
 
     it('Tries to update the delays with wrong configuration (revert expected)', async () => {

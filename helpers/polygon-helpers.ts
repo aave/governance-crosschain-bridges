@@ -5,7 +5,7 @@ import {
   PolygonBridgeExecutor__factory,
   PolygonMarketUpdate,
   PolygonMarketUpdate__factory,
-} from '../typechain/index';
+} from '../typechain';
 import ContractAddresses from '../contractAddresses.json';
 import { getMnemonicSigner } from './wallet-helpers';
 
