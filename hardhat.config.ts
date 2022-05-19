@@ -1,15 +1,25 @@
-import { HardhatUserConfig } from 'hardhat/types';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { task, HardhatUserConfig } from 'hardhat/config';
 import { accounts } from './helpers/test-wallets';
-import { eEthereumNetwork, eNetwork, ePolygonNetwork, eXDaiNetwork } from './helpers/types';
+import {
+  eArbitrumNetwork,
+  eEthereumNetwork,
+  eNetwork,
+  eOptimismNetwork,
+  ePolygonNetwork,
+  eXDaiNetwork,
+} from './helpers/types';
 import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
 import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
-import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-etherscan';
 import '@typechain/hardhat';
+import '@typechain/ethers-v5';
+import '@nomiclabs/hardhat-ethers';
 import '@tenderly/hardhat-tenderly';
+import 'hardhat-deploy';
+import 'hardhat-dependency-compiler';
 import 'solidity-coverage';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
@@ -22,7 +32,11 @@ if (!SKIP_LOAD) {
   require('./tasks/governance/simulate-mumbai-governance');
   require('./tasks/governance/check-polygon');
   require('./tasks/misc/set-DRE');
+  require('./tasks/l2/optimism');
+  require('./tasks/l2/arbitrum');
 }
+
+require('dotenv').config();
 
 const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
 const DEFAULT_GAS_MUL = 5;
@@ -31,6 +45,7 @@ const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
+const ARBISCAN_KEY = process.env.ARBISCAN_KEY || '';
 const TENDERLY_PROJECT = process.env.TENDERLY_PROJECT || '';
 const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
 
@@ -39,7 +54,7 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
   hardfork: HARDFORK,
   blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
   gasMultiplier: DEFAULT_GAS_MUL,
-  gasPrice: NETWORKS_DEFAULT_GAS[networkName],
+  gasPrice: NETWORKS_DEFAULT_GAS[networkName] || undefined,
   chainId: networkId,
   accounts: {
     mnemonic: MNEMONIC,
@@ -51,13 +66,20 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 
 const mainnetFork = MAINNET_FORK
   ? {
-      blockNumber: 12012081,
+      blockNumber: 14340480,
       url: NETWORKS_RPC_URL['main'],
     }
   : undefined;
 
 // export hardhat config
-const config: HardhatUserConfig = {
+export default {
+  typechain: {
+    outDir: 'typechain',
+    target: 'ethers-v5',
+  },
+  namedAccounts: {
+    deployer: 0,
+  },
   solidity: {
     compilers: [
       {
@@ -70,7 +92,10 @@ const config: HardhatUserConfig = {
     ],
   },
   etherscan: {
-    apiKey: ETHERSCAN_KEY,
+    apiKey: {
+      optimisticEthereum: ETHERSCAN_KEY,
+      arbitrumOne: ETHERSCAN_KEY,
+    },
   },
   tenderly: {
     project: TENDERLY_PROJECT,
@@ -85,14 +110,45 @@ const config: HardhatUserConfig = {
       url: 'http://localhost:8555',
       chainId: COVERAGE_CHAINID,
     },
-    kovan: getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
+    kovan: {
+      ...getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
+      companionNetworks: {
+        optimism: eOptimismNetwork.testnet,
+      },
+    },
     ropsten: getCommonNetworkConfig(eEthereumNetwork.ropsten, 3),
+    rinkeby: {
+      ...getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
+      companionNetworks: {
+        arbitrum: eArbitrumNetwork.arbitrumTestnet,
+      },
+    },
     goerli: getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
-    main: getCommonNetworkConfig(eEthereumNetwork.main, 1),
+    main: {
+      ...getCommonNetworkConfig(eEthereumNetwork.main, 1),
+      companionNetworks: {
+        optimism: eOptimismNetwork.main,
+        arbitrum: eArbitrumNetwork.arbitrum,
+      },
+    },
     tenderlyMain: getCommonNetworkConfig(eEthereumNetwork.tenderlyMain, 5),
     matic: getCommonNetworkConfig(ePolygonNetwork.matic, 137),
     mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     xdai: getCommonNetworkConfig(eXDaiNetwork.xdai, 100),
+    [eArbitrumNetwork.arbitrum]: getCommonNetworkConfig(eArbitrumNetwork.arbitrum, 42161),
+    [eArbitrumNetwork.arbitrumTestnet]: {
+      ...getCommonNetworkConfig(eArbitrumNetwork.arbitrumTestnet, 421611),
+      companionNetworks: {
+        l1: 'rinkeby',
+      },
+    },
+    [eOptimismNetwork.main]: getCommonNetworkConfig(eOptimismNetwork.main, 10),
+    [eOptimismNetwork.testnet]: {
+      ...getCommonNetworkConfig(eOptimismNetwork.testnet, 69),
+      companionNetworks: {
+        l1: 'kovan',
+      },
+    },
     hardhat: {
       hardfork: 'istanbul',
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -127,6 +183,10 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  dependencyCompiler: {
+    paths: [
+      '@aave/governance-v2/contracts/governance/AaveGovernanceV2.sol',
+      '@aave/governance-v2/contracts/governance/Executor.sol',
+    ],
+  },
 };
-
-export default config;

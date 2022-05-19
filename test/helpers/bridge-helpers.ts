@@ -2,6 +2,7 @@ import { DRE } from '../../helpers/misc-utils';
 import { BigNumber } from 'ethers';
 import { ProposalActions, TestEnv } from './make-suite';
 import { tEthereumAddress } from '../../helpers/types';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 
 export const createActionHash = (
   proposalIndex: number,
@@ -600,16 +601,81 @@ export const createArbitrumBridgeTest = async (
   testEnv: TestEnv
 ): Promise<ProposalActions> => {
   const { ethers } = DRE;
-  const { arbitrumBridgeExecutor } = testEnv;
+  const { arbitrumBridgeExecutor, arbitrumInbox } = testEnv;
   const proposalActions = new ProposalActions();
 
   // push the first transaction fields into action arrays
   const encodedAddress = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyAddress]);
   proposalActions.targets.push(arbitrumBridgeExecutor.address);
+  proposalActions.values.push(BigNumber.from(0)); // TODO
+  proposalActions.signatures.push('updateEthereumGovernanceExecutor(address)');
+  proposalActions.calldatas.push(encodedAddress);
+  proposalActions.withDelegatecalls.push(false);
+
+  const encodedQueue = arbitrumBridgeExecutor.interface.encodeFunctionData('queue', [
+    proposalActions.targets,
+    proposalActions.values,
+    proposalActions.signatures,
+    proposalActions.calldatas,
+    proposalActions.withDelegatecalls,
+  ]);
+
+  const retryableTicket = {
+    destAddr: arbitrumBridgeExecutor.address,
+    arbTxCallValue: 0,
+    maxSubmissionCost: 0,
+    submissionRefundAddress: ZERO_ADDRESS,
+    valueRefundAddress: ZERO_ADDRESS,
+    maxGas: BigNumber.from(200000).mul(3),
+    gasPriceBid: 0,
+    data: encodedQueue,
+  };
+
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'uint256', 'uint256', 'address', 'address', 'uint256', 'uint256', 'bytes'],
+    [
+      retryableTicket.destAddr,
+      retryableTicket.arbTxCallValue,
+      retryableTicket.maxSubmissionCost,
+      retryableTicket.submissionRefundAddress,
+      retryableTicket.valueRefundAddress,
+      retryableTicket.maxGas,
+      retryableTicket.gasPriceBid,
+      retryableTicket.data,
+    ]
+  );
+
+  return proposalActions;
+};
+
+export const createOptimismBridgeTest = async (
+  dummyAddress: tEthereumAddress,
+  testEnv: TestEnv
+): Promise<ProposalActions> => {
+  const { ethers } = DRE;
+  const { optimismBridgeExecutor } = testEnv;
+  const proposalActions = new ProposalActions();
+
+  // push the first transaction fields into action arrays
+  const encodedAddress = ethers.utils.defaultAbiCoder.encode(['uint256'], [dummyAddress]);
+  proposalActions.targets.push(optimismBridgeExecutor.address);
   proposalActions.values.push(BigNumber.from(0));
   proposalActions.signatures.push('updateEthereumGovernanceExecutor(address)');
   proposalActions.calldatas.push(encodedAddress);
   proposalActions.withDelegatecalls.push(false);
+
+  const encodedQueue = optimismBridgeExecutor.interface.encodeFunctionData('queue', [
+    proposalActions.targets,
+    proposalActions.values,
+    proposalActions.signatures,
+    proposalActions.calldatas,
+    proposalActions.withDelegatecalls,
+  ]);
+
+  proposalActions.encodedRootCalldata = ethers.utils.defaultAbiCoder.encode(
+    ['address', 'bytes', 'uint32'],
+    [optimismBridgeExecutor.address, encodedQueue, 1500000]
+  );
 
   return proposalActions;
 };

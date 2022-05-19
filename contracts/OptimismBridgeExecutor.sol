@@ -1,19 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
+import './interfaces/ICrossDomainMessenger.sol';
 import './L2BridgeExecutor.sol';
-import './dependencies/arbitrum/AddressAliasHelper.sol';
 
-contract ArbitrumBridgeExecutor is L2BridgeExecutor {
+contract OptimismBridgeExecutor is L2BridgeExecutor {
+  address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
+
   modifier onlyEthereumGovernanceExecutor() override {
     require(
-      AddressAliasHelper.undoL1ToL2Alias(msg.sender) == _ethereumGovernanceExecutor,
+      msg.sender == OVM_L2_CROSS_DOMAIN_MESSENGER &&
+        ICrossDomainMessenger(OVM_L2_CROSS_DOMAIN_MESSENGER).xDomainMessageSender() ==
+        _ethereumGovernanceExecutor,
       'UNAUTHORIZED_EXECUTOR'
     );
     _;
   }
 
   constructor(
+    address ovmL2CrossDomainMessenger,
     address ethereumGovernanceExecutor,
     uint256 delay,
     uint256 gracePeriod,
@@ -30,6 +35,6 @@ contract ArbitrumBridgeExecutor is L2BridgeExecutor {
       guardian
     )
   {
-    // Intentionally left blank
+    OVM_L2_CROSS_DOMAIN_MESSENGER = ovmL2CrossDomainMessenger;
   }
 }

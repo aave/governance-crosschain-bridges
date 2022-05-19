@@ -38,13 +38,13 @@ task('check-polygon', 'Create Proposal').setAction(async (_, localBRE) => {
   console.log();
   console.log('2__Test Polygon Bridge Executor');
   console.log(`Current Delay: ${(await polygonBridgeExecutor.getDelay()).toString()}`);
-  const delayTx = await polygonBridgeExecutor.setDelay(61);
-  await delayTx.wait();
-  while (polygonBridgeExecutor.listenerCount() > 0) {
+  // const delayTx = await polygonBridgeExecutor.setDelay(61);
+  //  await delayTx.wait();
+  /* while (polygonBridgeExecutor.listenerCount() > 0) {
     console.log('Waiting for event');
     await sleep(2000);
   }
-  await sleep(3000);
+  await sleep(3000);*/
 });
 
 const sleep = async (ms: number) => {
