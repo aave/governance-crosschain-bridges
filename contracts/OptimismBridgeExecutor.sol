@@ -8,12 +8,11 @@ contract OptimismBridgeExecutor is L2BridgeExecutor {
   address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
 
   modifier onlyEthereumGovernanceExecutor() override {
-    require(
-      msg.sender == OVM_L2_CROSS_DOMAIN_MESSENGER &&
-        ICrossDomainMessenger(OVM_L2_CROSS_DOMAIN_MESSENGER).xDomainMessageSender() ==
-        _ethereumGovernanceExecutor,
-      'UNAUTHORIZED_EXECUTOR'
-    );
+    if (
+      msg.sender != OVM_L2_CROSS_DOMAIN_MESSENGER ||
+      ICrossDomainMessenger(OVM_L2_CROSS_DOMAIN_MESSENGER).xDomainMessageSender() !=
+      _ethereumGovernanceExecutor
+    ) revert UnauthorizedEthereumExecutor();
     _;
   }
 

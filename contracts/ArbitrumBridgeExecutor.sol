@@ -6,10 +6,8 @@ import './dependencies/arbitrum/AddressAliasHelper.sol';
 
 contract ArbitrumBridgeExecutor is L2BridgeExecutor {
   modifier onlyEthereumGovernanceExecutor() override {
-    require(
-      AddressAliasHelper.undoL1ToL2Alias(msg.sender) == _ethereumGovernanceExecutor,
-      'UNAUTHORIZED_EXECUTOR'
-    );
+    if (AddressAliasHelper.undoL1ToL2Alias(msg.sender) != _ethereumGovernanceExecutor)
+      revert UnauthorizedEthereumExecutor();
     _;
   }
 

@@ -11,8 +11,10 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   event FxRootSenderUpdate(address previousFxRootSender, address newFxRootSender);
   event FxChildUpdate(address previousFxChild, address newFxChild);
 
+  error UnauthorizedChildOrigin();
+
   modifier onlyFxChild() {
-    require(msg.sender == _fxChild, 'UNAUTHORIZED_CHILD_ORIGIN');
+    if (msg.sender != _fxChild) revert UnauthorizedChildOrigin();
     _;
   }
 
