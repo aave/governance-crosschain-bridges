@@ -1,5 +1,5 @@
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { task, HardhatUserConfig } from 'hardhat/config';
+// import { HardhatRuntimeEnvironment } from 'hardhat/types';
+// import { task, HardhatUserConfig } from 'hardhat/config';
 import { accounts } from './helpers/test-wallets';
 import {
   eArbitrumNetwork,
@@ -9,8 +9,7 @@ import {
   ePolygonNetwork,
   eXDaiNetwork,
 } from './helpers/types';
-import { BUIDLEREVM_CHAINID, COVERAGE_CHAINID } from './helpers/buidler-constants';
-import { NETWORKS_RPC_URL, NETWORKS_DEFAULT_GAS } from './helper-hardhat-config';
+import { NETWORKS_RPC_URL, /*NETWORKS_DEFAULT_GAS*/ } from './helper-hardhat-config';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
@@ -37,26 +36,16 @@ if (!SKIP_LOAD) {
   require('./tasks/l2/arbitrum');
 }
 
-require('dotenv').config();
-
-const DEFAULT_BLOCK_GAS_LIMIT = 12450000;
-const DEFAULT_GAS_MUL = 5;
-const HARDFORK = 'istanbul';
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
-const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || '';
 const ARBISCAN_KEY = process.env.ARBISCAN_KEY || '';
+const OPTIMISTIC_ETHERSCAN_KEY = process.env.OPTIMISTIC_ETHERSCAN_KEY || '';
 const TENDERLY_PROJECT = process.env.TENDERLY_PROJECT || '';
 const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
 
 const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
   url: NETWORKS_RPC_URL[networkName],
-  hardfork: HARDFORK,
-  blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
-  gasMultiplier: DEFAULT_GAS_MUL,
-  gasPrice: NETWORKS_DEFAULT_GAS[networkName] || undefined,
-  chainId: networkId,
   accounts: {
     mnemonic: MNEMONIC,
     path: MNEMONIC_PATH,
@@ -72,7 +61,6 @@ const mainnetFork = MAINNET_FORK
     }
   : undefined;
 
-// export hardhat config
 export default {
   typechain: {
     outDir: 'typechain',
@@ -87,15 +75,26 @@ export default {
         version: '0.8.10',
         settings: { optimizer: { enabled: true, runs: 200 } },
       },
-      { version: '0.7.5', settings: { optimizer: { enabled: true, runs: 200 } } },
+      {
+        version: '0.7.5',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+            details: {
+              yul: true,
+            },
+          },
+        },
+      },
       { version: '0.7.3', settings: { optimizer: { enabled: true, runs: 200 } } },
       { version: '0.5.2', settings: { optimizer: { enabled: true, runs: 200 } } },
     ],
   },
   etherscan: {
     apiKey: {
-      optimisticEthereum: ETHERSCAN_KEY,
-      arbitrumOne: ETHERSCAN_KEY,
+      optimisticEthereum: OPTIMISTIC_ETHERSCAN_KEY,
+      arbitrumOne: ARBISCAN_KEY,
     },
   },
   tenderly: {
@@ -107,12 +106,6 @@ export default {
     timeout: 100000,
   },
   networks: {
-    coverage: {
-      url: 'http://localhost:8555',
-      chainId: COVERAGE_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-    },
     kovan: {
       ...getCommonNetworkConfig(eEthereumNetwork.kovan, 42),
       companionNetworks: {
@@ -153,37 +146,11 @@ export default {
       },
     },
     hardhat: {
-      hardfork: 'istanbul',
-      blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
-      gas: DEFAULT_BLOCK_GAS_LIMIT,
-      gasPrice: 8000000000,
-      chainId: BUIDLEREVM_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
       accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
         privateKey: secretKey,
         balance,
       })),
       forking: mainnetFork,
-    },
-    buidlerevm_docker: {
-      hardfork: 'istanbul',
-      blockGasLimit: 9500000,
-      gas: 9500000,
-      gasPrice: 8000000000,
-      chainId: BUIDLEREVM_CHAINID,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      url: 'http://localhost:8545',
-    },
-    ganache: {
-      url: 'http://ganache:8545',
-      accounts: {
-        mnemonic: 'fox sight canyon orphan hotel grow hedgehog build bless august weather swarm',
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-      },
     },
   },
   dependencyCompiler: {

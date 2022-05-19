@@ -44,18 +44,3 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eOptimismNetwork.main]: `https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eOptimismNetwork.testnet]: `https://opt-kovan.g.alchemy.com/v2/${ALCHEMY_KEY}`,
 };
-
-export const NETWORKS_DEFAULT_GAS: iParamsPerNetwork<number> = {
-  [eEthereumNetwork.kovan]: 65 * GWEI,
-  [eEthereumNetwork.ropsten]: 65 * GWEI,
-  [eEthereumNetwork.rinkeby]: 65 * GWEI,
-  [eEthereumNetwork.goerli]: 65 * GWEI,
-  [eEthereumNetwork.main]: 65 * GWEI,
-  [eEthereumNetwork.coverage]: 65 * GWEI,
-  [eEthereumNetwork.hardhat]: 65 * GWEI,
-  [eEthereumNetwork.buidlerevm]: 65 * GWEI,
-  [eEthereumNetwork.tenderlyMain]: 65 * GWEI,
-  [ePolygonNetwork.mumbai]: 1 * GWEI,
-  [ePolygonNetwork.matic]: 2 * GWEI,
-  [eXDaiNetwork.xdai]: 1 * GWEI,
-};
