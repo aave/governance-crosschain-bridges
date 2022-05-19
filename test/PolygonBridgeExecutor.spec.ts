@@ -12,6 +12,7 @@ import {
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ExecutorErrors } from './helpers/executor-helpers';
+import { BigNumber } from 'ethers';
 
 chai.use(solidity);
 
@@ -32,7 +33,7 @@ const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const paramTypes = fn.split('(')[1].split(')')[0].split(',');
   const data = [
     [target],
-    [0],
+    [BigNumber.from(0)],
     [fn],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],

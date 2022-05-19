@@ -38,7 +38,7 @@ const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const paramTypes = fn.split('(')[1].split(')')[0].split(',');
   const data = [
     [target],
-    [0],
+    [BigNumber.from(0)],
     [fn],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],
@@ -262,13 +262,7 @@ describe('BridgeExecutorBase', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeter.address],
-        [BigNumber.from(0)],
-        ['setMessage(string)'],
-        [ethers.utils.defaultAbiCoder.encode(['string'], [NEW_MESSAGE])],
-        [false],
-      ];
+      const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
       const tx = await bridgeExecutor.queue(
         data[0] as string[],
         data[1] as BigNumberish[],
@@ -325,19 +319,10 @@ describe('BridgeExecutorBase', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeterPayload.address],
-        [BigNumber.from(0)],
-        ['execute(address,string)'],
-        [
-          ethers.utils.defaultAbiCoder.encode(
-            ['address', 'string'],
-            [greeter.address, NEW_MESSAGE]
-          ),
-        ],
-        [true],
-      ];
-
+      const { data } = encodeSimpleActionsSet(greeterPayload.address, 'execute(address,string)', [
+        greeter.address,
+        NEW_MESSAGE,
+      ]);
       const tx = await bridgeExecutor.queue(
         data[0] as string[],
         data[1] as BigNumberish[],

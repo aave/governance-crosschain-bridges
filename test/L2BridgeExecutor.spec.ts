@@ -36,7 +36,7 @@ const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const paramTypes = fn.split('(')[1].split(')')[0].split(',');
   const data = [
     [target],
-    [0],
+    [BigNumber.from(0)],
     [fn],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],
