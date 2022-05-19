@@ -27,7 +27,7 @@
     "hardhat:arbitrum-testnet": "hardhat --network arbitrum-testnet",
     "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
     "console:fork": "MAINNET_FORK=true hardhat console",
-    "coverage": "npx hardhat coverage --testfiles  'test/*.spec.ts'",
+    "coverage": "npx hardhat coverage --testfiles  'test/emptyrun.coverage.ts' && npx hardhat coverage --testfiles  'test/*.spec.ts'",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
