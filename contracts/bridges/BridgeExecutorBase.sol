@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.10;
 
-import {IExecutorBase} from './interfaces/IExecutorBase.sol';
+import {IExecutorBase} from '../interfaces/IExecutorBase.sol';
 
 /**
  * @title BridgeExecutorBase
