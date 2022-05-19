@@ -95,7 +95,7 @@ describe('L2BridgeExecutor', async function () {
   });
 
   context('Ethereum Governance Executor queues an actions sets', () => {
-    it('Tries to queue and actions set without being the Ethereum Governance Executor', async () => {
+    it('Tries to queue and actions set without being the Ethereum Governance Executor (revert expected)', async () => {
       await expect(bridgeExecutor.queue([], [], [], [], [])).to.be.revertedWith(
         ExecutorErrors.UnauthorizedEthereumExecutor
       );
