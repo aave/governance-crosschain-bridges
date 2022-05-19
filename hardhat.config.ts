@@ -15,11 +15,12 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
 import '@typechain/hardhat';
+import '@typechain/ethers-v5';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
-import '@typechain/ethers-v5';
-import 'hardhat-deploy';
 import '@tenderly/hardhat-tenderly';
+import 'hardhat-deploy';
+import 'hardhat-dependency-compiler';
 import 'solidity-coverage';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
@@ -184,5 +185,11 @@ export default {
         count: 20,
       },
     },
+  },
+  dependencyCompiler: {
+    paths: [
+      '@aave/governance-v2/contracts/governance/AaveGovernanceV2.sol',
+      '@aave/governance-v2/contracts/governance/Executor.sol',
+    ],
   },
 };
