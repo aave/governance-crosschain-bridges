@@ -18,7 +18,7 @@ import {
   getImpersonatedSigner,
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
-import { ExecutorErrors } from './helpers/executor-helpers';
+import { ActionsSetState, ExecutorErrors } from './helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -282,7 +282,7 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       const actionsSet = await bridgeExecutor.getActionsSetById(0);
       expect(actionsSet[0]).to.be.eql(data[0]);
@@ -308,7 +308,7 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(NEW_MESSAGE);
 
       expect(await greeter.message()).to.be.equal(NEW_MESSAGE);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(1);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Executed);
       expect((await bridgeExecutor.getActionsSetById(0)).executed).to.be.equal(true);
     });
 
@@ -351,7 +351,7 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       const actionsSet = await bridgeExecutor.getActionsSetById(0);
       expect(actionsSet[0]).to.be.eql(data[0]);
@@ -390,7 +390,7 @@ describe('BridgeExecutorBase', async function () {
       expect(payloadExecutedEvent.sender).to.be.equal(bridgeExecutor.address);
 
       expect(await greeter.message()).to.be.equal(NEW_MESSAGE);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(1);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Executed);
       expect((await bridgeExecutor.getActionsSetById(0)).executed).to.be.equal(true);
     });
 
@@ -429,13 +429,13 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       expect(await bridgeExecutor.connect(guardian).cancel(0))
         .to.emit(bridgeExecutor, 'ActionsSetCanceled')
         .withArgs(0);
 
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(2);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Canceled);
       expect((await bridgeExecutor.getActionsSetById(0)).canceled).to.be.equal(true);
     });
 
@@ -470,7 +470,7 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
@@ -482,7 +482,7 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(NEW_MESSAGE);
 
       expect(await greeter.message()).to.be.equal(NEW_MESSAGE);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(1);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Executed);
 
       await expect(bridgeExecutor.connect(guardian).cancel(0)).to.be.revertedWith(
         ExecutorErrors.OnlyQueuedActions
@@ -520,14 +520,14 @@ describe('BridgeExecutorBase', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       const expirationTime = executionTime.add(GRACE_PERIOD);
 
       await setBlocktime(expirationTime.add(1).toNumber());
       await advanceBlocks(1);
 
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(3);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Expired);
 
       await expect(bridgeExecutor.execute(0)).to.be.revertedWith(ExecutorErrors.OnlyQueuedActions);
       await expect(bridgeExecutor.connect(guardian).cancel(0)).to.be.revertedWith(

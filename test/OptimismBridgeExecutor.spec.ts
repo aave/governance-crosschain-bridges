@@ -21,7 +21,7 @@ import {
   timeLatest,
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
-import { ExecutorErrors } from './helpers/executor-helpers';
+import { ActionsSetState, ExecutorErrors } from './helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -153,7 +153,7 @@ describe('OptimismBridgeExecutor', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       const actionsSet = await bridgeExecutor.getActionsSetById(0);
       expect(actionsSet[0]).to.be.eql(data[0]);
@@ -179,7 +179,7 @@ describe('OptimismBridgeExecutor', async function () {
         .withArgs(NEW_MESSAGE);
 
       expect(await greeter.message()).to.be.equal(NEW_MESSAGE);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(1);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Executed);
       expect((await bridgeExecutor.getActionsSetById(0)).executed).to.be.equal(true);
     });
 
@@ -215,7 +215,7 @@ describe('OptimismBridgeExecutor', async function () {
         .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(1);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(0);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Queued);
 
       const actionsSet = await bridgeExecutor.getActionsSetById(0);
       expect(actionsSet[0]).to.be.eql(data[0]);
@@ -254,7 +254,7 @@ describe('OptimismBridgeExecutor', async function () {
       expect(payloadExecutedEvent.sender).to.be.equal(bridgeExecutor.address);
 
       expect(await greeter.message()).to.be.equal(NEW_MESSAGE);
-      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(1);
+      expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Executed);
       expect((await bridgeExecutor.getActionsSetById(0)).executed).to.be.equal(true);
     });
   });

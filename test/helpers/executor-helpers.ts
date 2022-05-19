@@ -22,3 +22,10 @@ export enum ExecutorErrors {
   // L2BridgeExecutor
   UnauthorizedEthereumExecutor = 'UnauthorizedEthereumExecutor()',
 }
+
+export enum ActionsSetState {
+  Queued = 0,
+  Executed = 1,
+  Canceled = 2,
+  Expired = 3,
+}

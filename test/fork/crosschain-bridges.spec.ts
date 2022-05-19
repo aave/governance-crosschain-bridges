@@ -41,7 +41,7 @@ import {
 } from '../helpers/governance-helpers';
 import { PolygonBridgeExecutor__factory } from '../../typechain';
 import { ZERO_ADDRESS } from '../../helpers/constants';
-import { ExecutorErrors } from '../helpers/executor-helpers';
+import { ActionsSetState, ExecutorErrors } from '../helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -866,7 +866,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('Execute Action Sets - Aave Polygon Governance', async function () {
     it('Get State of Actions 0 - Actions Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(0)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(ActionsSetState.Queued)).to.be.eq(
+        ActionsSetState.Queued
+      );
     });
     it('Execute Action Set 0 - polygon gov error - timelock not finished', async () => {
       const { polygonBridgeExecutor } = testEnv;
@@ -895,7 +897,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 0 - Actions Executed', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(0)).to.be.eq(1);
+      await expect(await polygonBridgeExecutor.getCurrentState(0)).to.be.eq(
+        ActionsSetState.Executed
+      );
     });
     it('Execute Action Set 100 - polygon gov error - invalid actions id', async () => {
       const { polygonBridgeExecutor } = testEnv;
@@ -1031,7 +1035,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 2 - Action Set Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(ActionsSetState.Queued);
     });
     it('Cancel Action Set 2 - polygon gov error - only guardian', async () => {
       const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
@@ -1053,7 +1057,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 2 - Actions Canceled', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(2);
+      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(
+        ActionsSetState.Canceled
+      );
     });
   });
   describe('Update Guardian', async function () {
@@ -1072,7 +1078,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 2 - Action Set Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(ActionsSetState.Queued);
     });
     it('Cancel Action Set 2 - polygon gov error - only guardian', async () => {
       const { polygonBridgeExecutor, aaveGovOwner } = testEnv;
@@ -1095,7 +1101,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('Expired Actions - Aave Polygon Governance', async function () {
     it('Get State of Action Set 3 - Actions Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(ActionsSetState.Queued);
     });
     it('Execute Actions 3 - polygon gov error - expired action', async () => {
       const { ethers } = DRE;
@@ -1109,7 +1115,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Actions 3 - Actions Expired', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(3);
+      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(
+        ActionsSetState.Expired
+      );
     });
   });
 });
