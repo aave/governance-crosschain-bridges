@@ -67,6 +67,7 @@ describe('OptimismBridgeExecutor', async function () {
     await hardhat.run('set-DRE');
     [user, ethereumGovernanceExecutor, guardian, ...users] = await ethers.getSigners();
 
+    // Mocking Optimism bridge messenger
     ovmL1CrossDomainMessenger = await new MockOvmL1CrossDomainMessenger__factory(user).deploy();
     ovmL2CrossDomainMessenger = await new MockOvmL2CrossDomainMessenger__factory(user).deploy();
     await ovmL1CrossDomainMessenger.setL2Messenger(ovmL2CrossDomainMessenger.address);
@@ -132,18 +133,15 @@ describe('OptimismBridgeExecutor', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeter.address],
-        [BigNumber.from(0)],
-        ['setMessage(string)'],
-        [ethers.utils.defaultAbiCoder.encode(['string'], [NEW_MESSAGE])],
-        [false],
-      ];
-      const encodedQueue = bridgeExecutor.interface.encodeFunctionData('queue', data as any);
-
+      const { data, encodedData } = encodeSimpleActionsSet(
+        bridgeExecutor,
+        greeter.address,
+        'setMessage(string)',
+        [NEW_MESSAGE]
+      );
       const tx = await ovmL1CrossDomainMessenger
         .connect(ethereumGovernanceExecutor)
-        .sendMessage(bridgeExecutor.address, encodedQueue, OPTIMISM_GAS_LIMIT, {
+        .sendMessage(bridgeExecutor.address, encodedData, OPTIMISM_GAS_LIMIT, {
           gasLimit: 12000000,
         });
       const executionTime = (await timeLatest()).add(DELAY);
@@ -507,22 +505,15 @@ describe('OptimismBridgeExecutor', async function () {
 
       const NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS = ZERO_ADDRESS;
 
-      const data = [
-        [bridgeExecutor.address],
-        [BigNumber.from(0)],
-        ['updateEthereumGovernanceExecutor(address)'],
-        [
-          ethers.utils.defaultAbiCoder.encode(
-            ['address'],
-            [NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS]
-          ),
-        ],
-        [false],
-      ];
-      const encodedQueue = bridgeExecutor.interface.encodeFunctionData('queue', data as any);
+      const { data, encodedData } = encodeSimpleActionsSet(
+        bridgeExecutor,
+        bridgeExecutor.address,
+        'updateEthereumGovernanceExecutor(address)',
+        [NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS]
+      );
       const tx = await ovmL1CrossDomainMessenger
         .connect(ethereumGovernanceExecutor)
-        .sendMessage(bridgeExecutor.address, encodedQueue, OPTIMISM_GAS_LIMIT, {
+        .sendMessage(bridgeExecutor.address, encodedData, OPTIMISM_GAS_LIMIT, {
           gasLimit: 12000000,
         });
 
