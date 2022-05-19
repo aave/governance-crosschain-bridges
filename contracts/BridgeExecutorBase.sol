@@ -387,7 +387,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
           revert(add(32, returndata), returndata_size)
         }
       } else {
-        revert('FAILED_ACTION_EXECUTION');
+        revert FailedActionExecution();
       }
     }
   }

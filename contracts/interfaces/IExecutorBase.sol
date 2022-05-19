@@ -25,6 +25,7 @@ interface IExecutorBase {
   error InconsistentParamsLength();
   error DuplicateAction();
   error InsufficientBalance();
+  error FailedActionExecution();
 
   /**
    * @notice This enum contains all possible action set states.

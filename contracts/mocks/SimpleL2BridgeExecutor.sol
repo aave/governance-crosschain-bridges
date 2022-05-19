@@ -4,9 +4,8 @@ pragma solidity 0.8.10;
 import '../L2BridgeExecutor.sol';
 
 contract SimpleL2BridgeExecutor is L2BridgeExecutor {
-
   modifier onlyEthereumGovernanceExecutor() override {
-    require(msg.sender == _ethereumGovernanceExecutor, 'ONLY_ETHEREUM_GOVERNANCE_EXECUTOR');
+    if (msg.sender != _ethereumGovernanceExecutor) revert UnauthorizedEthereumExecutor();
     _;
   }
 

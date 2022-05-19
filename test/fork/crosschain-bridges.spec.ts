@@ -630,19 +630,19 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Execute Proposal 6 - polygon gov error - no targets in polygon actions', async () => {
       const { aaveGovContract } = testEnv;
       await expect(aaveGovContract.execute(proposals[5].id)).to.be.revertedWith(
-        'FAILED_ACTION_EXECUTION'
+        ExecutorErrors.FailedActionExecution
       );
     });
     it('Execute Proposal 7 - polygon gov error - targets[].length < values[].length in polygon actions', async () => {
       const { aaveGovContract } = testEnv;
       await expect(aaveGovContract.execute(proposals[6].id)).to.be.revertedWith(
-        'FAILED_ACTION_EXECUTION'
+        ExecutorErrors.FailedActionExecution
       );
     });
     it('Execute Proposal 8 - polygon gov error - duplicate polygon actions', async () => {
       const { aaveGovContract } = testEnv;
       await expect(aaveGovContract.execute(proposals[7].id)).to.be.revertedWith(
-        'FAILED_ACTION_EXECUTION'
+        ExecutorErrors.FailedActionExecution
       );
     });
     it('Execute Proposal 9 - successfully queue transaction - fx root sender update', async () => {
@@ -909,7 +909,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Execute Action Set 1 - polygon gov error - failing action', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.execute(1)).to.revertedWith('FAILED_ACTION_EXECUTION');
+      await expect(polygonBridgeExecutor.execute(1)).to.revertedWith(
+        ExecutorErrors.FailedActionExecution
+      );
     });
     it('Execute Action Set 2 - polygon gov error - not enough msg value', async () => {
       const { polygonBridgeExecutor } = testEnv;

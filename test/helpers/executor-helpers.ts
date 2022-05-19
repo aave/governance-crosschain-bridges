@@ -15,6 +15,7 @@ export enum ExecutorErrors {
   InconsistentParamsLength = 'InconsistentParamsLength()',
   DuplicateAction = 'DuplicateAction()',
   InsufficientBalance = 'InsufficientBalance()',
+  FailedActionExecution = 'FailedActionExecution()',
 
   // PolygonBridgeExecutor
   UnauthorizedChildOrigin = 'UnauthorizedChildOrigin()',
