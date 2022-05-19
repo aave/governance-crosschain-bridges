@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.7.5;
 
-import './Greeter.sol';
+import {Greeter} from './Greeter.sol';
 
 contract GreeterPayload {
   event PayloadExecuted(address sender);

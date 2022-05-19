@@ -2,7 +2,7 @@
 pragma solidity 0.7.5;
 pragma abicoder v2;
 
-import './../dependencies/arbitrum/AddressAliasHelper.sol';
+import {AddressAliasHelper} from './../dependencies/arbitrum/AddressAliasHelper.sol';
 
 contract ArbGreeter {
   event Senders(address msgSender, address applyAlias, address undoAlias);

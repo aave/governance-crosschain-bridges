@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import './interfaces/IFxMessageProcessor.sol';
-import './BridgeExecutorBase.sol';
+import {IFxMessageProcessor} from './interfaces/IFxMessageProcessor.sol';
+import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
 
 contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   address private _fxRootSender;

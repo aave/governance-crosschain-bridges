@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.7.5;
 
-import '../interfaces/ICrossDomainMessenger.sol';
-import './MockOvmL2CrossDomainMessenger.sol';
+import {ICrossDomainMessenger} from '../interfaces/ICrossDomainMessenger.sol';
+import {MockOvmL2CrossDomainMessenger} from './MockOvmL2CrossDomainMessenger.sol';
 
 contract MockOvmL1CrossDomainMessenger is ICrossDomainMessenger {
   address private sender;

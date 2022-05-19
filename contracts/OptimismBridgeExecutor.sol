@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import './interfaces/ICrossDomainMessenger.sol';
-import './L2BridgeExecutor.sol';
+import {ICrossDomainMessenger} from './interfaces/ICrossDomainMessenger.sol';
+import {L2BridgeExecutor} from './L2BridgeExecutor.sol';
 
 contract OptimismBridgeExecutor is L2BridgeExecutor {
   address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
