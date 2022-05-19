@@ -11,6 +11,7 @@ import {
   timeLatest,
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
+import { ExecutorErrors } from './helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -80,7 +81,9 @@ describe('PolygonBridgeExecutor', async function () {
 
     // ActionsSet
     expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+      ExecutorErrors.InvalidActionsSetId
+    );
 
     // Polygon FxPortal parameters
     expect(await bridgeExecutor.getFxRootSender()).to.be.equal(fxRootSender.address);
@@ -91,7 +94,7 @@ describe('PolygonBridgeExecutor', async function () {
     it('User tries to queue actions set (revert expected)', async () => {
       await expect(
         bridgeExecutor.connect(users[0]).processMessageFromRoot(1, fxRootSender.address, '0x')
-      ).to.be.revertedWith('UNAUTHORIZED_CHILD_ORIGIN');
+      ).to.be.revertedWith(ExecutorErrors.UnauthorizedChildOrigin);
     });
 
     it('FxChild tries to queue actions set with wrong fxRoot sender (revert expected)', async () => {
@@ -116,7 +119,7 @@ describe('PolygonBridgeExecutor', async function () {
         bridgeExecutor
           .connect(fxChild)
           .processMessageFromRoot(mockStateId, fxRootSender.address, encodedData)
-      ).to.be.revertedWith('EmptyTargets()');
+      ).to.be.revertedWith(ExecutorErrors.EmptyTargets);
     });
 
     it('FxChild tries to queue an actions set with inconsistent params length (revert expected)', async () => {
@@ -140,7 +143,7 @@ describe('PolygonBridgeExecutor', async function () {
                 wrongData
               )
             )
-        ).to.be.revertedWith('InconsistentParamsLength()');
+        ).to.be.revertedWith(ExecutorErrors.InconsistentParamsLength);
       }
     });
 
@@ -160,7 +163,7 @@ describe('PolygonBridgeExecutor', async function () {
         bridgeExecutor
           .connect(fxChild)
           .processMessageFromRoot(mockStateId, fxRootSender.address, encodedData)
-      ).to.be.revertedWith('DuplicateAction()');
+      ).to.be.revertedWith(ExecutorErrors.DuplicateAction);
     });
   });
 
@@ -177,7 +180,7 @@ describe('PolygonBridgeExecutor', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'OnlyCallableByThis()'
+          ExecutorErrors.OnlyCallableByThis
         );
       }
     });
@@ -350,10 +353,10 @@ describe('PolygonBridgeExecutor', async function () {
         encodeSimpleActionsSet(bridgeExecutor.address, 'updateMaximumDelay(uint256)', [DELAY - 1]),
       ];
       const errors = [
-        'DelayLongerThanMax()',
-        'DelayShorterThanMin()',
-        'DelayShorterThanMin()',
-        'DelayLongerThanMax()',
+        ExecutorErrors.DelayLongerThanMax,
+        ExecutorErrors.DelayShorterThanMin,
+        ExecutorErrors.DelayShorterThanMin,
+        ExecutorErrors.DelayLongerThanMax,
       ];
       for (const wrongConfig of wrongConfigs) {
         expect(
@@ -382,7 +385,7 @@ describe('PolygonBridgeExecutor', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'OnlyCallableByThis()'
+          ExecutorErrors.OnlyCallableByThis
         );
       }
     });

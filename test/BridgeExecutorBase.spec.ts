@@ -18,6 +18,7 @@ import {
   getImpersonatedSigner,
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
+import { ExecutorErrors } from './helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -87,7 +88,9 @@ describe('BridgeExecutorBase', async function () {
 
     // ActionsSet
     expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+      ExecutorErrors.InvalidActionsSetId
+    );
   });
 
   it('Receive funds', async () => {
@@ -112,7 +115,7 @@ describe('BridgeExecutorBase', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'OnlyCallableByThis()'
+          ExecutorErrors.OnlyCallableByThis
         );
       }
     });
@@ -182,22 +185,22 @@ describe('BridgeExecutorBase', async function () {
         {
           fnName: 'updateDelay(uint256)',
           params: [(MAXIMUM_DELAY + 1).toString()],
-          error: 'DelayLongerThanMax()',
+          error: ExecutorErrors.DelayLongerThanMax,
         },
         {
           fnName: 'updateDelay(uint256)',
           params: [(MINIMUM_DELAY - 1).toString()],
-          error: 'DelayShorterThanMin()',
+          error: ExecutorErrors.DelayShorterThanMin,
         },
         {
           fnName: 'updateMinimumDelay(uint256)',
           params: [(DELAY + 1).toString()],
-          error: 'DelayShorterThanMin()',
+          error: ExecutorErrors.DelayShorterThanMin,
         },
         {
           fnName: 'updateMaximumDelay(uint256)',
           params: [(DELAY - 1).toString()],
-          error: 'DelayLongerThanMax()',
+          error: ExecutorErrors.DelayLongerThanMax,
         },
       ];
       for (const wrongConfig of wrongConfigs) {
@@ -211,7 +214,7 @@ describe('BridgeExecutorBase', async function () {
   context('ActionsSet', () => {
     it('Tries to queue an actions set with 0 targets (revert expected)', async () => {
       await expect(bridgeExecutor.queue([], [0], ['mock()'], ['0x'], [false])).to.be.revertedWith(
-        'EmptyTargets()'
+        ExecutorErrors.EmptyTargets
       );
     });
 
@@ -232,7 +235,7 @@ describe('BridgeExecutorBase', async function () {
             wrongData[3] as string[],
             wrongData[4] as boolean[]
           )
-        ).to.be.revertedWith('InconsistentParamsLength()');
+        ).to.be.revertedWith(ExecutorErrors.InconsistentParamsLength);
       }
     });
 
@@ -245,7 +248,7 @@ describe('BridgeExecutorBase', async function () {
           ['0x', '0x'],
           [false, false]
         )
-      ).to.be.revertedWith('DuplicateAction()');
+      ).to.be.revertedWith(ExecutorErrors.DuplicateAction);
     });
 
     it('Queue and execute an actions set to set a message in Greeter', async () => {
@@ -255,7 +258,9 @@ describe('BridgeExecutorBase', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const data = [
         [greeter.address],
@@ -289,7 +294,9 @@ describe('BridgeExecutorBase', async function () {
       expect(actionsSet[6]).to.be.eql(false);
       expect(actionsSet[7]).to.be.eql(false);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('TimelockNotFinished()');
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(
+        ExecutorErrors.TimelockNotFinished
+      );
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
@@ -314,7 +321,9 @@ describe('BridgeExecutorBase', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const data = [
         [greeterPayload.address],
@@ -354,7 +363,9 @@ describe('BridgeExecutorBase', async function () {
       expect(actionsSet[6]).to.be.eql(false);
       expect(actionsSet[7]).to.be.eql(false);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('TimelockNotFinished()');
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(
+        ExecutorErrors.TimelockNotFinished
+      );
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
@@ -384,7 +395,7 @@ describe('BridgeExecutorBase', async function () {
     });
 
     it('Tries to cancel an actions set without being the guardian (revert expected)', async () => {
-      await expect(bridgeExecutor.cancel(0)).to.be.revertedWith('NotGuardian()');
+      await expect(bridgeExecutor.cancel(0)).to.be.revertedWith(ExecutorErrors.NotGuardian);
     });
 
     it('Queue an actions set and cancel by the guardian', async () => {
@@ -394,7 +405,9 @@ describe('BridgeExecutorBase', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const data = [
         [greeter.address],
@@ -433,7 +446,9 @@ describe('BridgeExecutorBase', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const data = [
         [greeter.address],
@@ -470,7 +485,7 @@ describe('BridgeExecutorBase', async function () {
       expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(1);
 
       await expect(bridgeExecutor.connect(guardian).cancel(0)).to.be.revertedWith(
-        'OnlyQueuedActions()'
+        ExecutorErrors.OnlyQueuedActions
       );
     });
 
@@ -481,7 +496,9 @@ describe('BridgeExecutorBase', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const data = [
         [greeter.address],
@@ -512,9 +529,9 @@ describe('BridgeExecutorBase', async function () {
 
       expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(3);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('OnlyQueuedActions()');
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(ExecutorErrors.OnlyQueuedActions);
       await expect(bridgeExecutor.connect(guardian).cancel(0)).to.be.revertedWith(
-        'OnlyQueuedActions()'
+        ExecutorErrors.OnlyQueuedActions
       );
     });
   });

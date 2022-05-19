@@ -21,6 +21,7 @@ import {
   timeLatest,
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
+import { ExecutorErrors } from './helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -100,7 +101,9 @@ describe('OptimismBridgeExecutor', async function () {
 
     // ActionsSet
     expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+    await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+      ExecutorErrors.InvalidActionsSetId
+    );
 
     // Optimism Bridge Executor parameters
     expect(await bridgeExecutor.getEthereumGovernanceExecutor()).to.be.equal(
@@ -114,7 +117,7 @@ describe('OptimismBridgeExecutor', async function () {
   context('Ethereum Governance Executor queues an actions sets', () => {
     it('Tries to queue and actions set without being the Ethereum Governance Executor', async () => {
       await expect(bridgeExecutor.queue([], [], [], [], [])).to.be.revertedWith(
-        'UNAUTHORIZED_EXECUTOR'
+        ExecutorErrors.UnauthorizedEthereumExecutor
       );
     });
 
@@ -125,7 +128,9 @@ describe('OptimismBridgeExecutor', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const data = [
         [greeter.address],
@@ -160,7 +165,9 @@ describe('OptimismBridgeExecutor', async function () {
       expect(actionsSet[6]).to.be.eql(false);
       expect(actionsSet[7]).to.be.eql(false);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('TimelockNotFinished()');
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(
+        ExecutorErrors.TimelockNotFinished
+      );
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
@@ -185,7 +192,9 @@ describe('OptimismBridgeExecutor', async function () {
       const NEW_MESSAGE = 'hello';
 
       expect(await bridgeExecutor.getActionsSetCount()).to.be.equal(0);
-      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith('InvalidActionsSetId()');
+      await expect(bridgeExecutor.getCurrentState(0)).to.be.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
 
       const { data, encodedData } = encodeSimpleActionsSet(
         bridgeExecutor,
@@ -218,7 +227,9 @@ describe('OptimismBridgeExecutor', async function () {
       expect(actionsSet[6]).to.be.eql(false);
       expect(actionsSet[7]).to.be.eql(false);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith('TimelockNotFinished()');
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(
+        ExecutorErrors.TimelockNotFinished
+      );
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
@@ -261,7 +272,7 @@ describe('OptimismBridgeExecutor', async function () {
       ];
       for (const call of calls) {
         await expect(bridgeExecutor[call.fn](...call.params)).to.be.revertedWith(
-          'OnlyCallableByThis()'
+          ExecutorErrors.OnlyCallableByThis
         );
       }
     });
@@ -457,10 +468,10 @@ describe('OptimismBridgeExecutor', async function () {
         ),
       ];
       const errors = [
-        'DelayLongerThanMax()',
-        'DelayShorterThanMin()',
-        'DelayShorterThanMin()',
-        'DelayLongerThanMax()',
+        ExecutorErrors.DelayLongerThanMax,
+        ExecutorErrors.DelayShorterThanMin,
+        ExecutorErrors.DelayShorterThanMin,
+        ExecutorErrors.DelayLongerThanMax,
       ];
       for (const wrongConfig of wrongConfigs) {
         expect(
@@ -486,7 +497,7 @@ describe('OptimismBridgeExecutor', async function () {
     it('Tries to update the Ethereum Governance Executor without being itself', async () => {
       await expect(
         bridgeExecutor.updateEthereumGovernanceExecutor(ZERO_ADDRESS)
-      ).to.be.revertedWith('OnlyCallableByThis()');
+      ).to.be.revertedWith(ExecutorErrors.OnlyCallableByThis);
     });
 
     it('Update the Ethereum Governance Executor', async () => {
