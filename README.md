@@ -11,18 +11,21 @@
  -/:             :/-  -/:             :/.     ://:         `/////////////-
 ```
 
-# Aave Crosschain Bridges
+# Aave Governance Cross-chain Bridges
 
-This repo contains smart contracts and related code for Aave cross-chain bridges. This is intended to extend Aave governance on Ethereum to other networks. This repo currently contains contracts to support bridging to Polygon and Arbitrum.
+This repository contains smart contracts and related code for Aave cross-chain bridges. This is intended to extend Aave governance on Ethereum to other networks. This repository currently contains contracts to support bridging to Polygon, Arbitrum and Optimism.
 
-The core contract is the `BridgeExecutorBase`, an abstract contract that contains the logic to facilitate the queueing, delay, and execution of sets of actions on downstream networks. This base contract needs to be extended with functionality required for cross-chain transactions on a specific downstream network. In this repo, the base contract is extended for Polygon and Arbitrum.
+The core contract is the `BridgeExecutorBase`, an abstract contract that contains the logic to facilitate the queueing, delay, and execution of sets of actions on downstream networks. This base contract needs to be extended with functionality required for cross-chain transactions on a specific downstream network.
 
-The `BridgeExecutorBase` contract is implemented to facilitate the execution of sets of actions on other chains, after approval through Aave's governance process on Ethereum. Once the Ethereum governance process is completed, a cross-chain transaction can queue sets of actions for execution on the downstream chain. Once queued, these actions must wait for a certain `delay` prior to being executed. During the delay period a `guardian` address has the power to cancel the execution of these actions. If the delay period passes and the actions are not cancelled, the actions can be executed by anyone on the downstream chain.
+The `BridgeExecutorBase` contract is implemented to facilitate the execution of sets of actions on other chains, after approval through Aave's governance process on Ethereum. Once the Ethereum governance process is completed, a cross-chain transaction can queue sets of actions for execution on the downstream chain. Once queued, these actions must wait for a certain `delay` prior to being executed. After the delay period, a `guardian` address has the power to cancel the execution of these actions. If the delay period passes and the actions are not cancelled, the actions can be executed during the `grace period` time window by anyone on the downstream chain.
 
 The `BridgeExecutorBase` is abstract and intentionally leaves the `_queue` function internal. This requires another contract to extend the `BridgeExecutorBase` to handle network specific logic, cross-chain transaction validation, and permissioning, prior to calling the internal `_queue` function.
 
-## Audit
-- MixBytes (8/12/21): [report](./audit/Aave-Governance-Crosschain-Bridges-Security-Audit-Report.pdf)
+The `L2BridgeExecutor` abstract contract extends the `BridgeExecutorBase` functionality in order to make it ready for Layer 2 networks. It stores the address of the `Ethereum Governance Executor` in Ethereum network, so each specific L2 implementation has a reference of who is the initiator of the cross-chain transaction.
+
+## Audits
+
+- [MixBytes (12/08/21)](./audits/12-08-2021_MixBytes_AaveGovernanceCrosschainBridges.pdf)
 
 ## Getting Started
 
@@ -56,12 +59,12 @@ This will compile the available smart contracts.
 
 ### Polygon Governance Bridge Architecture
 
-![aave-polygon-governance-bridge-architecture](./PolygonBridgeArch.png)
+![aave-polygon-governance-bridge-architecture](./docs/PolygonBridgeArch.png)
 
 Additional documentation around the Polygon Bridging setup can be found at the links below:
 
-- [Polygon Docs `L1<>L2 Communication`](https://docs.matic.network/docs/develop/l1-l2-communication/state-transfer)
-- [FxPortal](https://github.com/jdkanani/fx-portal)
+- [Polygon Docs `L1<>L2 Communication`](https://docs.polygon.technology/docs/develop/l1-l2-communication/fx-portal)
+- [FxPortal](https://github.com/fx-portal/fx-portal)
 
 ### Test / Coverage
 
@@ -70,6 +73,7 @@ Additional documentation around the Polygon Bridging setup can be found at the l
 Run an end to end test of these contracts on an Ethereum mainnet fork. This makes the assumption that all contracts are on Ethereum, which is an inaccurate assumption but helps for testing smart contract functionality in one script.
 
 The two assumption required to make this possible are:
+
 1. Add a Call in the `CustomPolygonMapping` Contract. This way, rather than just emitting an event, and having a function called on Polygon, the receiver will be called directly with this function on the forked Eth Network.
 2. In the `FxChild` the access control require statement in the first line of onStateReceive must be commented out because you cannot imitate that system address used in the polygon bridge.
 
@@ -92,6 +96,7 @@ The script will:
 9. Confirm expected Polygon state update
 
 ### Bridge Contracts Functionality
+
 - The proposal is an encoded function call to the function `sendMessageToChild()` in `FxRoot`. The calldata for this proposal contains two encoded variables:
 - The first variable is the address of the contract that will decode and process this message on the Polygon chain. In this case, the receiver is the `PolygonBridgeExecutor` contract address.
 - The second variable is the data that will be decoded on the polygon chain. This field contains encoded bytes for the following fields targets[], values[], signatures[], calldatas[], and withDelegatecall[]
@@ -111,7 +116,7 @@ The script will:
 
 ### PolygonBridge - FxPortal
 
-This repo uses the [FxPortal](https://github.com/jdkanani/fx-portal) developed and designed by the Polygon team to support bridging from Ethereum to Polygon. The intent of the FxPortal is to help users avoid the step of registering their own sender and receiver contracts within Polygon's `StateSender` contract. The FxPortal contains two contracts - `FxRoot` and `FxChild`. The `FxRoot` contract has been deployed on Ethereum and the `FxChild` contract has been deployed on Polygon. The `FxRoot` contract is mapped to the `FxChild` contract via Polygon's `StateSender` contract on Ethereum. By calling the `sendMessageToChild(address _receiver, bytes calldata _data)` function in the `FxRoot`, the `msg.sender` is encoded, along with the provided `_receiver` and `_data`. This encoded message is sent to the `StateSender` contract and a `StateSynced` event is emitted with this data.
+This repo uses the [FxPortal](https://github.com/fx-portal/contracts) developed and designed by the Polygon team to support bridging from Ethereum to Polygon. The intent of the FxPortal is to help users avoid the step of registering their own sender and receiver contracts within Polygon's `StateSender` contract. The FxPortal contains two contracts - `FxRoot` and `FxChild`. The `FxRoot` contract has been deployed on Ethereum and the `FxChild` contract has been deployed on Polygon. The `FxRoot` contract is mapped to the `FxChild` contract via Polygon's `StateSender` contract on Ethereum. By calling the `sendMessageToChild(address _receiver, bytes calldata _data)` function in the `FxRoot`, the `msg.sender` is encoded, along with the provided `_receiver` and `_data`. This encoded message is sent to the `StateSender` contract and a `StateSynced` event is emitted with this data.
 
 Polygon validators listen for `StateSynced` events from the `StateSender` - upon identifying one of these events from the `FxRoot`, they will call the function `onStateReceive(uint256 stateId, bytes calldata _data)` in `FxChild`. The encoded `data` message is decoded in `FxChild` and forwarded to the `receiver` contract via the function `processMessageFromRoot(stateId, rootMessageSender, data)`. The `rootMessageSender` that is passed along is the original `msg.sender` that called `FxRoot` which in this case is the Aave Governance Executor contract.
 
@@ -133,7 +138,7 @@ In order to update the PolygonBridgeExecutor - the function `updateFxRootSender(
 
 ## Arbitrum Governance Bridge Architecture
 
-![aave-abitrum-governance-bridge-architecture](./ArbitrumBridgeArch.png)
+![aave-abitrum-governance-bridge-architecture](./docs/ArbitrumBridgeArch.png)
 
 Additional documentation around the Arbitrum Bridging setup can be found at the links below:
 
@@ -183,7 +188,6 @@ When this transaction is sent cross-chain, the `msg.sender` that send the messag
 - `maximumDelay` - if the delay is updated by the guardian, it cannot be more than this maximum
 - `guardian` - the admin address of this contract with the permission to cancel ActionsSets and update the delay value
 
-
 ## Additional Available Tasks
 
 - `get-info` - this will print current chain info: ChainId, Current Block, Balance of a hardcoded address
@@ -206,23 +210,24 @@ Usage: hardhat [GLOBAL OPTIONS] deploy --contract <STRING> --libraries <STRING> 
 
 OPTIONS:
 
-  --contract     	Name of contract to deploy
-  --libraries    	json as string mapping of libraries to address
-  --librariesfile	file containing mapping of libraries to address
-  --params       	JSON string of contract params - defaults to CLI
-  --paramsfile   	Path to a TS file with params defined as default export
-  --printparams  	Print constructor params
-  --signer       	Define signer - private key(pk), mnemonic(mn), defender(ozd) - defaults to ethers signer
-  --verify       	Verify contract on Etherscan
+--contract Name of contract to deploy
+--libraries json as string mapping of libraries to address
+--librariesfile file containing mapping of libraries to address
+--params JSON string of contract params - defaults to CLI
+--paramsfile Path to a TS file with params defined as default export
+--printparams Print constructor params
+--signer Define signer - private key(pk), mnemonic(mn), defender(ozd) - defaults to ethers signer
+--verify Verify contract on Etherscan
 
 deploy: deploy contract - add contract name and params as arguements
 
 The parameters for the contract constructor can be set four different ways:
+
 1. use the option `--params` as a stringified JSON
 2. use the option `--paramsfile` to define the path to a ts file that has the parameters as the default export
-2. hardcode the params as a JSON in the contractparams variable in the deploy task
-    - you can use the --printparams option to get a template JSON of the params to copy and paste into the script and fill out
-3. use the cli. By not setting contractparams you can
+3. hardcode the params as a JSON in the contractparams variable in the deploy task
+   - you can use the --printparams option to get a template JSON of the params to copy and paste into the script and fill out
+4. use the cli. By not setting contractparams you can
 
 To include the contract params as a string, pay close attentions to the quotations used to create the stringified JSON object. Below is a working example:
 
@@ -231,6 +236,7 @@ npm run hardhat deploy -- --contract Greeter --params '{"_greeting": "asdf","_te
 ```
 
 Example using --paramsfile
+
 ```
 npm run hardhat deploy -- --contract Greeter --paramsfile ./greeterParams.ts
 ```
@@ -241,18 +247,18 @@ Usage: hardhat [GLOBAL OPTIONS] verify-template --contract <STRING> --contractad
 
 OPTIONS:
 
-  --contract       	Name of contract to deploy
-  --contractaddress	Address of deployed contract to verify
-  --libraries      	json as string mapping of libraries to address
-  --librariesfile  	file containing mapping of libraries to address
-  --params         	JSON string of contract params - defaults to CLI
-  --paramsfile     	Path to a TS file with params defined as default export
-  --printparams    	Print constructor params
+--contract Name of contract to deploy
+--contractaddress Address of deployed contract to verify
+--libraries json as string mapping of libraries to address
+--librariesfile file containing mapping of libraries to address
+--params JSON string of contract params - defaults to CLI
+--paramsfile Path to a TS file with params defined as default export
+--printparams Print constructor params
 
 verify-template: verify contract on etherscan
 
 This wraps the default 'verify' task to enable some flexibility in how params and libraries are provided.
 
-
 ## License
+
 [BSD-3-Clause](./LICENSE.md)
