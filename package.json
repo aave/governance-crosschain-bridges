@@ -11,7 +11,7 @@
     "run-env": "npm i && tail -f /dev/null",
     "hardhat": "hardhat",
     "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
-    "clean": "hardhat clean",
+    "clean": "SKIP_LOAD=true hardhat clean",
     "console:fork": "MAINNET_FORK=true hardhat console",
     "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/*.ts' 'test/*.ts' 'test/**/*.ts'",
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/*.ts' 'test/*.ts' 'test/**/*.ts'",
