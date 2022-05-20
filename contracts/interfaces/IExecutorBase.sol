@@ -64,7 +64,7 @@ interface IExecutorBase {
    * @param signatures Array of function signatures to encode in each call by the actions set
    * @param calldatas Array of calldata to pass in each call by the actions set
    * @param withDelegatecalls Array of whether to delegatecall for each call of the actions set
-   * @param executionTime The timestamp in which this actions set can be executed
+   * @param executionTime The timestamp at which this actions set can be executed
    **/
   event ActionsSetQueued(
     uint256 indexed id,
@@ -155,7 +155,7 @@ interface IExecutorBase {
   function updateDelay(uint256 delay) external;
 
   /**
-   * @notice Update the grace period, time after the execution time during which an actions set can be executed
+   * @notice Update the grace period, the period after the execution time during which an actions set can be executed
    * @param gracePeriod The value of the grace period (in seconds)
    **/
   function updateGracePeriod(uint256 gracePeriod) external;

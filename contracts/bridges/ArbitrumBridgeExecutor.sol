@@ -8,7 +8,7 @@ import {L2BridgeExecutor} from './L2BridgeExecutor.sol';
  * @title ArbitrumBridgeExecutor
  * @author Aave
  * @notice Implementation of the Arbitrum Bridge Executor, able to receive cross-chain transactions from Ethereum
- * @dev Queuing an ActionSet into this Executor can only be done by the L2 Address Alias of the L1 EthereumGovernanceExecutor
+ * @dev Queuing an ActionsSet into this Executor can only be done by the L2 Address Alias of the L1 EthereumGovernanceExecutor
  */
 contract ArbitrumBridgeExecutor is L2BridgeExecutor {
   /// @inheritdoc L2BridgeExecutor

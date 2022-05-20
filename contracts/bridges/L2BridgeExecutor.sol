@@ -9,14 +9,14 @@ import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
  * @author Aave
  * @notice Abstract contract that implements bridge executor functionality for L2
  * @dev It does not implement the `onlyEthereumGovernanceExecutor` modifier. This should instead be done in the inheriting
- * contract with proper configuration and adjustments depending of the L2
+ * contract with proper configuration and adjustments depending on the L2
  */
 abstract contract L2BridgeExecutor is BridgeExecutorBase, IL2BridgeExecutor {
-  // Address of the Ethereum Governance Executor, able to queue actions sets
+  // Address of the Ethereum Governance Executor, which should be able to queue actions sets
   address internal _ethereumGovernanceExecutor;
 
   /**
-   * @dev Only the Ethereum Governance Executor can call functions marked by this modifier.
+   * @dev Only the Ethereum Governance Executor should be able to call functions marked by this modifier.
    **/
   modifier onlyEthereumGovernanceExecutor() virtual;
 

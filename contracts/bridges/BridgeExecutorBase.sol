@@ -11,7 +11,7 @@ import {IExecutorBase} from '../interfaces/IExecutorBase.sol';
  * contract with proper access control
  */
 abstract contract BridgeExecutorBase is IExecutorBase {
-  // Minimum allowed grace period, which reduces the risk of having actions set expired due to network congestion
+  // Minimum allowed grace period, which reduces the risk of having an actions set expire due to network congestion
   uint256 constant MINIMUM_GRACE_PERIOD = 10 minutes;
 
   // Time between queuing and execution
@@ -270,9 +270,9 @@ abstract contract BridgeExecutorBase is IExecutorBase {
    * @dev If a signature is empty, calldata is used for the execution, calldata is appended to signature otherwise
    * @param targets Array of targets to be called by the actions set
    * @param values Array of values to pass in each call by the actions set
-   * @param signatures Array of function signatures to encode in each call by the actions (can be empty)
-   * @param calldatas Array of calldata to pass in each call by the actions set
-   * @param withDelegatecalls Array of whether to delegatecall for each call of the actions set
+   * @param signatures Array of function signatures to encode in each call (can be empty)
+   * @param calldatas Array of calldata to pass in each call (can be empty)
+   * @param withDelegatecalls Array of whether to delegatecall for each call
    **/
   function _queue(
     address[] memory targets,

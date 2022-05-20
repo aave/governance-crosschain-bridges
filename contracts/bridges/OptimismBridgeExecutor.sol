@@ -8,7 +8,7 @@ import {L2BridgeExecutor} from './L2BridgeExecutor.sol';
  * @title OptimismBridgeExecutor
  * @author Aave
  * @notice Implementation of the Optimism Bridge Executor, able to receive cross-chain transactions from Ethereum
- * @dev Queuing an ActionSet into this Executor can only be done by the Optimism L2 Cross Domain Messenger and having
+ * @dev Queuing an ActionsSet into this Executor can only be done by the Optimism L2 Cross Domain Messenger and having
  * the EthereumGovernanceExecutor as xDomainMessageSender
  */
 contract OptimismBridgeExecutor is L2BridgeExecutor {
