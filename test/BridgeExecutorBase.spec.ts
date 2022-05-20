@@ -400,7 +400,7 @@ describe('BridgeExecutorBase', async function () {
       expect((await bridgeExecutor.getActionsSetById(0)).executed).to.be.equal(true);
     });
 
-    it('Tries to queue and execute an actions set with insufficient value (revert expected)', async () => {
+    it('Tries to execute an actions set with insufficient value after queueing (revert expected)', async () => {
       const greeter = await new Greeter__factory(user).deploy();
       const NEW_MESSAGE = 'hello';
 
