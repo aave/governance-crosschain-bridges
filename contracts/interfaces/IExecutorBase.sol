@@ -67,7 +67,7 @@ interface IExecutorBase {
    * @param executionTime The timestamp in which this actions set can be executed
    **/
   event ActionsSetQueued(
-    uint256 id,
+    uint256 indexed id,
     address[] targets,
     uint256[] values,
     string[] signatures,
@@ -82,13 +82,17 @@ interface IExecutorBase {
    * @param initiatorExecution The address that triggered the ActionsSet execution
    * @param returnedData The returned data from the ActionsSet execution
    **/
-  event ActionsSetExecuted(uint256 id, address indexed initiatorExecution, bytes[] returnedData);
+  event ActionsSetExecuted(
+    uint256 indexed id,
+    address indexed initiatorExecution,
+    bytes[] returnedData
+  );
 
   /**
    * @dev Emitted when an ActionsSet is cancelled by the guardian
    * @param id Id of the ActionsSet
    **/
-  event ActionsSetCanceled(uint256 id);
+  event ActionsSetCanceled(uint256 indexed id);
 
   /**
    * @dev Emitted when a new guardian is set

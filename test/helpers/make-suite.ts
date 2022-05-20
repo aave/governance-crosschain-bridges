@@ -1,12 +1,12 @@
-import { DRE, getImpersonatedSigner, setCode } from '../../helpers/misc-utils';
 import { Signer, BigNumber } from 'ethers';
 import hardhat, { ethers } from 'hardhat';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 
-import { tEthereumAddress } from '../../helpers/types';
+import { DRE, getImpersonatedSigner, setCode } from '../../helpers/misc-utils';
 import { deployArbitrumBridgeExecutor, deployInbox } from '../../helpers/arbitrum-contract-getters';
 import { applyL1ToL2Alias } from '../../helpers/arbitrum-helpers';
+import { tEthereumAddress } from '../../helpers/types';
 
 import {
   deployOptimismBridgeExecutor,
