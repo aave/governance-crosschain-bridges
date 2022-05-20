@@ -18,9 +18,7 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase, IL2BridgeExecutor {
   /**
    * @dev Only the Ethereum Governance Executor can call functions marked by this modifier.
    **/
-  modifier onlyEthereumGovernanceExecutor() virtual {
-    _;
-  }
+  modifier onlyEthereumGovernanceExecutor() virtual;
 
   /**
    * @dev Constructor

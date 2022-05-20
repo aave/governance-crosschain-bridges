@@ -19,6 +19,7 @@ import {
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ActionsSetState, ExecutorErrors } from './helpers/executor-helpers';
+import { Selfdestructor__factory } from '../typechain/factories/Selfdestructor__factory';
 
 chai.use(solidity);
 
@@ -397,6 +398,47 @@ describe('BridgeExecutorBase', async function () {
       expect(await greeter.message()).to.be.equal(NEW_MESSAGE);
       expect(await bridgeExecutor.getCurrentState(0)).to.be.equal(ActionsSetState.Executed);
       expect((await bridgeExecutor.getActionsSetById(0)).executed).to.be.equal(true);
+    });
+
+    it('Tries to execute an actions set with insufficient value after queueing (revert expected)', async () => {
+      const greeter = await new Greeter__factory(user).deploy();
+      const NEW_MESSAGE = 'hello';
+
+      const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
+      const value = (await ethers.provider.getBalance(bridgeExecutor.address)).add(1);
+      expect(
+        await bridgeExecutor.queue(
+          data[0] as string[],
+          [value],
+          data[2] as string[],
+          data[3] as string[],
+          data[4] as boolean[]
+        )
+      );
+      const executionTime = (await timeLatest()).add(DELAY);
+
+      await setBlocktime(executionTime.add(1).toNumber());
+      await advanceBlocks(1);
+
+      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(
+        ExecutorErrors.InsufficientBalance
+      );
+    });
+
+    it('Queue and execute an actions set to self-destruct via delegatecall', async () => {
+      const selfdestructor = await new Selfdestructor__factory(user).deploy();
+      const data = selfdestructor.interface.encodeFunctionData('oops');
+
+      expect(await bridgeExecutor.queue([selfdestructor.address], [0], [''], [data], [true]));
+      const executionTime = (await timeLatest()).add(DELAY);
+
+      await setBlocktime(executionTime.add(1).toNumber());
+      await advanceBlocks(1);
+
+      expect(await bridgeExecutor.execute(0));
+
+      const code = await ethers.provider.getCode(bridgeExecutor.address);
+      expect(code).to.eq('0x');
     });
 
     it('Queue and execute an actions set to set a message in Greeter via payload', async () => {

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.7.5;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.8.10;
 
 contract Greeter {
   event MessageUpdated(string newMessage);
