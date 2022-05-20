@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import './L2BridgeExecutor.sol';
-import './dependencies/arbitrum/AddressAliasHelper.sol';
+import {AddressAliasHelper} from '../dependencies/arbitrum/AddressAliasHelper.sol';
+import {L2BridgeExecutor} from './L2BridgeExecutor.sol';
 
 contract ArbitrumBridgeExecutor is L2BridgeExecutor {
   modifier onlyEthereumGovernanceExecutor() override {
-    require(
-      AddressAliasHelper.undoL1ToL2Alias(msg.sender) == _ethereumGovernanceExecutor,
-      'UNAUTHORIZED_EXECUTOR'
-    );
+    if (AddressAliasHelper.undoL1ToL2Alias(msg.sender) != _ethereumGovernanceExecutor)
+      revert UnauthorizedEthereumExecutor();
     _;
   }
 

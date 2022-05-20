@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import './interfaces/IFxMessageProcessor.sol';
-import './BridgeExecutorBase.sol';
+import {IFxMessageProcessor} from '../interfaces/IFxMessageProcessor.sol';
+import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
 
 contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   address private _fxRootSender;
@@ -11,8 +11,11 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   event FxRootSenderUpdate(address previousFxRootSender, address newFxRootSender);
   event FxChildUpdate(address previousFxChild, address newFxChild);
 
+  error UnauthorizedChildOrigin();
+  error UnauthorizedRootOrigin();
+
   modifier onlyFxChild() {
-    require(msg.sender == _fxChild, 'UNAUTHORIZED_CHILD_ORIGIN');
+    if (msg.sender != _fxChild) revert UnauthorizedChildOrigin();
     _;
   }
 
@@ -35,7 +38,7 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     address rootMessageSender,
     bytes calldata data
   ) external override onlyFxChild {
-    require(rootMessageSender == _fxRootSender, 'UNAUTHORIZED_ROOT_ORIGIN');
+    if (rootMessageSender != _fxRootSender) revert UnauthorizedRootOrigin();
 
     address[] memory targets;
     uint256[] memory values;

@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.5;
+pragma solidity 0.8.10;
 
-import '../interfaces/ICrossDomainMessenger.sol';
-import './MockOvmL2CrossDomainMessenger.sol';
+import {ICrossDomainMessenger} from '../interfaces/ICrossDomainMessenger.sol';
+import {MockOvmL2CrossDomainMessenger} from './MockOvmL2CrossDomainMessenger.sol';
 
 contract MockOvmL1CrossDomainMessenger is ICrossDomainMessenger {
   address private sender;
@@ -25,7 +25,7 @@ contract MockOvmL1CrossDomainMessenger is ICrossDomainMessenger {
     bytes calldata _message,
     uint32 _gasLimit
   ) external override {
-    MockOvmL2CrossDomainMessenger(l2Messenger).redirect(_target, _message, _gasLimit);
+    MockOvmL2CrossDomainMessenger(l2Messenger).redirect(msg.sender, _target, _message, _gasLimit);
   }
 
   function redirect(
@@ -33,6 +33,7 @@ contract MockOvmL1CrossDomainMessenger is ICrossDomainMessenger {
     bytes calldata _message,
     uint32 _gasLimit
   ) external {
-    _target.call{gas: _gasLimit}(_message);
+    bool success;
+    (success, ) = _target.call{gas: _gasLimit}(_message);
   }
 }

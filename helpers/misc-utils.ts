@@ -1,20 +1,8 @@
-import BigNumber from 'bignumber.js';
-import BN = require('bn.js');
-// import low from 'lowdb';
-// import FileSync from 'lowdb/adapters/FileSync';
-import { WAD } from './constants';
-import { Wallet, ContractTransaction, Signer } from 'ethers';
+import { Wallet, ContractTransaction, Signer, BigNumber } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from './types';
 import { isAddress } from 'ethers/lib/utils';
 import { isZeroAddress } from 'ethereumjs-util';
-
-export const toWad = (value: string | number) => new BigNumber(value).times(WAD).toFixed();
-
-export const bnToBigNumber = (amount: BN): BigNumber => new BigNumber(<any>amount);
-export const stringToBigNumber = (amount: string): BigNumber => new BigNumber(amount);
-
-// export const getDb = () => low(new FileSync('./deployed-contracts.json'));
 
 export let DRE: HardhatRuntimeEnvironment;
 
@@ -34,8 +22,17 @@ export const evmRevert = async (id: string) => DRE.ethers.provider.send('evm_rev
 
 export const timeLatest = async () => {
   const block = await DRE.ethers.provider.getBlock('latest');
-  return new BigNumber(block.timestamp);
+  return BigNumber.from(block.timestamp);
 };
+
+export const setBlocktime = async (time: number) => {
+  await DRE.ethers.provider.send('evm_setNextBlockTimestamp', [time]);
+};
+export const advanceBlocks = async (numberOfBlocks: number, timeBetweenBlocks: number = 0) =>
+  await DRE.ethers.provider.send('hardhat_mine', [
+    `0x${numberOfBlocks.toString(16)}`,
+    `0x${timeBetweenBlocks.toString(16)}`,
+  ]);
 
 export const advanceBlock = async (timestamp: number) =>
   await DRE.ethers.provider.send('evm_mine', [timestamp]);

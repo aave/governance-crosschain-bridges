@@ -32,7 +32,7 @@ import {
   createBridgeTest16,
   createArbitrumBridgeTest,
   createOptimismBridgeTest,
-} from '../helpers/bridge-helpers';
+} from '../helpers/actions-sets-helpers';
 import {
   expectProposalState,
   createProposal,
@@ -41,6 +41,7 @@ import {
 } from '../helpers/governance-helpers';
 import { PolygonBridgeExecutor__factory } from '../../typechain';
 import { ZERO_ADDRESS } from '../../helpers/constants';
+import { ActionsSetState, ExecutorErrors } from '../helpers/executor-helpers';
 
 chai.use(solidity);
 
@@ -341,7 +342,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Get State of Actions 0 - Actions Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.getCurrentState(0)).to.be.revertedWith(
-        'InvalidActionsSetId()'
+        ExecutorErrors.InvalidActionsSetId
       );
     });
   });
@@ -360,7 +361,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
           BigNumber.from(500),
           aaveGovOwner.address
         )
-      ).to.be.revertedWith('InvalidInitParams()');
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
     });
     it('Delay < Minimum Delay', async () => {
       const { shortExecutor, fxChild, aaveGovOwner } = testEnv;
@@ -375,7 +376,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
           BigNumber.from(500),
           aaveGovOwner.address
         )
-      ).to.be.revertedWith('InvalidInitParams()');
+      ).to.be.revertedWith(ExecutorErrors.InvalidInitParams);
     });
   });
 
@@ -385,7 +386,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const { encodedActions } = testEnv.proposalActions[0];
       await expect(
         polygonBridgeExecutor.processMessageFromRoot(1, shortExecutor.address, encodedActions)
-      ).to.be.revertedWith('UNAUTHORIZED_CHILD_ORIGIN');
+      ).to.be.revertedWith(ExecutorErrors.UnauthorizedChildOrigin);
     });
     it('Unauthorized Transaction - Call Root From Unauthorized Address', async () => {
       const { fxRoot, polygonBridgeExecutor } = testEnv;
@@ -397,43 +398,43 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Unauthorized FxRootSender Update - Revert', async () => {
       const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
       await expect(polygonBridgeExecutor.updateFxRootSender(aaveWhale2.address)).to.be.revertedWith(
-        'OnlyCallableByThis()'
+        ExecutorErrors.OnlyCallableByThis
       );
     });
     it('Unauthorized FxChild Update - Revert', async () => {
       const { polygonBridgeExecutor, aaveWhale2 } = testEnv;
       await expect(polygonBridgeExecutor.updateFxChild(aaveWhale2.address)).to.be.revertedWith(
-        'OnlyCallableByThis()'
+        ExecutorErrors.OnlyCallableByThis
       );
     });
     it('Unauthorized Guardian Update - Revert', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.updateGuardian(ZERO_ADDRESS)).to.be.revertedWith(
-        'OnlyCallableByThis()'
+        ExecutorErrors.OnlyCallableByThis
       );
     });
     it('Unauthorized Delay Update - Revert', async () => {
       const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
       await expect(
         polygonBridgeExecutor.connect(aaveWhale1.signer).updateDelay(1000)
-      ).to.be.revertedWith('OnlyCallableByThis()');
+      ).to.be.revertedWith(ExecutorErrors.OnlyCallableByThis);
     });
     it('Unauthorized GracePeriod Update - Revert', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.updateGracePeriod(1000)).to.be.revertedWith(
-        'OnlyCallableByThis()'
+        ExecutorErrors.OnlyCallableByThis
       );
     });
     it('Unauthorized Minimum Delay Update - Revert', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.updateMinimumDelay(1)).to.be.revertedWith(
-        'OnlyCallableByThis()'
+        ExecutorErrors.OnlyCallableByThis
       );
     });
     it('Unauthorized Maximum Delay Update - Revert', async () => {
       const { polygonBridgeExecutor } = testEnv;
       await expect(polygonBridgeExecutor.updateMaximumDelay(100000000)).to.be.revertedWith(
-        'OnlyCallableByThis()'
+        ExecutorErrors.OnlyCallableByThis
       );
     });
   });
@@ -444,7 +445,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         testEnv.proposalActions[0];
       await expect(
         arbitrumBridgeExecutor.queue(targets, values, signatures, calldatas, withDelegatecalls)
-      ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
+      ).to.be.revertedWith(ExecutorErrors.UnauthorizedEthereumExecutor);
     });
     it('Unauthorized Update Ethereum Governance Executor - revert', async () => {
       const { arbitrumBridgeExecutor, aaveWhale1 } = testEnv;
@@ -452,7 +453,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         arbitrumBridgeExecutor
           .connect(aaveWhale1.signer)
           .updateEthereumGovernanceExecutor(aaveWhale1.address)
-      ).to.be.revertedWith('OnlyCallableByThis()');
+      ).to.be.revertedWith(ExecutorErrors.OnlyCallableByThis);
     });
   });
   describe('OptimismBridgeExecutor Authorization', async function () {
@@ -462,7 +463,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         testEnv.proposalActions[0];
       await expect(
         optimismBridgeExecutor.queue(targets, values, signatures, calldatas, withDelegatecalls)
-      ).to.be.revertedWith('UNAUTHORIZED_EXECUTOR');
+      ).to.be.revertedWith(ExecutorErrors.UnauthorizedEthereumExecutor);
     });
     it('Unauthorized Update Ethereum Governance Executor - revert', async () => {
       const { optimismBridgeExecutor, aaveWhale1 } = testEnv;
@@ -470,7 +471,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
         optimismBridgeExecutor
           .connect(aaveWhale1.signer)
           .updateEthereumGovernanceExecutor(aaveWhale1.address)
-      ).to.be.revertedWith('OnlyCallableByThis()');
+      ).to.be.revertedWith(ExecutorErrors.OnlyCallableByThis);
     });
   });
   describe('BridgeExecutorBase - Validate Delay Logic', async function () {
@@ -481,7 +482,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       );
       await expect(
         polygonBridgeExecutor.connect(polygonBridgeExecutorSigner).updateDelay(100000000)
-      ).to.be.revertedWith('DelayLongerThanMax()');
+      ).to.be.revertedWith(ExecutorErrors.DelayLongerThanMax);
     });
     it('Delay < Minimum Delay', async () => {
       const { polygonBridgeExecutor } = testEnv;
@@ -490,7 +491,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       );
       await expect(
         polygonBridgeExecutor.connect(polygonBridgeExecutorSigner).updateDelay(1)
-      ).to.be.revertedWith('DelayShorterThanMin()');
+      ).to.be.revertedWith(ExecutorErrors.DelayShorterThanMin);
     });
   });
   describe('Queue - PolygonBridgeExecutor through Ethereum Aave Governance', async function () {
@@ -865,11 +866,15 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('Execute Action Sets - Aave Polygon Governance', async function () {
     it('Get State of Actions 0 - Actions Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(0)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(ActionsSetState.Queued)).to.be.eq(
+        ActionsSetState.Queued
+      );
     });
     it('Execute Action Set 0 - polygon gov error - timelock not finished', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.execute(0)).to.revertedWith('TimelockNotFinished()');
+      await expect(polygonBridgeExecutor.execute(0)).to.revertedWith(
+        ExecutorErrors.TimelockNotFinished
+      );
     });
     it('Execute Action Set 0 - execution successful', async () => {
       const { ethers } = DRE;
@@ -892,19 +897,27 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 0 - Actions Executed', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(0)).to.be.eq(1);
+      await expect(await polygonBridgeExecutor.getCurrentState(0)).to.be.eq(
+        ActionsSetState.Executed
+      );
     });
     it('Execute Action Set 100 - polygon gov error - invalid actions id', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.execute(100)).to.revertedWith('InvalidActionsSetId()');
+      await expect(polygonBridgeExecutor.execute(100)).to.revertedWith(
+        ExecutorErrors.InvalidActionsSetId
+      );
     });
     it('Execute Action Set 1 - polygon gov error - failing action', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.execute(1)).to.revertedWith('FAILED_ACTION_EXECUTION');
+      await expect(polygonBridgeExecutor.execute(1)).to.revertedWith(
+        ExecutorErrors.FailedActionExecution
+      );
     });
     it('Execute Action Set 2 - polygon gov error - not enough msg value', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.execute(2)).to.revertedWith('InsufficientBalance()');
+      await expect(polygonBridgeExecutor.execute(2)).to.revertedWith(
+        ExecutorErrors.InsufficientBalance
+      );
     });
     it('Execute Action Set 5 - updateFxRootSender', async () => {
       const { polygonBridgeExecutor, shortExecutor, aaveWhale2 } = testEnv;
@@ -1024,7 +1037,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 2 - Action Set Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(ActionsSetState.Queued);
     });
     it('Cancel Action Set 2 - polygon gov error - only guardian', async () => {
       const { polygonBridgeExecutor, aaveWhale1 } = testEnv;
@@ -1034,7 +1047,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Cancel Action Set 0 - polygon gov error - only before executed', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(polygonBridgeExecutor.cancel(0)).to.be.revertedWith('OnlyQueuedActions()');
+      await expect(polygonBridgeExecutor.cancel(0)).to.be.revertedWith(
+        ExecutorErrors.OnlyQueuedActions
+      );
     });
     it('Cancel Action Set 2 - successful cancellation', async () => {
       const { polygonBridgeExecutor, aaveGovOwner } = testEnv;
@@ -1044,7 +1059,9 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 2 - Actions Canceled', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(2);
+      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(
+        ActionsSetState.Canceled
+      );
     });
   });
   describe('Update Guardian', async function () {
@@ -1063,7 +1080,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     });
     it('Get State of Action Set 2 - Action Set Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(3)).to.be.eq(ActionsSetState.Queued);
     });
     it('Cancel Action Set 2 - polygon gov error - only guardian', async () => {
       const { polygonBridgeExecutor, aaveGovOwner } = testEnv;
@@ -1086,7 +1103,7 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
   describe('Expired Actions - Aave Polygon Governance', async function () {
     it('Get State of Action Set 3 - Actions Queued', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(0);
+      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(ActionsSetState.Queued);
     });
     it('Execute Actions 3 - polygon gov error - expired action', async () => {
       const { ethers } = DRE;
@@ -1094,11 +1111,15 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
       const blocktime = (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
         .timestamp;
       await advanceBlock(blocktime + 100000);
-      await expect(polygonBridgeExecutor.execute(4)).to.revertedWith('OnlyQueuedActions()');
+      await expect(polygonBridgeExecutor.execute(4)).to.revertedWith(
+        ExecutorErrors.OnlyQueuedActions
+      );
     });
     it('Get State of Actions 3 - Actions Expired', async () => {
       const { polygonBridgeExecutor } = testEnv;
-      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(3);
+      await expect(await polygonBridgeExecutor.getCurrentState(4)).to.be.eq(
+        ActionsSetState.Expired
+      );
     });
   });
 });

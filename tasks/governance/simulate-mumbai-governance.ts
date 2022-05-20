@@ -6,7 +6,6 @@ import { BigNumber } from 'ethers';
 import { DRE } from '../../helpers/misc-utils';
 import { getMnemonicSigner } from '../../helpers/wallet-helpers';
 import ContractAddresses from '../../contractAddresses.json';
-import AaveGovernanceV2Abi from '../../abis/AaveGovernanceV2.json';
 import {
   initPolygonMarketUpdateContract,
   initPolygonBridgeExecutor,
@@ -17,6 +16,7 @@ import {
   listenForUpdateExecuted,
   getActionsSetById,
 } from '../../helpers/polygon-helpers';
+import { AaveGovernanceV2__factory } from '../../typechain';
 
 dotenv.config({ path: '../../.env' });
 
@@ -37,9 +37,8 @@ task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localB
   aaveWhaleSigner = aaveWhaleSigner.connect(provider);
   const aaveWhaleAddress = await aaveWhaleSigner.getAddress();
   console.log(`Aave Whale: ${aaveWhaleAddress}\n\n`);
-  const govContract = new DRE.ethers.Contract(
+  const govContract = AaveGovernanceV2__factory.connect(
     ContractAddresses.governance,
-    AaveGovernanceV2Abi,
     aaveWhaleSigner
   );
 
@@ -103,7 +102,7 @@ task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localB
       [BigNumber.from(0)],
       ['sendMessageToChild(address,bytes)'],
       [encodedRootCalldata],
-      [0],
+      [false],
       '0xf7a1f565fcd7684fba6fea5d77c5e699653e21cb6ae25fbf8c5dbc8d694c7949',
       {
         gasLimit: 2000000,
@@ -163,7 +162,7 @@ task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localB
   let voteTransaction;
   let voteReceipt;
   try {
-    voteTransaction = await govContract.submitVote(proposal.id, 1, overrides);
+    voteTransaction = await govContract.submitVote(proposal.id, true, overrides);
     voteReceipt = await voteTransaction.wait();
   } catch (e) {
     console.log(`Error in vote Transaction`);
