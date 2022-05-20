@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from 'dotenv';
-config();
-
 import { HardhatUserConfig } from 'hardhat/types';
 import '@typechain/hardhat';
 import '@typechain/ethers-v5';
@@ -12,7 +10,11 @@ import '@nomiclabs/hardhat-etherscan';
 import '@tenderly/hardhat-tenderly';
 import 'hardhat-deploy';
 import 'hardhat-dependency-compiler';
+import 'hardhat-contract-sizer';
 import 'solidity-coverage';
+
+config();
+
 import { accounts } from './helpers/test-wallets';
 import {
   eArbitrumNetwork,
