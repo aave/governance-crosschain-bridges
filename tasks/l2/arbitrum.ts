@@ -11,7 +11,7 @@ import { eArbitrumNetwork, eEthereumNetwork } from '../../helpers/types';
 import {
   ArbitrumBridgeExecutor__factory,
   Greeter__factory,
-  IArbRetryableTx__factory,
+  ArbRetryableTx__factory,
   IInbox__factory,
 } from '../../typechain';
 
@@ -107,7 +107,7 @@ task(
   const inbox = IInbox__factory.connect(INBOX, deployer);
   console.log(`INBOX at: ${inbox.address}`);
 
-  const retryable = IArbRetryableTx__factory.connect(
+  const retryable = ArbRetryableTx__factory.connect(
     ADDRESSES['RETRYABLE_TICKET_TX_ADDRESS'],
     l2Provider
   );
@@ -189,7 +189,7 @@ task('arbitrum:redeem-retryable', 'Redeem a retryable ticket on arbitrum')
       `Deployer address: ${deployer.address} (${formatUnits(await deployer.getBalance())})`
     );
 
-    const retryable = IArbRetryableTx__factory.connect(
+    const retryable = ArbRetryableTx__factory.connect(
       ADDRESSES['RETRYABLE_TICKET_TX_ADDRESS'],
       deployer
     );
