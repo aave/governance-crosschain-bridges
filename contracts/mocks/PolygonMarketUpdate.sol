@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.5;
+pragma solidity 0.8.10;
 
 contract PolygonMarketUpdate {
   event UpdateExecuted(uint256 counter, uint256 testInt, address testAddress, uint256 fee);
