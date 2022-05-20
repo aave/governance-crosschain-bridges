@@ -13,6 +13,7 @@ import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
  */
 contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   error UnauthorizedChildOrigin();
+  error UnauthorizedRootOrigin();
 
   /**
    * @dev Emitted when the FxRoot Sender is updated
@@ -71,7 +72,7 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
     address rootMessageSender,
     bytes calldata data
   ) external override onlyFxChild {
-    require(rootMessageSender == _fxRootSender, 'UNAUTHORIZED_ROOT_ORIGIN');
+    if (rootMessageSender != _fxRootSender) revert UnauthorizedRootOrigin();
 
     address[] memory targets;
     uint256[] memory values;

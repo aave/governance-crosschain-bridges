@@ -19,6 +19,7 @@ export enum ExecutorErrors {
 
   // PolygonBridgeExecutor
   UnauthorizedChildOrigin = 'UnauthorizedChildOrigin()',
+  UnauthorizedRootOrigin = 'UnauthorizedRootOrigin()',
 
   // L2BridgeExecutor
   UnauthorizedEthereumExecutor = 'UnauthorizedEthereumExecutor()',
