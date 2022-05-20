@@ -13,9 +13,7 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
 
   error UnauthorizedEthereumExecutor();
 
-  modifier onlyEthereumGovernanceExecutor() virtual {
-    _;
-  }
+  modifier onlyEthereumGovernanceExecutor() virtual;
 
   constructor(
     address ethereumGovernanceExecutor,
