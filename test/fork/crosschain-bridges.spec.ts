@@ -630,19 +630,19 @@ makeSuite('Crosschain bridge tests', setupTestEnvironment, (testEnv: TestEnv) =>
     it('Execute Proposal 6 - polygon gov error - no targets in polygon actions', async () => {
       const { aaveGovContract } = testEnv;
       await expect(aaveGovContract.execute(proposals[5].id)).to.be.revertedWith(
-        "FAILED_ACTION_EXECUTION"
+        'FAILED_ACTION_EXECUTION'
       );
     });
     it('Execute Proposal 7 - polygon gov error - targets[].length < values[].length in polygon actions', async () => {
       const { aaveGovContract } = testEnv;
       await expect(aaveGovContract.execute(proposals[6].id)).to.be.revertedWith(
-        "FAILED_ACTION_EXECUTION"
+        'FAILED_ACTION_EXECUTION'
       );
     });
     it('Execute Proposal 8 - polygon gov error - duplicate polygon actions', async () => {
       const { aaveGovContract } = testEnv;
       await expect(aaveGovContract.execute(proposals[7].id)).to.be.revertedWith(
-        "FAILED_ACTION_EXECUTION"
+        'FAILED_ACTION_EXECUTION'
       );
     });
     it('Execute Proposal 9 - successfully queue transaction - fx root sender update', async () => {
