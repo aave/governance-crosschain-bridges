@@ -32,7 +32,7 @@ import {
   createBridgeTest16,
   createArbitrumBridgeTest,
   createOptimismBridgeTest,
-} from '../helpers/proposals-helpers';
+} from '../helpers/actions-sets-helpers';
 import {
   expectProposalState,
   createProposal,

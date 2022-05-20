@@ -37,7 +37,10 @@ task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localB
   aaveWhaleSigner = aaveWhaleSigner.connect(provider);
   const aaveWhaleAddress = await aaveWhaleSigner.getAddress();
   console.log(`Aave Whale: ${aaveWhaleAddress}\n\n`);
-  const govContract = AaveGovernanceV2__factory.connect(ContractAddresses.governance, aaveWhaleSigner);
+  const govContract = AaveGovernanceV2__factory.connect(
+    ContractAddresses.governance,
+    aaveWhaleSigner
+  );
 
   const polygonMarketUpdate = await initPolygonMarketUpdateContract();
   await listenForUpdateExecuted(polygonMarketUpdate);

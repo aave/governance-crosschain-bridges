@@ -406,13 +406,15 @@ describe('BridgeExecutorBase', async function () {
 
       const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
       const value = (await ethers.provider.getBalance(bridgeExecutor.address)).add(1);
-      await expect(bridgeExecutor.queue(
-        data[0] as string[],
-        [value],
-        data[2] as string[],
-        data[3] as string[],
-        data[4] as boolean[]
-      )).to.not.be.reverted;
+      expect(
+        await bridgeExecutor.queue(
+          data[0] as string[],
+          [value],
+          data[2] as string[],
+          data[3] as string[],
+          data[4] as boolean[]
+        )
+      );
       const executionTime = (await timeLatest()).add(DELAY);
 
       await setBlocktime(executionTime.add(1).toNumber());
@@ -427,14 +429,13 @@ describe('BridgeExecutorBase', async function () {
       const selfdestructor = await new Selfdestructor__factory(user).deploy();
       const data = selfdestructor.interface.encodeFunctionData('oops');
 
-      await expect(bridgeExecutor.queue([selfdestructor.address], [0], [''], [data], [true])).to.not.be
-        .reverted;
+      expect(await bridgeExecutor.queue([selfdestructor.address], [0], [''], [data], [true]));
       const executionTime = (await timeLatest()).add(DELAY);
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
 
-      await expect(bridgeExecutor.execute(0)).to.not.be.reverted;
+      expect(await bridgeExecutor.execute(0));
 
       const code = await ethers.provider.getCode(bridgeExecutor.address);
       expect(code).to.eq('0x');
