@@ -13,7 +13,6 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
 
   error UnauthorizedEthereumExecutor();
 
-  //We need to implement this here seemingly due to a bug in solidity-coverage.
   modifier onlyEthereumGovernanceExecutor() virtual {
     _;
   }
