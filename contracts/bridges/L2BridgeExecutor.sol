@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
+import {IL2BridgeExecutor} from '../interfaces/IL2BridgeExecutor.sol';
 import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
 
 /**
@@ -10,19 +11,7 @@ import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
  * @dev It does not implement the `onlyEthereumGovernanceExecutor` modifier. This should instead be done in the inheriting
  * contract with proper configuration and adjustments depending of the L2
  */
-abstract contract L2BridgeExecutor is BridgeExecutorBase {
-  error UnauthorizedEthereumExecutor();
-
-  /**
-   * @dev Emitted when the Ethereum Governance Executor is updated
-   * @param oldEthereumGovernanceExecutor The address of the old EthereumGovernanceExecutor
-   * @param newEthereumGovernanceExecutor The address of the new EthereumGovernanceExecutor
-   **/
-  event EthereumGovernanceExecutorUpdate(
-    address oldEthereumGovernanceExecutor,
-    address newEthereumGovernanceExecutor
-  );
-
+abstract contract L2BridgeExecutor is BridgeExecutorBase, IL2BridgeExecutor {
   // Address of the Ethereum Governance Executor, able to queue actions sets
   address internal _ethereumGovernanceExecutor;
 
@@ -54,15 +43,7 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
     _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
   }
 
-  /**
-   * @notice Queue an ActionsSet
-   * @dev If a signature is empty, calldata is used for the execution, calldata is appended to signature otherwise
-   * @param targets Array of targets to be called by the actions set
-   * @param values Array of values to pass in each call by the actions set
-   * @param signatures Array of function signatures to encode in each call by the actions (can be empty)
-   * @param calldatas Array of calldata to pass in each call by the actions set
-   * @param withDelegatecalls Array of whether to delegatecall for each call of the actions set
-   **/
+  /// @inheritdoc IL2BridgeExecutor
   function queue(
     address[] memory targets,
     uint256[] memory values,
@@ -73,19 +54,13 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 
-  /**
-   * @notice Update the address of the Ethereum Governance Executor
-   * @param ethereumGovernanceExecutor The address of the new EthereumGovernanceExecutor
-   **/
+  /// @inheritdoc IL2BridgeExecutor
   function updateEthereumGovernanceExecutor(address ethereumGovernanceExecutor) external onlyThis {
     emit EthereumGovernanceExecutorUpdate(_ethereumGovernanceExecutor, ethereumGovernanceExecutor);
     _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
   }
 
-  /**
-   * @notice Returns the address of the Ethereum Governance Executor
-   * @return The address of the EthereumGovernanceExecutor
-   **/
+  /// @inheritdoc IL2BridgeExecutor
   function getEthereumGovernanceExecutor() external view returns (address) {
     return _ethereumGovernanceExecutor;
   }
