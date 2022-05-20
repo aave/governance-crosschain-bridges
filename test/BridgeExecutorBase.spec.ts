@@ -6,7 +6,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
   GreeterPayload__factory,
   Greeter__factory,
-  Oops__factory,
   SimpleBridgeExecutor,
   SimpleBridgeExecutor__factory,
 } from '../typechain';
@@ -20,6 +19,7 @@ import {
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ActionsSetState, ExecutorErrors } from './helpers/executor-helpers';
+import { Selfdestructor__factory } from '../typechain/factories/Selfdestructor__factory';
 
 chai.use(solidity);
 
@@ -424,10 +424,10 @@ describe('BridgeExecutorBase', async function () {
     });
 
     it('Queue and execute an actions set to self-destruct via delegatecall', async () => {
-      const oops = await new Oops__factory(user).deploy();
-      const data = oops.interface.encodeFunctionData('oops');
+      const selfdestructor = await new Selfdestructor__factory(user).deploy();
+      const data = selfdestructor.interface.encodeFunctionData('oops');
 
-      await expect(bridgeExecutor.queue([oops.address], [0], [''], [data], [true])).to.not.be
+      await expect(bridgeExecutor.queue([selfdestructor.address], [0], [''], [data], [true])).to.not.be
         .reverted;
       const executionTime = (await timeLatest()).add(DELAY);
 
