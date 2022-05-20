@@ -17,6 +17,7 @@
     "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/*.ts' 'test/*.ts' 'test/**/*.ts'",
     "coverage": "npx hardhat coverage --testfiles  'test/emptyrun.coverage.ts' && npx hardhat coverage --testfiles  'test/*.spec.ts'",
     "test": "npm run compile && hardhat test test/*.spec.ts",
+    "test-noc": "hardhat test test/*.spec.ts",
     "test-fork": "npm run compile && MAINNET_FORK=true FORKING_BLOCK_NUMBER=14340480 hardhat test test/fork/crosschain-bridges.spec.ts",
     "hardhat:kovan": "hardhat --network kovan",
     "hardhat:tenderlyMain": "hardhat --network tenderlyMain",
