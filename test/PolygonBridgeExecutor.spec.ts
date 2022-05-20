@@ -101,7 +101,7 @@ describe('PolygonBridgeExecutor', async function () {
     it('FxChild tries to queue actions set with wrong fxRoot sender (revert expected)', async () => {
       await expect(
         bridgeExecutor.connect(fxChild).processMessageFromRoot(1, ZERO_ADDRESS, '0x')
-      ).to.be.revertedWith('UNAUTHORIZED_ROOT_ORIGIN');
+      ).to.be.revertedWith(ExecutorErrors.UnauthorizedRootOrigin);
     });
 
     it('FxChild tries to queue an empty actions set (revert expected)', async () => {
