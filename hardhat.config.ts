@@ -9,6 +9,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-etherscan';
 import '@tenderly/hardhat-tenderly';
 import 'hardhat-deploy';
+import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
@@ -73,6 +74,9 @@ const hardhatConfig: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: 0,
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
   },
   solidity: {
     compilers: [
