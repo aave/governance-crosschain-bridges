@@ -1,12 +1,16 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+/**
+ * @title IFxMessageProcessor
+ * @notice Defines the interface to process message
+ */
 interface IFxMessageProcessor {
   /**
-   * @dev Process the cross-chain message from an FxChild contract through the ETH/Polygon StateSender
-   * @param stateId Id of the cross-chain message created in the ETH/Polygon StateSender
-   * @param rootMessageSender address that initially sent this message on ethereum
-   * @param data the data from the abi-encoded cross-chain message
+   * @notice Process the cross-chain message from a FxChild contract through the Ethereum/Polygon StateSender
+   * @param stateId The id of the cross-chain message created in the Ethereum/Polygon StateSender
+   * @param rootMessageSender The address that initially sent this message on Ethereum
+   * @param data The data from the abi-encoded cross-chain message
    **/
   function processMessageFromRoot(
     uint256 stateId,

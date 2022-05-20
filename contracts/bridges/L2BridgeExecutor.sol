@@ -1,20 +1,35 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
+import {IL2BridgeExecutor} from '../interfaces/IL2BridgeExecutor.sol';
 import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
 
-abstract contract L2BridgeExecutor is BridgeExecutorBase {
+/**
+ * @title L2BridgeExecutor
+ * @author Aave
+ * @notice Abstract contract that implements bridge executor functionality for L2
+ * @dev It does not implement the `onlyEthereumGovernanceExecutor` modifier. This should instead be done in the inheriting
+ * contract with proper configuration and adjustments depending on the L2
+ */
+abstract contract L2BridgeExecutor is BridgeExecutorBase, IL2BridgeExecutor {
+  // Address of the Ethereum Governance Executor, which should be able to queue actions sets
   address internal _ethereumGovernanceExecutor;
 
-  event EthereumGovernanceExecutorUpdate(
-    address previousEthereumGovernanceExecutor,
-    address newEthereumGovernanceExecutor
-  );
-
-  error UnauthorizedEthereumExecutor();
-
+  /**
+   * @dev Only the Ethereum Governance Executor should be able to call functions marked by this modifier.
+   **/
   modifier onlyEthereumGovernanceExecutor() virtual;
 
+  /**
+   * @dev Constructor
+   *
+   * @param ethereumGovernanceExecutor The address of the EthereumGovernanceExecutor
+   * @param delay The delay before which an actions set can be executed
+   * @param gracePeriod The time period after a delay during which an actions set can be executed
+   * @param minimumDelay The minimum bound a delay can be set to
+   * @param maximumDelay The maximum bound a delay can be set to
+   * @param guardian The address of the guardian, which can cancel queued proposals (can be zero)
+   */
   constructor(
     address ethereumGovernanceExecutor,
     uint256 delay,
@@ -26,14 +41,7 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
     _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
   }
 
-  /**
-   * @dev Queue the cross-chain message in the BridgeExecutor
-   * @param targets list of contracts called by each action's associated transaction
-   * @param values list of value in wei for each action's  associated transaction
-   * @param signatures list of function signatures (can be empty) to be used when created the callData
-   * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
-   **/
+  /// @inheritdoc IL2BridgeExecutor
   function queue(
     address[] memory targets,
     uint256[] memory values,
@@ -44,19 +52,13 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase {
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 
-  /**
-   * @dev Update the address of the Ethereum Governance Executor contract responsible for sending cross-chain transactions
-   * @param ethereumGovernanceExecutor the address of the Ethereum Governance Executor contract
-   **/
+  /// @inheritdoc IL2BridgeExecutor
   function updateEthereumGovernanceExecutor(address ethereumGovernanceExecutor) external onlyThis {
     emit EthereumGovernanceExecutorUpdate(_ethereumGovernanceExecutor, ethereumGovernanceExecutor);
     _ethereumGovernanceExecutor = ethereumGovernanceExecutor;
   }
 
-  /**
-   * @dev get the current address of ethereumGovernanceExecutor
-   * @return the address of the Ethereum Governance Executor contract
-   **/
+  /// @inheritdoc IL2BridgeExecutor
   function getEthereumGovernanceExecutor() external view returns (address) {
     return _ethereumGovernanceExecutor;
   }
