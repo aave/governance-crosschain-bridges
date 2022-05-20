@@ -7,14 +7,9 @@ import {
   iParamsPerNetwork,
 } from './helpers/types';
 
-import dotenv from 'dotenv';
-dotenv.config({});
-
 const INFURA_KEY = process.env.INFURA_KEY || '';
 const ALCHEMY_KEY = process.env.ALCHEMY_KEY || '';
 const TENDERLY_FORK = process.env.TENDERLY_FORK || '';
-
-const GWEI = 1000 * 1000 * 1000;
 
 export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.kovan]: ALCHEMY_KEY

@@ -1,5 +1,18 @@
-// import { HardhatRuntimeEnvironment } from 'hardhat/types';
-// import { task, HardhatUserConfig } from 'hardhat/config';
+import fs from 'fs';
+import path from 'path';
+import { config } from 'dotenv';
+config();
+
+import { HardhatUserConfig } from 'hardhat/types';
+import '@typechain/hardhat';
+import '@typechain/ethers-v5';
+import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-etherscan';
+import '@tenderly/hardhat-tenderly';
+import 'hardhat-deploy';
+import 'hardhat-dependency-compiler';
+import 'solidity-coverage';
 import { accounts } from './helpers/test-wallets';
 import {
   eArbitrumNetwork,
@@ -9,43 +22,33 @@ import {
   ePolygonNetwork,
   eXDaiNetwork,
 } from './helpers/types';
-import { NETWORKS_RPC_URL, /*NETWORKS_DEFAULT_GAS*/ } from './helper-hardhat-config';
-import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-
-import '@typechain/hardhat';
-import '@typechain/ethers-v5';
-import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-waffle';
-import '@tenderly/hardhat-tenderly';
-import 'hardhat-deploy';
-import 'hardhat-dependency-compiler';
-import 'solidity-coverage';
+import { NETWORKS_RPC_URL } from './helper-hardhat-config';
 
 const SKIP_LOAD = process.env.SKIP_LOAD === 'true';
+const TASK_FOLDERS = ['deploy', 'governance', 'l2', 'misc', 'setup', 'verify'];
 if (!SKIP_LOAD) {
-  require('./tasks/setup/get-info');
-  require('./tasks/setup/print-default-wallets');
-  require('./tasks/deploy/deploy');
-  require('./tasks/deploy/deployPolygonGovernance');
-  require('./tasks/verify/verify-template');
-  require('./tasks/governance/simulate-mumbai-governance');
-  require('./tasks/governance/check-polygon');
-  require('./tasks/misc/set-DRE');
-  require('./tasks/l2/optimism');
-  require('./tasks/l2/arbitrum');
+  TASK_FOLDERS.forEach((folder) => {
+    const tasksPath = path.join(__dirname, './tasks', folder);
+    fs.readdirSync(tasksPath)
+      .filter((pth) => pth.includes('.ts') || pth.includes('.js'))
+      .forEach((task) => {
+        require(`${tasksPath}/${task}`);
+      });
+  });
 }
 
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
+const FORKING_BLOCK_NUMBER = process.env.FORKING_BLOCK_NUMBER;
 const ARBISCAN_KEY = process.env.ARBISCAN_KEY || '';
 const OPTIMISTIC_ETHERSCAN_KEY = process.env.OPTIMISTIC_ETHERSCAN_KEY || '';
 const TENDERLY_PROJECT = process.env.TENDERLY_PROJECT || '';
 const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
 
-const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
+const getCommonNetworkConfig = (networkName: eNetwork, chainId: number) => ({
   url: NETWORKS_RPC_URL[networkName],
+  chainId,
   accounts: {
     mnemonic: MNEMONIC,
     path: MNEMONIC_PATH,
@@ -56,12 +59,12 @@ const getCommonNetworkConfig = (networkName: eNetwork, networkId: number) => ({
 
 const mainnetFork = MAINNET_FORK
   ? {
-      blockNumber: 14340480,
+      blockNumber: FORKING_BLOCK_NUMBER ? Number.parseInt(FORKING_BLOCK_NUMBER) : 14340480,
       url: NETWORKS_RPC_URL['main'],
     }
   : undefined;
 
-export default {
+const hardhatConfig: HardhatUserConfig = {
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
@@ -150,6 +153,8 @@ export default {
         privateKey: secretKey,
         balance,
       })),
+      throwOnTransactionFailures: true,
+      throwOnCallFailures: true,
       forking: mainnetFork,
     },
   },
@@ -160,3 +165,5 @@ export default {
     ],
   },
 };
+
+export default hardhatConfig;
