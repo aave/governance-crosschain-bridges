@@ -1,17 +1,23 @@
 {
-  "name": "governance-bridge",
+  "name": "governance-crosschain-bridges",
   "version": "1.0.0",
-  "description": "governance bridge repo",
-  "main": "index.js",
+  "description": "Contracts of Aave Governance Crosschain Bridges",
+  "files": [
+    "contracts",
+    "artifacts",
+    "types"
+  ],
   "scripts": {
-    "deploy:gov-bridge:optimism-testnet": "hardhat deploy --tags 'OptimisticGov,Greeter' --network optimism-testnet",
-    "deploy:gov-bridge:arbitrum-testnet": "hardhat deploy --tags 'ArbitrumGov,Greeter' --network arbitrum-testnet",
     "run-env": "npm i && tail -f /dev/null",
-    "test": "npm run compile && hardhat test test/*.spec.ts",
-    "quick-test": "hardhat test test/*.spec.ts",
-    "test-fork": "npm run compile && MAINNET_FORK=true FORKING_BLOCK_NUMBER=14340480 hardhat test test/fork/crosschain-bridges.spec.ts",
-    "clean": "hardhat clean",
     "hardhat": "hardhat",
+    "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
+    "clean": "hardhat clean",
+    "console:fork": "MAINNET_FORK=true hardhat console",
+    "prettier:check": "npx prettier -c 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/*.ts' 'test/*.ts' 'test/**/*.ts'",
+    "prettier:write": "prettier --write 'tasks/**/*.ts' 'contracts/**/*.sol' 'helpers/*.ts' 'test/*.ts' 'test/**/*.ts'",
+    "coverage": "npx hardhat coverage --testfiles  'test/emptyrun.coverage.ts' && npx hardhat coverage --testfiles  'test/*.spec.ts'",
+    "test": "npm run compile && hardhat test test/*.spec.ts",
+    "test-fork": "npm run compile && MAINNET_FORK=true FORKING_BLOCK_NUMBER=14340480 hardhat test test/fork/crosschain-bridges.spec.ts",
     "hardhat:kovan": "hardhat --network kovan",
     "hardhat:tenderlyMain": "hardhat --network tenderlyMain",
     "hardhat:ropsten": "hardhat --network ropsten",
@@ -25,14 +31,9 @@
     "hardhat:optimism-testnet": "hardhat --network optimism-testnet",
     "hardhat:arbitrum": "hardhat --network arbitrum",
     "hardhat:arbitrum-testnet": "hardhat --network arbitrum-testnet",
-    "compile": "SKIP_LOAD=true hardhat clean && SKIP_LOAD=true hardhat compile",
-    "console:fork": "MAINNET_FORK=true hardhat console",
-    "coverage": "npx hardhat coverage --testfiles  'test/emptyrun.coverage.ts' && npx hardhat coverage --testfiles  'test/*.spec.ts'",
-    "format": "prettier --write .",
-    "lint": "eslint ."
+    "deploy:gov-bridge:optimism-testnet": "npm run hardhat:optimism-testnet -- --tags 'OptimisticGov,Greeter'",
+    "deploy:gov-bridge:arbitrum-testnet": "npm run hardhat:arbitrum-testnet -- --tags 'ArbitrumGov,Greeter'"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@aave/governance-v2": "^1.0.0",
     "@ethersproject/abi": "^5.1.0",
@@ -59,6 +60,7 @@
     "hardhat-deploy": "^0.10.6",
     "hardhat-gas-reporter": "^1.0.8",
     "prettier": "^2.3.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solidity-coverage": "^0.7.17",
     "tmp-promise": "^3.0.2",
     "ts-node": "^10.2.1",
@@ -72,5 +74,28 @@
     "hooks": {
       "pre-commit": "pretty-quick --staged --pattern 'contracts/**/*.sol' --pattern 'helpers/**/*.ts'  --pattern 'test/**/*.ts' --pattern 'tasks/**/*.ts'"
     }
+  },
+  "author": "Aave",
+  "contributors": [
+    "Steven Valeri <steven@aave.com>",
+    "Lasse Herskind <lasse@aave.com>",
+    "Miguel Martinez <miguel@aave.com>",
+    "Peter Michael <peter.dev@aave.com>"
+  ],
+  "license": "BSD",
+  "keywords": [
+    "aave",
+    "governance",
+    "crosschain",
+    "bridges",
+    "ethereum",
+    "solidity"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aave/governance-crosschain-bridges"
   }
 }

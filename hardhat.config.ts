@@ -69,7 +69,7 @@ const mainnetFork = MAINNET_FORK
 
 const hardhatConfig: HardhatUserConfig = {
   typechain: {
-    outDir: 'typechain',
+    outDir: 'types',
     target: 'ethers-v5',
   },
   namedAccounts: {
