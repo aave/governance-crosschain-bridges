@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
 import {IExecutorBase} from '../interfaces/IExecutorBase.sol';
@@ -6,42 +6,56 @@ import {IExecutorBase} from '../interfaces/IExecutorBase.sol';
 /**
  * @title BridgeExecutorBase
  * @author Aave
- *
- * @notice This is an abstract contract that implements basic governance executor functionality.
- * It does not implement an external queue function, this should instead be done in the inheriting
- * contract with proper access control.
+ * @notice Abstract contract that implements basic executor functionality
+ * @dev It does not implement an external `queue` function. This should instead be done in the inheriting
+ * contract with proper access control
  */
 abstract contract BridgeExecutorBase is IExecutorBase {
+  // Minimum allowed grace period, which reduces the risk of having actions set expired due to network congestion
   uint256 constant MINIMUM_GRACE_PERIOD = 10 minutes;
 
+  // Time between queuing and execution
   uint256 private _delay;
+  // Time after the execution time during which the actions set can be executed
   uint256 private _gracePeriod;
+  // Minimum allowed delay
   uint256 private _minimumDelay;
+  // Maximum allowed delay
   uint256 private _maximumDelay;
+  // Address with the ability of canceling actions sets
   address private _guardian;
-  uint256 private _actionsSetCounter;
 
+  // Number of actions sets
+  uint256 private _actionsSetCounter;
+  // Map of registered actions sets (id => ActionsSet)
   mapping(uint256 => ActionsSet) private _actionsSets;
+  // Map of queued actions sets (actionHash => isQueued)
   mapping(bytes32 => bool) private _queuedActions;
 
+  /**
+   * @dev Only guardian can call functions marked by this modifier.
+   **/
   modifier onlyGuardian() {
     if (msg.sender != _guardian) revert NotGuardian();
     _;
   }
 
+  /**
+   * @dev Only this contract can call functions marked by this modifier.
+   **/
   modifier onlyThis() {
     if (msg.sender != address(this)) revert OnlyCallableByThis();
     _;
   }
 
   /**
-   * @notice The constructor sets the initial parameters.
+   * @dev Constructor
    *
-   * @param delay The delay before which a queued proposal can be executed.
-   * @param gracePeriod The time period after a delay during which a proposal can be executed.
-   * @param minimumDelay The minimum bound a delay can be set to, this is a precaution.
-   * @param maximumDelay The maximum bound a delay can be set to, this is a precaution.
-   * @param guardian The guardian address, which can cancel queued proposals. Can be zero.
+   * @param delay The delay before which an actions set can be executed
+   * @param gracePeriod The time period after a delay during which an actions set can be executed
+   * @param minimumDelay The minimum bound a delay can be set to
+   * @param maximumDelay The maximum bound a delay can be set to
+   * @param guardian The address of the guardian, which can cancel queued proposals (can be zero)
    */
   constructor(
     uint256 delay,
@@ -88,6 +102,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
         ++i;
       }
     }
+
     emit ActionsSetExecuted(actionsSetId, msg.sender, returnedData);
   }
 
@@ -251,12 +266,13 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   }
 
   /**
-   * @dev Queue the ActionsSet
-   * @param targets list of contracts called by each action's associated transaction
-   * @param values list of value in wei for each action's  associated transaction
-   * @param signatures list of function signatures (can be empty) to be used when created the callData
-   * @param calldatas list of calldatas: if associated signature empty, calldata ready, else calldata is arguments
-   * @param withDelegatecalls boolean, true = transaction delegatecalls the target, else calls the target
+   * @notice Queue an ActionsSet
+   * @dev If a signature is empty, calldata is used for the execution, calldata is appended to signature otherwise
+   * @param targets Array of targets to be called by the actions set
+   * @param values Array of values to pass in each call by the actions set
+   * @param signatures Array of function signatures to encode in each call by the actions (can be empty)
+   * @param calldatas Array of calldata to pass in each call by the actions set
+   * @param withDelegatecalls Array of whether to delegatecall for each call of the actions set
    **/
   function _queue(
     address[] memory targets,
@@ -369,22 +385,22 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     if (delay > _maximumDelay) revert DelayLongerThanMax();
   }
 
-  function _verifyCallResult(bool success, bytes memory returndata)
+  function _verifyCallResult(bool success, bytes memory returnData)
     private
     pure
     returns (bytes memory)
   {
     if (success) {
-      return returndata;
+      return returnData;
     } else {
       // Look for revert reason and bubble it up if present
-      if (returndata.length > 0) {
+      if (returnData.length > 0) {
         // The easiest way to bubble the revert reason is using memory via assembly
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-          let returndata_size := mload(returndata)
-          revert(add(32, returndata), returndata_size)
+          let returndata_size := mload(returnData)
+          revert(add(32, returnData), returndata_size)
         }
       } else {
         revert FailedActionExecution();

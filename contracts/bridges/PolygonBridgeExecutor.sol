@@ -4,20 +4,54 @@ pragma solidity 0.8.10;
 import {IFxMessageProcessor} from '../interfaces/IFxMessageProcessor.sol';
 import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
 
+/**
+ * @title PolygonBridgeExecutor
+ * @author Aave
+ * @notice Implementation of the Polygon Bridge Executor, able to receive cross-chain transactions from Ethereum
+ * @dev Queuing an ActionSet into this Executor can only be done by the FxChild and having the EthereumGovernanceExecutor
+ * as the FxRoot sender
+ */
 contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
-  address private _fxRootSender;
-  address private _fxChild;
-
-  event FxRootSenderUpdate(address previousFxRootSender, address newFxRootSender);
-  event FxChildUpdate(address previousFxChild, address newFxChild);
-
   error UnauthorizedChildOrigin();
 
+  /**
+   * @dev Emitted when the FxRoot Sender is updated
+   * @param oldFxRootSender The address of the old FxRootSender
+   * @param newFxRootSender The address of the new FxRootSender
+   **/
+  event FxRootSenderUpdate(address oldFxRootSender, address newFxRootSender);
+
+  /**
+   * @dev Emitted when the FxChild is updated
+   * @param oldFxChild The address of the old FxChild
+   * @param newFxChild The address of the new FxChild
+   **/
+  event FxChildUpdate(address oldFxChild, address newFxChild);
+
+  // Address of the FxRoot Sender, sending the cross-chain transaction from Ethereum
+  address private _fxRootSender;
+  // Address of the FxChild, in charge of redirecting cross-chain transactions in Polygon
+  address private _fxChild;
+
+  /**
+   * @dev Only FxChild can call functions marked by this modifier.
+   **/
   modifier onlyFxChild() {
     if (msg.sender != _fxChild) revert UnauthorizedChildOrigin();
     _;
   }
 
+  /**
+   * @dev Constructor
+   *
+   * @param fxRootSender The address of the transaction sender in FxRoot
+   * @param fxChild The address of the FxChild
+   * @param delay The delay before which an actions set can be executed
+   * @param gracePeriod The time period after a delay during which an actions set can be executed
+   * @param minimumDelay The minimum bound a delay can be set to
+   * @param maximumDelay The maximum bound a delay can be set to
+   * @param guardian The address of the guardian, which can cancel queued proposals (can be zero)
+   */
   constructor(
     address fxRootSender,
     address fxChild,
@@ -54,8 +88,8 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   }
 
   /**
-   * @dev Update the expected address of contract originating a cross-chain transaction
-   * @param fxRootSender contract originating a cross-chain transaction - likely the aave governance executor
+   * @notice Update the address of the FxRoot Sender
+   * @param fxRootSender The address of the new FxRootSender
    **/
   function updateFxRootSender(address fxRootSender) external onlyThis {
     emit FxRootSenderUpdate(_fxRootSender, fxRootSender);
@@ -63,8 +97,8 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   }
 
   /**
-   * @dev Update the address of the FxChild contract
-   * @param fxChild the address of the contract used to forward cross-chain transactions on Polygon
+   * @notice Update the address of the FxChild
+   * @param fxChild The address of the new FxChild
    **/
   function updateFxChild(address fxChild) external onlyThis {
     emit FxChildUpdate(_fxChild, fxChild);
@@ -72,16 +106,16 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   }
 
   /**
-   * @dev Get the address currently stored as fxRootSender
-   * @return fxRootSender contract originating a cross-chain transaction - likely the aave governance executor
+   * @notice Returns the address of the FxRoot Sender
+   * @return The address of the FxRootSender
    **/
   function getFxRootSender() external view returns (address) {
     return _fxRootSender;
   }
 
   /**
-   * @dev Get the address currently stored as fxChild
-   * @return fxChild the address of the contract used to forward cross-chain transactions on Polygon
+   * @notice Returns the address of the FxChild
+   * @return fxChild The address of FxChild
    **/
   function getFxChild() external view returns (address) {
     return _fxChild;

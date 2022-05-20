@@ -27,7 +27,7 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
   ) external override {
     MockOvmL1CrossDomainMessenger(l1Messenger).redirect(_target, _message, _gasLimit);
   }
-  
+
   // This error must be defined here or else Hardhat will not recognize the selector
   error UnauthorizedEthereumExecutor();
 
@@ -41,7 +41,7 @@ contract MockOvmL2CrossDomainMessenger is ICrossDomainMessenger {
     (bool success, bytes memory data) = _target.call{gas: _gasLimit}(_message);
     if (!success) {
       assembly {
-        revert(add(data, 32), mload(data))        
+        revert(add(data, 32), mload(data))
       }
     }
   }
