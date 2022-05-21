@@ -40,7 +40,7 @@ task('verify-template', 'verify contract on etherscan')
       }
 
       /**
-       * uncomment following line to override params with hardhcoded parameters
+       * uncomment following line to override params with hardcoded parameters
        */
       // params = {}
 

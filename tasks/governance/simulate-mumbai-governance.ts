@@ -158,7 +158,7 @@ task('simulate-mumbai-governance', 'Create Proposal').setAction(async (_, localB
 
   // Vote
   console.log(``);
-  console.log(`Submiting Vote...`);
+  console.log(`Submitting Vote...`);
   let voteTransaction;
   let voteReceipt;
   try {

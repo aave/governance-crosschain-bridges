@@ -118,7 +118,7 @@ export const runTaskWithRetry = async (
     }
     console.error('[ETHERSCAN][ERROR]', error.message);
     console.log();
-    console.info(`[ETHERSCAN][[INFO] Retrying attemps: ${counter}.`);
+    console.info(`[ETHERSCAN][[INFO] Retrying attempts: ${counter}.`);
     if (error.message.includes(unableVerifyError)) {
       console.log('[ETHERSCAN][WARNING] Trying to verify via uploading all sources.');
       delete params.relatedSources;
