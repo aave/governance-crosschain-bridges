@@ -15,7 +15,7 @@
 
 This repository contains smart contracts and related code for Aave cross-chain bridge executors. This is intended to extend Aave governance on Ethereum to other networks. This repository currently contains contracts to support bridging to Polygon, Arbitrum and Optimism.
 
-The core contract is the `BridgeExecutorBase`, an abstract contract that contains the logic to facilitate the queueing, delay, and execution of sets of actions on downstream networks. This base contract needs to be extended with functionality required for cross-chain transactions on a specific downstream network.
+The core contract is the `BridgeExecutorBase`, an abstract contract that contains the logic to facilitate the queueing, delay, and execution of sets of actions on downstream networks. This base contract needs to be extended with the functionality required for cross-chain transactions on a specific downstream network.
 
 The `BridgeExecutorBase` contract is implemented to facilitate the execution of arbitrary actions after governance approval on Ethereum. Once the Ethereum proposal is executed, a cross-chain transaction can queue sets of actions for execution on the downstream chain. Once queued, these actions cannot be executed until a certain `delay` has passed, though a specified (potentially zero) `guardian` address has the power to cancel the execution of these actions. If the delay period passes and the actions are not cancelled, the actions can be executed during the `grace period` time window by anyone on the downstream chain.
 
@@ -106,7 +106,7 @@ This repository uses the [FxPortal](https://github.com/fx-portal/contracts) deve
 
 Polygon validators listen for `StateSynced` events from the `StateSender` - upon identifying one of these events from the `FxRoot`, they will call the function `onStateReceive(uint256 stateId, bytes calldata _data)` in `FxChild`. The encoded `data` message is decoded in `FxChild` and forwarded to the `receiver` contract via the function `processMessageFromRoot(stateId, rootMessageSender, data)`. The `rootMessageSender` that is passed along is the original `msg.sender` that called `FxRoot` which in this case is the Aave Governance Executor contract.
 
-The `PolygonBridgeExecutor` implements the function `processMessageFromRoot(stateId, rootMessageSender, data);`. In this function, requiring that the `msg.sender` is the `FxChild` should ensure this is a legitimate transaction stemming from the Ethereum bridge. By confirming that the `rootMessageSender` is the Aave Governance Executor contract, the `PolygonBridgeExecutor` can conclude this bridge transaction was triggered be the Aave Governance process and should in-fact be queued for execution.
+The `PolygonBridgeExecutor` implements the function `processMessageFromRoot(stateId, rootMessageSender, data);`. In this function, requiring that the `msg.sender` is the `FxChild` should ensure this is a legitimate transaction stemming from the Ethereum bridge. By confirming that the `rootMessageSender` is the Aave Governance Executor contract, the `PolygonBridgeExecutor` can conclude this bridge transaction was triggered by the Aave Governance process and should in fact be queued for execution.
 
 ### Examples of Upgradability
 
@@ -120,7 +120,7 @@ In the future, if a change is needed in the PolygonBridgeExecutor contract, a ne
 
 Aave's governance contracts on Ethereum are upgradable and because the PolygonBridgeExecutor is dependent on knowing the address of the Aave Governance Executor contract on Ethereum, the PolygonBridgeExecutor will also have to be updated as part of this upgrade.
 
-In order to update the PolygonBridgeExecutor - the function `updateFxRootSender(address)` should be called on the PolygonBridgeExecutor. This function should be executed via the cross-chain governance process using the original Aave Governance Executor. A proposal should be created on the Ethereum based Aave governance, once passed and executed, the transaction will be send to the PolygonBridgeExecutor contract. Once queued and executed, the PolygonBridgeExecutor will call `updateFxRootSender(address)` on itself and updated the expected Aave Governance Executor address. Once that transaction executes, the PolygonBridgeExecutor will only queue ActionsSets that originate from the new Aave Governance Executor.
+In order to update the PolygonBridgeExecutor - the function `updateFxRootSender(address)` should be called on the PolygonBridgeExecutor. This function should be executed via the cross-chain governance process using the original Aave Governance Executor. A proposal should be created on the Ethereum based Aave governance, once passed and executed, the transaction will be sent to the PolygonBridgeExecutor contract. Once queued and executed, the PolygonBridgeExecutor will call `updateFxRootSender(address)` on itself and update the expected Aave Governance Executor address. Once that transaction executes, the PolygonBridgeExecutor will only queue ActionsSets that originate from the new Aave Governance Executor.
 
 ## Arbitrum Governance Bridge
 
@@ -163,9 +163,9 @@ After going through the Aave governance, the proposal payload will be a call to 
     ) external payable returns (uint256)
 ```
 
-From the function above, the key (non-gas related) bridging fields are `destAddr`, `data`, and `l2CallValue`. `destAddr` is the contract that will be called on Arbitrum. In this case it is the `ArbitrumBridgeExecutor` contract. The `data` is the encoded data for the cross chain transaction. In this case the `data` should be the encoded data for `queue(targets, values, signatures, calldatas, withDelegatecalls)`. `l2CallValue` is what will be sent over as the `msg.value` on L2. The rest of the fields pertain to gas management on Arbitrum and should be defined per Arbitrum documentation.
+From the function above, the key (non-gas related) bridging fields are `destAddr`, `data`, and `l2CallValue`. `destAddr` is the contract that will be called on Arbitrum. In this case, it is the `ArbitrumBridgeExecutor` contract. The `data` is the encoded data for the cross-chain transaction. In this case, the `data` should be the encoded data for `queue(targets, values, signatures, calldatas, withDelegatecalls)`. `l2CallValue` is what will be sent over as the `msg.value` on L2. The rest of the fields pertain to gas management on Arbitrum and should be defined per Arbitrum documentation.
 
-When this transaction is sent cross-chain, the `msg.sender` that send the message to the Arbitrum Inbox is aliased. This means that the so-called "L2 Alias" of the Aave Governance Executor contract will be the `msg.sender` when the `ArbitrumBridgeExecutor` is called on Arbitrum. For this reason, the Aave Governance Executor contract address should be provided to the `ArbitrumBridgeExecutor` contract in the constructor. This address will be saved, transformed to its alias and used to permission the queue function so that only calls from this address can successfully queue the ActionsSet in the `BridgeExecutorBase`.
+When this transaction is sent cross-chain, the `msg.sender` that send the message to the Arbitrum Inbox is aliased. This means that the so-called "L2 Alias" of the Aave Governance Executor contract will be the `msg.sender` when the `ArbitrumBridgeExecutor` is called on Arbitrum. For this reason, the Aave Governance Executor contract address should be provided to the `ArbitrumBridgeExecutor` contract in the constructor. This address will be saved, transformed to its alias, and used to permit the queue function so that only calls from this address can successfully queue the ActionsSet in the `BridgeExecutorBase`.
 
 ### Deploying the ArbitrumBridgeExecutor
 
@@ -205,15 +205,15 @@ After going through the Aave governance, the proposal payload will be a call to 
     ) public
 ```
 
-From the function above, the `target` is the contract that will be called on Optimism (in this case it is the `OptimismBridgeExecutor` contract). The `_message` is the encoded data for the cross chain transaction: the encoded data for `queue(targets, values, signatures, calldatas, withDelegatecalls)`. The `_gasLimit` field pertain to gas management on Optimism and should be defined per Optimism documentation.
+From the function above, the `target` is the contract that will be called on Optimism (in this case it is the `OptimismBridgeExecutor` contract). The `_message` is the encoded data for the cross-chain transaction: the encoded data for `queue(targets, values, signatures, calldatas, withDelegatecalls)`. The `_gasLimit` field pertain to gas management on Optimism and should be defined per Optimism documentation.
 
-When this transaction is sent cross-chain, the `msg.sender` that send the message to the Optimism Messenger is stored at the OVM L2 Cross Domain Messenger and queryable using the following function:
+When this transaction is sent cross-chain, the `msg.sender` that sends the message to the Optimism Messenger is stored at the OVM L2 Cross Domain Messenger and queryable using the following function:
 
 ```
 function xDomainMessageSender() external view returns (address);
 ```
 
-Therefore, the `msg.sender` of the cross-chain transaction on Optimism is the OVM L2 Cross Domain Messenger contract, and the L1 sender is the Aave Governance Executor contract. For this reason, the Aave Governance Executor contract address should be provided to the `OptimismBridgeExecutor` contract in the constructor. This address will be saved, and used to permission the queue function so that only calls from this address can successfully queue the ActionsSet in the `BridgeExecutorBase`.
+Therefore, the `msg.sender` of the cross-chain transaction on Optimism is the OVM L2 Cross Domain Messenger contract, and the L1 sender is the Aave Governance Executor contract. For this reason, the Aave Governance Executor contract address should be provided to the `OptimismBridgeExecutor` contract in the constructor. This address will be saved and used to permit the queue function so that only calls from this address can successfully queue the ActionsSet in the `BridgeExecutorBase`.
 
 ### Deploying the OptimismBridgeExecutor
 
