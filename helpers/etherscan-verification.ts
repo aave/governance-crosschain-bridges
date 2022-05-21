@@ -49,7 +49,7 @@ export const verifyContract = async (
     );
     const msDelay = 3000;
     const times = 4;
-    // Write a temporal file to host complex parameters for buidler-etherscan https://github.com/nomiclabs/buidler/tree/development/packages/buidler-etherscan#complex-arguments
+    // Write a temporal file to host complex parameters for hardhat-etherscan https://github.com/nomiclabs/hardhat/tree/development/packages/hardhat-etherscan#complex-arguments
     const paramsFile = await file({
       prefix: 'verify-params-',
       postfix: '.js',
