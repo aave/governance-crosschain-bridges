@@ -126,7 +126,7 @@ In order to update the PolygonBridgeExecutor - the function `updateFxRootSender(
 
 ### Arbitrum Governance Bridge Architecture
 
-![aave-abitrum-governance-bridge-architecture](./docs/ArbitrumBridgeArch.png)
+![aave-arbitrum-governance-bridge-architecture](./docs/ArbitrumBridgeArch.png)
 
 Additional documentation around the Arbitrum Bridging setup can be found at the links below:
 
@@ -179,6 +179,8 @@ When this transaction is sent cross-chain, the `msg.sender` that send the messag
 ## Optimism Governance Bridge
 
 ### Optimism Governance Bridge Architecture
+
+![aave-optimism-governance-bridge-architecture](./docs/OptimismBridgeArch.png)
 
 Additional documentation around the Optimism Bridging setup can be found at the links below:
 
