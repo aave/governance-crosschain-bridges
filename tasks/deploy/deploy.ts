@@ -13,7 +13,7 @@ import {
   deployContract,
 } from '../../helpers/task-helpers';
 
-task('deploy-contract', 'deploy contract - add contract name and params as arguements')
+task('deploy-contract', 'deploy contract - add contract name and params as arguments')
   .addParam('contract', 'Name of contract to deploy')
   .addOptionalParam('params', 'JSON string of contract params - defaults to CLI')
   .addOptionalParam('paramsfile', 'Path to a TS file with params defined as default export')
@@ -58,7 +58,7 @@ task('deploy-contract', 'deploy contract - add contract name and params as argue
         if (!contractParams) return;
       }
       /**
-       * uncomment following line to override params with hardhcoded parameters
+       * uncomment following line to override params with hardcoded parameters
        */
       // contractParams = {}
 

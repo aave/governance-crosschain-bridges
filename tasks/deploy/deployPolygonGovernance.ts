@@ -24,7 +24,7 @@ task('deployPolygonGovernance', 'deploy PolygonBridgeExecutor')
     const constructorInputs = ContractFactory.interface.deploy.inputs;
 
     /**
-     * uncomment following line to override params with hardhcoded parameters
+     * uncomment following line to override params with hardcoded parameters
      */
     const contractParams = {
       fxRootSender: '0xee56e2b3d491590b5b31738cc34d5232f378a8d5',

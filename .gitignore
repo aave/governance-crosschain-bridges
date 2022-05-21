@@ -1,7 +1,8 @@
 .env
-#Buidler files
+#Hardhat files
 cache
 artifacts
+
 node_modules
 dist/
 build/
