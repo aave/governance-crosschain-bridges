@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity >=0.7.0;
 
+import {IInbox} from '../dependencies/arbitrum/interfaces/IInbox.sol';
 import {AddressAliasHelper} from '../dependencies/arbitrum/AddressAliasHelper.sol';
-import {IInbox} from '../interfaces/IInbox.sol';
 
 contract MockInbox is IInbox {
   uint256 public messageNum;
