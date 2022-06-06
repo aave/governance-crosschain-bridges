@@ -277,7 +277,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   function _queue(
     address[] memory targets,
     uint256[] memory values,
-    string[] memory signatures,
+    bytes[] memory signatures,
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
   ) internal {
@@ -336,23 +336,22 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   function _executeTransaction(
     address target,
     uint256 value,
-    string memory signature,
+    bytes memory signature,
     bytes memory data,
     uint256 executionTime,
     bool withDelegatecall
   ) internal returns (bytes memory) {
     if (address(this).balance < value) revert InsufficientBalance();
-
     bytes32 actionHash = keccak256(
       abi.encode(target, value, signature, data, executionTime, withDelegatecall)
     );
     _queuedActions[actionHash] = false;
 
     bytes memory callData;
-    if (bytes(signature).length == 0) {
+    if (signature.length == 0) {
       callData = data;
     } else {
-      callData = abi.encodePacked(bytes4(keccak256(bytes(signature))), data);
+      callData = abi.encodePacked(bytes4(signature), data);
     }
 
     bool success;
@@ -369,7 +368,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   function _cancelTransaction(
     address target,
     uint256 value,
-    string memory signature,
+    bytes memory signature,
     bytes memory data,
     uint256 executionTime,
     bool withDelegatecall

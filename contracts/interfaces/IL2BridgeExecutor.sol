@@ -31,7 +31,7 @@ interface IL2BridgeExecutor {
   function queue(
     address[] memory targets,
     uint256[] memory values,
-    string[] memory signatures,
+    bytes[] memory signatures,
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
   ) external;

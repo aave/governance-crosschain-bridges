@@ -48,7 +48,7 @@ interface IExecutorBase {
   struct ActionsSet {
     address[] targets;
     uint256[] values;
-    string[] signatures;
+    bytes[] signatures;
     bytes[] calldatas;
     bool[] withDelegatecalls;
     uint256 executionTime;
@@ -70,7 +70,7 @@ interface IExecutorBase {
     uint256 indexed id,
     address[] targets,
     uint256[] values,
-    string[] signatures,
+    bytes[] signatures,
     bytes[] calldatas,
     bool[] withDelegatecalls,
     uint256 executionTime

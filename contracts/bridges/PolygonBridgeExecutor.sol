@@ -76,13 +76,13 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
 
     address[] memory targets;
     uint256[] memory values;
-    string[] memory signatures;
+    bytes[] memory signatures;
     bytes[] memory calldatas;
     bool[] memory withDelegatecalls;
 
     (targets, values, signatures, calldatas, withDelegatecalls) = abi.decode(
       data,
-      (address[], uint256[], string[], bytes[], bool[])
+      (address[], uint256[], bytes[], bytes[], bool[])
     );
 
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
