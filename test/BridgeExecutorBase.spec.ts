@@ -41,12 +41,13 @@ const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const data = [
     [target],
     [BigNumber.from(0)],
-    [fn],
+    [ethers.utils.keccak256(ethers.utils.toUtf8Bytes(fn)).slice(0, 10)],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],
   ];
+  console.log(data);
   const encodedData = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     data
   );
 
@@ -307,18 +308,25 @@ describe('BridgeExecutorBase', async function () {
 
   context('ActionsSet', () => {
     it('Tries to queue an actions set with 0 targets (revert expected)', async () => {
-      await expect(bridgeExecutor.queue([], [0], ['mock()'], ['0x'], [false])).to.be.revertedWith(
-        ExecutorErrors.EmptyTargets
-      );
+      await expect(
+        bridgeExecutor.queue(
+          [],
+          [0],
+          [ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10)],
+          ['0x'],
+          [false]
+        )
+      ).to.be.revertedWith(ExecutorErrors.EmptyTargets);
     });
 
     it('Tries to queue an actions set with inconsistent params length (revert expected)', async () => {
+      const mockSignature = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10);
       const wrongDatas = [
-        [[ZERO_ADDRESS], [], ['mock()'], ['0x'], [false]],
+        [[ZERO_ADDRESS], [], [mockSignature], ['0x'], [false]],
         [[ZERO_ADDRESS], [0], [], ['0x'], [false]],
         [[ZERO_ADDRESS], [0], [], ['0x'], [false]],
-        [[ZERO_ADDRESS], [0], ['mock()'], [], [false]],
-        [[ZERO_ADDRESS], [0], ['mock()'], ['0x'], []],
+        [[ZERO_ADDRESS], [0], [mockSignature], [], [false]],
+        [[ZERO_ADDRESS], [0], [mockSignature], ['0x'], []],
       ];
       for (const wrongData of wrongDatas) {
         await expect(
@@ -334,11 +342,12 @@ describe('BridgeExecutorBase', async function () {
     });
 
     it('Tries to queue a duplicated actions set (revert expected)', async () => {
+      const mockSignature = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10);
       await expect(
         bridgeExecutor.queue(
           [ZERO_ADDRESS, ZERO_ADDRESS],
           [0, 0],
-          ['mock()', 'mock()'],
+          [mockSignature, mockSignature],
           ['0x', '0x'],
           [false, false]
         )
@@ -382,14 +391,15 @@ describe('BridgeExecutorBase', async function () {
       expect(actionsSet[6]).to.be.eql(false);
       expect(actionsSet[7]).to.be.eql(false);
 
-      await expect(bridgeExecutor.execute(0)).to.be.revertedWith(
+      await expect(bridgeExecutor.execute(0, { gasLimit: 12000000 })).to.be.revertedWith(
         ExecutorErrors.TimelockNotFinished
       );
 
       await setBlocktime(executionTime.add(1).toNumber());
       await advanceBlocks(1);
 
-      expect(await bridgeExecutor.execute(0))
+      console.log('hey2');
+      expect(await bridgeExecutor.execute(0, { gasLimit: 12000000 }))
         .to.emit(bridgeExecutor, 'ActionsSetExecuted')
         .withArgs(0, user.address, ['0x'])
         .to.emit(greeter, 'MessageUpdated')
@@ -429,7 +439,7 @@ describe('BridgeExecutorBase', async function () {
       const selfdestructor = await new Selfdestructor__factory(user).deploy();
       const data = selfdestructor.interface.encodeFunctionData('oops');
 
-      expect(await bridgeExecutor.queue([selfdestructor.address], [0], [''], [data], [true]));
+      expect(await bridgeExecutor.queue([selfdestructor.address], [0], ['0x'], [data], [true]));
       const executionTime = (await timeLatest()).add(DELAY);
 
       await setBlocktime(executionTime.add(1).toNumber());
@@ -529,13 +539,7 @@ describe('BridgeExecutorBase', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeter.address],
-        [0],
-        ['setMessage(string)'],
-        [ethers.utils.defaultAbiCoder.encode(['string'], [NEW_MESSAGE])],
-        [false],
-      ];
+      const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
       const tx = await bridgeExecutor.queue(
         data[0] as string[],
         data[1] as BigNumberish[],
@@ -570,13 +574,7 @@ describe('BridgeExecutorBase', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeter.address],
-        [0],
-        ['setMessage(string)'],
-        [ethers.utils.defaultAbiCoder.encode(['string'], [NEW_MESSAGE])],
-        [false],
-      ];
+      const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
       const tx = await bridgeExecutor.queue(
         data[0] as string[],
         data[1] as BigNumberish[],
@@ -620,13 +618,7 @@ describe('BridgeExecutorBase', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeter.address],
-        [BigNumber.from(0)],
-        ['setMessage(string)'],
-        [ethers.utils.defaultAbiCoder.encode(['string'], [NEW_MESSAGE])],
-        [false],
-      ];
+      const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
       const tx = await bridgeExecutor.queue(
         data[0] as string[],
         data[1] as BigNumberish[],

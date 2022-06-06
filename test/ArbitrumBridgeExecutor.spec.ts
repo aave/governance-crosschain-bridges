@@ -50,7 +50,7 @@ const encodeSimpleActionsSet = (
   const data = [
     [target],
     [BigNumber.from(0)],
-    [fn],
+    [ethers.utils.keccak256(ethers.utils.toUtf8Bytes(fn)).slice(0, 10)],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],
   ];

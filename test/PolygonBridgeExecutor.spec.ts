@@ -34,12 +34,12 @@ const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const data = [
     [target],
     [BigNumber.from(0)],
-    [fn],
+    [ethers.utils.keccak256(ethers.utils.toUtf8Bytes(fn)).slice(0, 10)],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],
   ];
   const encodedData = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     data
   );
 
@@ -113,8 +113,14 @@ describe('PolygonBridgeExecutor', async function () {
     it('FxChild tries to queue an actions set with 0 targets (revert expected)', async () => {
       const mockStateId = 123456;
       const encodedData = ethers.utils.defaultAbiCoder.encode(
-        ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
-        [[], [0], ['mock()'], ['0x'], [false]]
+        ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
+        [
+          [],
+          [0],
+          [ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10)],
+          ['0x'],
+          [false],
+        ]
       );
       await expect(
         bridgeExecutor
@@ -126,11 +132,29 @@ describe('PolygonBridgeExecutor', async function () {
     it('FxChild tries to queue an actions set with inconsistent params length (revert expected)', async () => {
       const mockStateId = 123456;
       const wrongDatas = [
-        [[ZERO_ADDRESS], [], ['mock()'], ['0x'], [false]],
+        [
+          [ZERO_ADDRESS],
+          [],
+          [ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10)],
+          ['0x'],
+          [false],
+        ],
         [[ZERO_ADDRESS], [0], [], ['0x'], [false]],
         [[ZERO_ADDRESS], [0], [], ['0x'], [false]],
-        [[ZERO_ADDRESS], [0], ['mock()'], [], [false]],
-        [[ZERO_ADDRESS], [0], ['mock()'], ['0x'], []],
+        [
+          [ZERO_ADDRESS],
+          [0],
+          [ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10)],
+          [],
+          [false],
+        ],
+        [
+          [ZERO_ADDRESS],
+          [0],
+          [ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10)],
+          ['0x'],
+          [],
+        ],
       ];
       for (const wrongData of wrongDatas) {
         await expect(
@@ -140,7 +164,7 @@ describe('PolygonBridgeExecutor', async function () {
               mockStateId,
               fxRootSender.address,
               ethers.utils.defaultAbiCoder.encode(
-                ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+                ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
                 wrongData
               )
             )
@@ -151,11 +175,14 @@ describe('PolygonBridgeExecutor', async function () {
     it('FxChild tries to queue a duplicated actions set (revert expected)', async () => {
       const mockStateId = 123456;
       const encodedData = ethers.utils.defaultAbiCoder.encode(
-        ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+        ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
         [
           [ZERO_ADDRESS, ZERO_ADDRESS],
           [0, 0],
-          ['mock()', 'mock()'],
+          [
+            ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10),
+            ethers.utils.keccak256(ethers.utils.toUtf8Bytes('mock()')).slice(0, 10),
+          ],
           ['0x', '0x'],
           [false, false],
         ]

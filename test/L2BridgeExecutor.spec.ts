@@ -37,12 +37,12 @@ const encodeSimpleActionsSet = (target: string, fn: string, params: any[]) => {
   const data = [
     [target],
     [BigNumber.from(0)],
-    [fn],
+    [ethers.utils.keccak256(ethers.utils.toUtf8Bytes(fn)).slice(0, 10)],
     [ethers.utils.defaultAbiCoder.encode(paramTypes, [...params])],
     [false],
   ];
   const encodedData = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     data
   );
 
@@ -112,13 +112,7 @@ describe('L2BridgeExecutor', async function () {
         ExecutorErrors.InvalidActionsSetId
       );
 
-      const data = [
-        [greeter.address],
-        [BigNumber.from(0)],
-        ['setMessage(string)'],
-        [ethers.utils.defaultAbiCoder.encode(['string'], [NEW_MESSAGE])],
-        [false],
-      ];
+      const { data } = encodeSimpleActionsSet(greeter.address, 'setMessage(string)', [NEW_MESSAGE]);
       const tx = await bridgeExecutor
         .connect(ethereumGovernanceExecutor)
         .queue(
@@ -415,18 +409,11 @@ describe('L2BridgeExecutor', async function () {
 
       const NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS = ZERO_ADDRESS;
 
-      const data = [
-        [bridgeExecutor.address],
-        [0],
-        ['updateEthereumGovernanceExecutor(address)'],
-        [
-          ethers.utils.defaultAbiCoder.encode(
-            ['address'],
-            [NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS]
-          ),
-        ],
-        [false],
-      ];
+      const { data } = encodeSimpleActionsSet(
+        bridgeExecutor.address,
+        'updateEthereumGovernanceExecutor(address)',
+        [NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS]
+      );
       const tx = await bridgeExecutor
         .connect(ethereumGovernanceExecutor)
         .queue(

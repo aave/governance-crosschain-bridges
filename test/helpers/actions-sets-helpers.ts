@@ -57,7 +57,7 @@ export const createBridgeTest1 = async (
   proposalActions.withDelegatecalls.push(true);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -89,7 +89,7 @@ export const createBridgeTest2 = async (testEnv: TestEnv): Promise<ProposalActio
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -124,7 +124,7 @@ export const createBridgeTest3 = async (
   proposalActions.withDelegatecalls.push(true);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -159,7 +159,7 @@ export const createBridgeTest4 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -194,7 +194,7 @@ export const createBridgeTest5 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -225,7 +225,7 @@ export const createBridgeTest6 = async (testEnv: TestEnv): Promise<ProposalActio
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -258,7 +258,7 @@ export const createBridgeTest7 = async (testEnv: TestEnv): Promise<ProposalActio
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -300,7 +300,7 @@ export const createBridgeTest8 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -335,7 +335,7 @@ export const createBridgeTest9 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -370,7 +370,7 @@ export const createBridgeTest10 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -405,7 +405,7 @@ export const createBridgeTest11 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -440,7 +440,7 @@ export const createBridgeTest12 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -475,7 +475,7 @@ export const createBridgeTest13 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -510,7 +510,7 @@ export const createBridgeTest14 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -543,7 +543,7 @@ export const createBridgeTest15 = async (testEnv: TestEnv): Promise<ProposalActi
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
@@ -578,7 +578,7 @@ export const createBridgeTest16 = async (
   proposalActions.withDelegatecalls.push(false);
 
   proposalActions.encodedActions = ethers.utils.defaultAbiCoder.encode(
-    ['address[]', 'uint256[]', 'string[]', 'bytes[]', 'bool[]'],
+    ['address[]', 'uint256[]', 'bytes[]', 'bytes[]', 'bool[]'],
     [
       proposalActions.targets,
       proposalActions.values,
