@@ -29,7 +29,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   uint256 private _actionsSetCounter;
   // Map of registered actions sets (id => ActionsSet)
   mapping(uint256 => ActionsSet) private _actionsSets;
-  // Map of queued actions sets (actionHash => isQueued)
+  // Map of queued actions (actionHash => isQueued)
   mapping(bytes32 => bool) private _queuedActions;
 
   /**
