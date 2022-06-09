@@ -2,7 +2,9 @@
 pragma solidity 0.8.10;
 
 import {IL2BridgeExecutor} from '../interfaces/IL2BridgeExecutor.sol';
-import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
+//import {BridgeExecutorBase} from './BridgeExecutorBase.sol';
+// Certora harness : change from original to harness version.
+import {BridgeExecutorBase} from '../../certora/harness/BridgeExecutorBase.sol';
 
 /**
  * @title L2BridgeExecutor
