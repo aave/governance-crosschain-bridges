@@ -24,7 +24,8 @@ methods {
 	queue(address[], uint256[], string[], bytes[], bool[])
 	tokenA() returns (address) envfree
 	tokenB() returns (address) envfree
-	getTransferArguments() returns (address, address, uint256, uint256 ) envfree 
+	getTransferArguments() returns (address, address, uint256, uint256 ) envfree
+	executeDelegateCall(address, bytes) => NONDET
 }
 
  //enum ActionsSetState 
@@ -150,8 +151,19 @@ filtered {f -> !f.isView}
 	assert state1 == state2, "${f} changed the state of an actions set.";
 }
 
+// No immediate execution after queue.
+rule holdYourHorses()
+{
+	env e;
+	calldataarg args;
+	uint256 actionsSetId = getActionsSetCount();
+	queue(e, args);
+	execute@withrevert(e, actionsSetId);
+	assert lastReverted;
+}
+
 // An action set cannot transform from 'queued' to 'executed'
-// by a function which is not "execute(uint256)".
+// by a function different than "execute(uint256)".
 rule executedValidTransition1(method f, uint256 actionsSetId)
 filtered{f -> !f.isView && f.selector != execute(uint256).selector}
 {
@@ -164,7 +176,7 @@ filtered{f -> !f.isView && f.selector != execute(uint256).selector}
 	assert ! (state1 == 0 && state2 == 1);
 }
 
-// If any action set was called, then this set (and only it) must change 
+// If any action set was executed, then this set (and only it) must change 
 // from 'queued' to 'executed'.
 rule executedValidTransition2(uint256 actionsSetId)
 {
@@ -188,7 +200,8 @@ rule executeFailsIfExpired(uint256 actionsSetId)
 	assert stateBefore == 3 => executeReverted;
 }
 
-// Can updating the grace period lead to execute revert?
+// After updating a grace period, an action set execution reverts
+// if and only if it's state is 'expired'.
 rule gracePeriodChangedAffectsExecution(uint256 actionsSetId)
 {
 	env e;
@@ -201,8 +214,10 @@ rule gracePeriodChangedAffectsExecution(uint256 actionsSetId)
 	execute(e, actionsSetId);
 	// Now check whether changing the grace period could lead to revert.
 	updateGracePeriod(e, period) at initialStorage;
+	uint8 stateAfterUpdate = getCurrentState(e, actionsSetId);
+
 	execute@withrevert(e, actionsSetId);
-	assert !lastReverted;
+	assert lastReverted <=> stateAfterUpdate == 3;
 }
 
 // Cannot execute before delay passed
@@ -211,7 +226,7 @@ rule executeRevertsBeforeDelay()
 	env e; env e2;
 	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
-	queue(e,args);
+	queue(e, args);
 	execute@withrevert(e2, actionsSetId);
 	bool executeFailed = lastReverted;
 	assert e2.block.timestamp < e.block.timestamp + getDelay() 
@@ -238,8 +253,9 @@ rule executeReentrancy()
 	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
 
-	customBatch(actionsSetId);
-	queue(e, args);
+	require getActionsSetLength(actionsSetId) == 1;
+	require getActionsSetTarget(actionsSetId, 0) == currentContract;
+	queueHarness2(e, args);
 	execute@withrevert(e2, actionsSetId);
 	
 	assert lastReverted;
@@ -262,20 +278,19 @@ rule checkQueuedBatch()
 	require getActionsSetLength(actionsSetId) == 2;
 	require (account1, account2, amount1, amount2) == getTransferArguments();
 
-	queueHarness(e, args);
-	execute(e2, actionsSetId);
-	assert false;
+	queueHarness1(e, args);
+	execute@withrevert(e2, actionsSetId);
+	assert lastReverted;
 }
 
+rule mockReachability()
+{
+	env e;
+	calldataarg args;
+	mockTargetCall(e, args);
+	assert false;
+}
+	
 ///////////////////////////////////////////////////////////////////////////
 //                       Functions                           			//
 ///////////////////////////////////////////////////////////////////////////
-
-function customBatch(uint256 actionsSetId)
-{
-	require getActionsSetLength(actionsSetId) == 2;
-	require !getActionSetWithDelegate(actionsSetId, 0);
-	require !getActionSetWithDelegate(actionsSetId, 1);
-	require getActionsSetTarget(actionsSetId, 0) == currentContract;
-	require getActionsSetTarget(actionsSetId, 1) == currentContract;
-}

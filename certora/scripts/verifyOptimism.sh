@@ -4,9 +4,10 @@ certoraRun certora/harness/OptimismHarness.sol \
     --verify OptimismHarness:certora/specs/OptimismBridge.spec \
     --solc solc8.10 \
     --optimistic_loop \
-    --loop_iter 2 \
+    --loop_iter 3 \
     --staging \
-    --rule checkQueuedBatch \
+    --settings -contractRecursionLimit=1 \
+    --rule holdYourHorses \
     --send_only \
-    --msg "checkQueuedBatch"  
+    --msg "holdYourHorses"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \

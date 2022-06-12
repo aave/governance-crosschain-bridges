@@ -279,15 +279,15 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     string[] memory signatures,
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
-  ) internal {
+  ) internal virtual {
     if (targets.length == 0) revert EmptyTargets();
-    //uint256 targetsLength = targets.length;
-    //if (
-    //  targetsLength != values.length ||
-    //  targetsLength != signatures.length ||
-    //  targetsLength != calldatas.length ||
-    //  targetsLength != withDelegatecalls.length
-    //) revert InconsistentParamsLength();
+    uint256 targetsLength = targets.length;
+    if (
+      targetsLength != values.length ||
+      targetsLength != signatures.length ||
+      targetsLength != calldatas.length ||
+      targetsLength != withDelegatecalls.length
+    ) revert InconsistentParamsLength();
 
     uint256 actionsSetId = _actionsSetCounter;
     uint256 executionTime = block.timestamp + _delay;
@@ -295,8 +295,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
       ++_actionsSetCounter;
     }
 
-  
-    /*for (uint256 i = 0; i < targetsLength; ) {
+    for (uint256 i = 0; i < targetsLength; ) {
       bytes32 actionHash = keccak256(
         abi.encode(
           targets[i],
@@ -312,7 +311,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
       unchecked {
         ++i;
       }
-    } */
+    } 
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     actionsSet.targets = targets;

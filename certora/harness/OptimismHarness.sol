@@ -17,6 +17,7 @@ contract OptimismHarness is L2BridgeExecutorHarness {
   address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
   DummyERC20Impl private _tokenA;
   DummyERC20Impl private _tokenB;
+  //mapping ((uint256 => uint256) => byte))
   // Transfer batch arguments
   address private _account1;
   address private _account2;
@@ -75,51 +76,72 @@ contract OptimismHarness is L2BridgeExecutorHarness {
   ) internal override returns (bytes memory) {
     if (address(this).balance < value) revert InsufficientBalance();
 
-    //bytes32 actionHash = keccak256(
-    //  abi.encode(target, value, signature, data, executionTime, withDelegatecall)
-    //);
-    //_queuedActions[actionHash] = false;
-
     bool success;
     bytes memory resultData;
-    //if (withDelegatecall) {
-    //  (success, resultData) = this.executeDelegateCall{value: value}(target, callData);
-    //} else {
+    if (withDelegatecall) {
+      (success, resultData) = this.executeDelegateCall{value: value}(target, data);
+    } else {
       // solium-disable-next-line security/no-call-value
       (success, resultData) = mockTargetCall(target, data);
-    //}
+      //(success, resultData) = target.call{value: value}(data);
+    }
     return _verifyCallResult(success, resultData);
   }
 
   function mockTargetCall(address target, bytes memory data) 
-  internal returns (bool output, bytes memory)
+  public returns (bool output, bytes memory)
   {
-    (address recipient, uint256 amount) = abi.decode(data, (address, uint256));
     
-    if(target == address(_tokenA)){
+    if (target == address(_tokenA)) {
+      (address recipient, uint256 amount) = abi.decode(data, (address, uint256));
       output = _tokenA.transfer(recipient, amount);
     }
-    else if(target == address(_tokenB)) {
+    else if (target == address(_tokenB)) {
+      (address recipient, uint256 amount) = abi.decode(data, (address, uint256));
       output = _tokenB.transfer(recipient, amount);
     }
-    
+    else if (target == address(this)) {
+      output = true;
+      uint256 number = abi.decode(data, (uint256));
+      this.execute(number);
+    }
+    else {
+      output = false;
+      return (false, abi.encode(output));
+    }
     return (true, abi.encode(output));
   }
 
-  function setCallData(bytes[] memory data, uint256 i,
+  function setCallData1(bytes[] memory data, uint256 i,
   address account, uint256 amount) internal pure {
     data[i] = abi.encode(account, amount); 
   }
 
-  function queueHarness(
+  function setCallData2(bytes[] memory data, uint256 i, uint256 amount) 
+  internal pure {
+    data[i] = abi.encode(amount); 
+  }
+
+  function queueHarness1(
     address[] memory targets,
     uint256[] memory values,
     string[] memory signatures,
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
-  ) external onlyEthereumGovernanceExecutor {
-    setCallData(calldatas, 0, _account1, _amount1);
-    setCallData(calldatas, 1, _account2, _amount2);
+  ) external onlyEthereumGovernanceExecutor { 
+    setCallData1(calldatas, 0, _account1, _amount1);
+    setCallData1(calldatas, 1, _account2, _amount2);
+    _queue(targets, values, signatures, calldatas, withDelegatecalls);
+  }
+
+  function queueHarness2(
+    address[] memory targets,
+    uint256[] memory values,
+    string[] memory signatures,
+    bytes[] memory calldatas,
+    bool[] memory withDelegatecalls
+  ) external onlyEthereumGovernanceExecutor { 
+    setCallData2(calldatas, 0, _amount1);
     _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 

@@ -32,6 +32,56 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
   ) L2BridgeExecutor(ethereumGovernanceExecutor, delay, gracePeriod,
     minimumDelay, maximumDelay, guardian){}
   
+  /**
+   * @notice Queue an ActionsSet
+   * @dev If a signature is empty, calldata is used for the execution, calldata is appended to signature otherwise
+   * @param targets Array of targets to be called by the actions set
+   * @param values Array of values to pass in each call by the actions set
+   * @param signatures Array of function signatures to encode in each call (can be empty)
+   * @param calldatas Array of calldata to pass in each call (can be empty)
+   * @param withDelegatecalls Array of whether to delegatecall for each call
+   **/
+  function _queue(
+    address[] memory targets,
+    uint256[] memory values,
+    string[] memory signatures,
+    bytes[] memory calldatas,
+    bool[] memory withDelegatecalls
+  ) internal override {
+    if (targets.length == 0) revert EmptyTargets();
+    //uint256 targetsLength = targets.length;
+    //if (
+    //  targetsLength != values.length ||
+    //  targetsLength != signatures.length ||
+    //  targetsLength != calldatas.length ||
+    //  targetsLength != withDelegatecalls.length
+    //) revert InconsistentParamsLength();
+
+    uint256 actionsSetId = _actionsSetCounter;
+    uint256 executionTime = block.timestamp + _delay;
+    unchecked {
+      ++_actionsSetCounter;
+    }
+
+    ActionsSet storage actionsSet = _actionsSets[actionsSetId];
+    actionsSet.targets = targets;
+    actionsSet.values = values;
+    actionsSet.signatures = signatures;
+    actionsSet.calldatas = calldatas;
+    actionsSet.withDelegatecalls = withDelegatecalls;
+    actionsSet.executionTime = executionTime;
+
+    emit ActionsSetQueued(
+      actionsSetId,
+      targets,
+      values,
+      signatures,
+      calldatas,
+      withDelegatecalls,
+      executionTime
+    );
+  }
+
   // Certora : add getters
   function getActionsSetLength(uint256 actionsSetId) 
   public view returns (uint256)
@@ -61,6 +111,17 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
   public view returns (bytes memory)
   {
     return _actionsSets[actionsSetId].calldatas[i];
+  }
+
+  function noDelegateCalls(uint256 actionsSetId) external onlyThis
+  {
+    uint256 length = getActionsSetLength(actionsSetId);
+    for (uint256 i = 0; i < length; ) {
+      _actionsSets[actionsSetId].withDelegatecalls[i] = false;
+      unchecked {
+        ++i;
+      }
+    } 
   }
     
   function ID2actionHash(uint256 actionsSetId, uint i) public view returns (bytes32)
