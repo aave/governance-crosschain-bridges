@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import {IExecutorBase} from '../../contracts/interfaces/IExecutorBase.sol';
+import {IExecutorBase} from '../interfaces/IExecutorBase.sol';
 
 /**
  * @title BridgeExecutorBase
@@ -15,7 +15,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   uint256 constant MINIMUM_GRACE_PERIOD = 10 minutes;
 
   // Time between queuing and execution
-  uint256 private _delay;
+  uint256 internal _delay; // harness: private -> internal
   // Time after the execution time during which the actions set can be executed
   uint256 private _gracePeriod;
   // Minimum allowed delay
@@ -24,13 +24,12 @@ abstract contract BridgeExecutorBase is IExecutorBase {
   uint256 private _maximumDelay;
   // Address with the ability of canceling actions sets
   address private _guardian;
-
   // Number of actions sets
-  uint256 private _actionsSetCounter;
+  uint256 internal _actionsSetCounter; // harness: private -> internal
   // Map of registered actions sets (id => ActionsSet)
-  mapping(uint256 => ActionsSet) private _actionsSets;
+  mapping(uint256 => ActionsSet) internal _actionsSets; // harness: private -> internal
   // Map of queued actions sets (actionHash => isQueued)
-  mapping(bytes32 => bool) private _queuedActions;
+  mapping(bytes32 => bool) internal _queuedActions; // harness: private -> internal
 
   /**
    * @dev Only guardian can call functions marked by this modifier.
@@ -91,7 +90,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     bytes[] memory returnedData = new bytes[](actionCount);
     for (uint256 i = 0; i < actionCount; ) {
       returnedData[i] = _executeTransaction(
-        actionsSet.targets[i], 
+        actionsSet.targets[i],
         actionsSet.values[i],
         actionsSet.signatures[i],
         actionsSet.calldatas[i],
@@ -281,27 +280,23 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
   ) internal {
-    // @Certora modification:
-    // Remove if, set length manually.
-    //if (targets.length == 0) revert EmptyTargets();
-    require(targets.length <= 2);
-    uint256 targetsLength = targets.length;
-    if (
-      targetsLength != values.length ||
-      targetsLength != signatures.length ||
-      targetsLength != calldatas.length ||
-      targetsLength != withDelegatecalls.length
-    ) revert InconsistentParamsLength();
+    if (targets.length == 0) revert EmptyTargets();
+    //uint256 targetsLength = targets.length;
+    //if (
+    //  targetsLength != values.length ||
+    //  targetsLength != signatures.length ||
+    //  targetsLength != calldatas.length ||
+    //  targetsLength != withDelegatecalls.length
+    //) revert InconsistentParamsLength();
 
     uint256 actionsSetId = _actionsSetCounter;
     uint256 executionTime = block.timestamp + _delay;
-    //setCustomSignatures(actionsSetId);
-    //setReentrancySignature(actionsSetId);
     unchecked {
       ++_actionsSetCounter;
     }
 
-    for (uint256 i = 0; i < targetsLength; ) {
+  
+    /*for (uint256 i = 0; i < targetsLength; ) {
       bytes32 actionHash = keccak256(
         abi.encode(
           targets[i],
@@ -317,7 +312,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
       unchecked {
         ++i;
       }
-    }
+    } */
 
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     actionsSet.targets = targets;
@@ -337,7 +332,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
       executionTime
     );
   }
-
+  // harness : added virtual
   function _executeTransaction(
     address target,
     uint256 value,
@@ -345,7 +340,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     bytes memory data,
     uint256 executionTime,
     bool withDelegatecall
-  ) internal returns (bytes memory) {
+  ) internal virtual returns (bytes memory) {
     if (address(this).balance < value) revert InsufficientBalance();
 
     bytes32 actionHash = keccak256(
@@ -390,8 +385,9 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     if (delay > _maximumDelay) revert DelayLongerThanMax();
   }
 
+  // harness: private to internal
   function _verifyCallResult(bool success, bytes memory returnData)
-    private
+    internal
     pure
     returns (bytes memory)
   {
@@ -412,62 +408,4 @@ abstract contract BridgeExecutorBase is IExecutorBase {
       }
     }
   }
-
-  // Certora : add getters
-
-  function getActionsSetLength(uint256 actionsSetId) 
-  public view returns (uint256)
-  {
-    return _actionsSets[actionsSetId].targets.length;
-  }
-
-  function getActionsSetExecutionTime(uint256 actionsSetId) 
-  public view returns (uint256)
-  {
-    return _actionsSets[actionsSetId].executionTime;
-  }
-
-  function getActionsSetTarget(uint256 actionsSetId, uint256 i) 
-  public view returns (address)
-  {
-    return _actionsSets[actionsSetId].targets[i];
-  }
-
-  function getActionSetWithDelegate(uint256 actionsSetId, uint256 i) 
-  public view returns (bool)
-  {
-    return _actionsSets[actionsSetId].withDelegatecalls[i];
-  }
-
-  function getActionsSetCalldata(uint256 actionsSetId, uint256 i) 
-  public view returns (bytes memory)
-  {
-    return _actionsSets[actionsSetId].calldatas[i];
-  }
-    
-  function ID2actionHash(uint256 actionsSetId, uint i) public view returns (bytes32)
-  {
-      ActionsSet storage actionsSet = _actionsSets[actionsSetId];
-      return keccak256(
-        abi.encode(actionsSet.targets[i], actionsSet.values[i],
-          actionsSet.signatures[i], actionsSet.calldatas[i],
-          actionsSet.executionTime, actionsSet.withDelegatecalls[i]));
-  }
-
-  function setSignature(uint256 actionsSetId, uint i, string memory mySig)
-  private
-  {
-    _actionsSets[actionsSetId].signatures[i] = mySig;
-  }
-
-  function setCustomSignatures(uint256 actionsSetId) private
-  {
-    setSignature(actionsSetId, 0, "transfer(address,uint256)");
-    setSignature(actionsSetId, 1, "transfer(address,uint256)");
-  }
-
-  function setReentrancySignature(uint256 actionsSetId) private
-  {
-    setSignature(actionsSetId, 0, "execute(uint256)");
-  } 
 }

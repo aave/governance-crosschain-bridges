@@ -21,7 +21,10 @@ methods {
 	getActionSetWithDelegate(uint256, uint256) returns (bool) envfree
 	getActionsSetTarget(uint256, uint256) returns (address) envfree
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
-	queue(address[], uint256[], string[], bytes[], bool[]) 
+	queue(address[], uint256[], string[], bytes[], bool[])
+	tokenA() returns (address) envfree
+	tokenB() returns (address) envfree
+	getTransferArguments() returns (address, address, uint256, uint256 ) envfree 
 }
 
  //enum ActionsSetState 
@@ -123,6 +126,16 @@ filtered{f -> !f.isView}
 			=> f.selector == cancel(uint256).selector;
 }
 
+rule cancelExclusive(uint actionsSetId1, uint actionsSetId2)
+{
+	env e;
+	uint8 stateBefore = getCurrentState(e, actionsSetId2);
+		cancel(e, actionsSetId1);
+	uint8 stateAfter = getCurrentState(e, actionsSetId2);
+
+	assert actionsSetId1 != actionsSetId2 => stateBefore == stateAfter;
+}
+
 // Checks which functions change the state of a set.
 rule whoChangesActionsSetState(method f, uint actionsSetId)
 filtered {f -> !f.isView}
@@ -192,6 +205,19 @@ rule gracePeriodChangedAffectsExecution(uint256 actionsSetId)
 	assert !lastReverted;
 }
 
+// Cannot execute before delay passed
+rule executeRevertsBeforeDelay()
+{
+	env e; env e2;
+	calldataarg args;
+	uint256 actionsSetId = getActionsSetCount();
+	queue(e,args);
+	execute@withrevert(e2, actionsSetId);
+	bool executeFailed = lastReverted;
+	assert e2.block.timestamp < e.block.timestamp + getDelay() 
+			=> executeFailed;
+}
+
 // Only queued actions can be executed.
 // Assumes a batch with a single action.
 rule onlyQueuedAreExecuted(uint256 actionsSetId)
@@ -210,10 +236,10 @@ rule executeReentrancy()
 {
 	env e; env e2;
 	calldataarg args;
-	uint256 actionsSetId;
+	uint256 actionsSetId = getActionsSetCount();
 
-	customBatch2(actionsSetId);
-	queue(e,args);
+	customBatch(actionsSetId);
+	queue(e, args);
 	execute@withrevert(e2, actionsSetId);
 	
 	assert lastReverted;
@@ -224,34 +250,32 @@ rule checkQueuedBatch()
 {
 	env e; env e2;
 	calldataarg args;
-	uint256 actionsSetId;
+	uint256 actionsSetId = getActionsSetCount();
 
-	customBatch1(actionsSetId);
-	queue(e, args);
-	
+	address account1 = erc20_A;
+	address account2 = erc20_B;
+	uint256 amount1 = 1;
+	uint256 amount2 = 2;
+
+	require tokenA() == erc20_A;
+	require tokenB() == erc20_B;
+	require getActionsSetLength(actionsSetId) == 2;
+	require (account1, account2, amount1, amount2) == getTransferArguments();
+
+	queueHarness(e, args);
+	execute(e2, actionsSetId);
 	assert false;
 }
+
 ///////////////////////////////////////////////////////////////////////////
 //                       Functions                           			//
 ///////////////////////////////////////////////////////////////////////////
 
-function customBatch1(uint256 actionsSetId)
+function customBatch(uint256 actionsSetId)
 {
-	require getActionsSetCount() == actionsSetId;
 	require getActionsSetLength(actionsSetId) == 2;
-
 	require !getActionSetWithDelegate(actionsSetId, 0);
 	require !getActionSetWithDelegate(actionsSetId, 1);
-
-	require getActionsSetTarget(actionsSetId, 0) == erc20_A;
-	require getActionsSetTarget(actionsSetId, 1) == erc20_B;
-}
-
-function customBatch2(uint256 actionsSetId)
-{
-	require getActionsSetCount() == actionsSetId;
-	require getActionsSetLength(actionsSetId) == 2;
-	//require !getActionSetWithDelegate(actionsSetId, 0);
 	require getActionsSetTarget(actionsSetId, 0) == currentContract;
 	require getActionsSetTarget(actionsSetId, 1) == currentContract;
 }
