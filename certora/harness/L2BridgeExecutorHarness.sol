@@ -32,7 +32,7 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
   ) L2BridgeExecutor(ethereumGovernanceExecutor, delay, gracePeriod,
     minimumDelay, maximumDelay, guardian){}
   
-  /**
+  /* 
    * @notice Queue an ActionsSet
    * @dev If a signature is empty, calldata is used for the execution, calldata is appended to signature otherwise
    * @param targets Array of targets to be called by the actions set
@@ -41,21 +41,71 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
    * @param calldatas Array of calldata to pass in each call (can be empty)
    * @param withDelegatecalls Array of whether to delegatecall for each call
    **/
-  function _queue(
-    address[] memory targets,
-    uint256[] memory values,
-    string[] memory signatures,
-    bytes[] memory calldatas,
-    bool[] memory withDelegatecalls
-  ) internal override {
+
+  function queueSingle(
+    address target,
+    uint256 value,
+    string memory signature, 
+    bytes memory Calldata,
+    bool withDelegatecall
+  ) external onlyEthereumGovernanceExecutor {
+    _queueSingle(target, value, signature, Calldata, withDelegatecall);
+  }
+
+  function _queueSingle(
+    address target,
+    uint256 value,
+    string memory signature,
+    bytes memory Calldata,
+    bool withDelegatecall) internal
+  {
+    uint256 actionsSetId = _actionsSetCounter;
+    uint256 executionTime = block.timestamp + _delay;
+    unchecked {
+      ++_actionsSetCounter;
+    }
+    
+    bytes32 actionHash = keccak256(abi.encode(target,
+    value, executionTime, withDelegatecall));
+    
+    if (isActionQueued(actionHash)) revert DuplicateAction();
+    _queuedActions[actionHash] = true;
+
+    ActionsSet storage actionsSet = _actionsSets[actionsSetId];
+    actionsSet.targets[0] = target;
+    actionsSet.values[0] = value;
+    actionsSet.signatures[0] = signature;
+    actionsSet.calldatas[0] = Calldata;
+    actionsSet.withDelegatecalls[0] = withDelegatecall;
+    actionsSet.executionTime = executionTime;
+  }
+
+  function queue2(
+    address[2] memory targets,
+    uint256[2] memory values,
+    string[2] memory signatures, 
+    bytes[2] memory calldatas,
+    bool[2] memory withDelegatecalls
+  ) external onlyEthereumGovernanceExecutor {
+    _queue2(targets, values, signatures, calldatas, withDelegatecalls);
+  }
+  
+
+  function _queue2(
+    address[2] memory targets,
+    uint256[2] memory values,
+    string[2] memory signatures,
+    bytes[2] memory calldatas,
+    bool[2] memory withDelegatecalls
+  ) internal {
     if (targets.length == 0) revert EmptyTargets();
-    //uint256 targetsLength = targets.length;
-    //if (
-    //  targetsLength != values.length ||
-    //  targetsLength != signatures.length ||
-    //  targetsLength != calldatas.length ||
-    //  targetsLength != withDelegatecalls.length
-    //) revert InconsistentParamsLength();
+    uint256 targetsLength = targets.length;
+    if (
+      targetsLength != values.length ||
+      targetsLength != signatures.length ||
+      targetsLength != calldatas.length ||
+      targetsLength != withDelegatecalls.length
+    ) revert InconsistentParamsLength();
 
     uint256 actionsSetId = _actionsSetCounter;
     uint256 executionTime = block.timestamp + _delay;
@@ -63,23 +113,31 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
       ++_actionsSetCounter;
     }
 
+    for (uint256 i = 0; i < targetsLength; ) {
+      bytes32 actionHash = keccak256(
+        abi.encode(
+          targets[i],
+          values[i],
+          signatures[i],
+          calldatas[i],
+          executionTime,
+          withDelegatecalls[i]
+        )
+      );
+      if (isActionQueued(actionHash)) revert DuplicateAction();
+      _queuedActions[actionHash] = true;
+      unchecked {
+        ++i;
+      }
+    } 
+
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     actionsSet.targets = targets;
     actionsSet.values = values;
-    actionsSet.signatures = signatures;
+    //actionsSet.signatures = signatures;
     actionsSet.calldatas = calldatas;
-    actionsSet.withDelegatecalls = withDelegatecalls;
+    //actionsSet.withDelegatecalls = withDelegatecalls;
     actionsSet.executionTime = executionTime;
-
-    emit ActionsSetQueued(
-      actionsSetId,
-      targets,
-      values,
-      signatures,
-      calldatas,
-      withDelegatecalls,
-      executionTime
-    );
   }
 
   // Certora : add getters
@@ -111,6 +169,18 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
   public view returns (bytes memory)
   {
     return _actionsSets[actionsSetId].calldatas[i];
+  }
+
+  function getActionsSetCanceled(uint256 actionsSetId) 
+  public view returns(bool)
+  {
+    return _actionsSets[actionsSetId].canceled;
+  }
+
+  function getActionsSetExecuted(uint256 actionsSetId) 
+  public view returns(bool)
+  {
+    return _actionsSets[actionsSetId].executed;
   }
 
   function noDelegateCalls(uint256 actionsSetId) external onlyThis

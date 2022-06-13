@@ -7,7 +7,8 @@ certoraRun certora/harness/OptimismHarness.sol \
     --loop_iter 3 \
     --staging \
     --settings -contractRecursionLimit=1 \
-    --rule holdYourHorses \
+    --rule independentQueuedActions \
+    --rule_sanity advanced \
     --send_only \
-    --msg "holdYourHorses"  
+    --msg "independentQueuedActions"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \

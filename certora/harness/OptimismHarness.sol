@@ -82,8 +82,8 @@ contract OptimismHarness is L2BridgeExecutorHarness {
       (success, resultData) = this.executeDelegateCall{value: value}(target, data);
     } else {
       // solium-disable-next-line security/no-call-value
-      (success, resultData) = mockTargetCall(target, data);
-      //(success, resultData) = target.call{value: value}(data);
+      // (success, resultData) = mockTargetCall(target, data);
+      (success, resultData) = target.call{value: value}(data);
     }
     return _verifyCallResult(success, resultData);
   }
@@ -103,46 +103,13 @@ contract OptimismHarness is L2BridgeExecutorHarness {
     else if (target == address(this)) {
       output = true;
       uint256 number = abi.decode(data, (uint256));
-      this.execute(number);
+      this.updateGracePeriod(number);
     }
     else {
       output = false;
       return (false, abi.encode(output));
     }
     return (true, abi.encode(output));
-  }
-
-  function setCallData1(bytes[] memory data, uint256 i,
-  address account, uint256 amount) internal pure {
-    data[i] = abi.encode(account, amount); 
-  }
-
-  function setCallData2(bytes[] memory data, uint256 i, uint256 amount) 
-  internal pure {
-    data[i] = abi.encode(amount); 
-  }
-
-  function queueHarness1(
-    address[] memory targets,
-    uint256[] memory values,
-    string[] memory signatures,
-    bytes[] memory calldatas,
-    bool[] memory withDelegatecalls
-  ) external onlyEthereumGovernanceExecutor { 
-    setCallData1(calldatas, 0, _account1, _amount1);
-    setCallData1(calldatas, 1, _account2, _amount2);
-    _queue(targets, values, signatures, calldatas, withDelegatecalls);
-  }
-
-  function queueHarness2(
-    address[] memory targets,
-    uint256[] memory values,
-    string[] memory signatures,
-    bytes[] memory calldatas,
-    bool[] memory withDelegatecalls
-  ) external onlyEthereumGovernanceExecutor { 
-    setCallData2(calldatas, 0, _amount1);
-    _queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 
   function tokenA() external view returns (DummyERC20Impl)

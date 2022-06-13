@@ -279,7 +279,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     string[] memory signatures,
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
-  ) internal virtual {
+  ) internal {
     if (targets.length == 0) revert EmptyTargets();
     uint256 targetsLength = targets.length;
     if (
@@ -331,6 +331,7 @@ abstract contract BridgeExecutorBase is IExecutorBase {
       executionTime
     );
   }
+
   // harness : added virtual
   function _executeTransaction(
     address target,

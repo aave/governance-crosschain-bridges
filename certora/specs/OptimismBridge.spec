@@ -1,6 +1,7 @@
 import "erc20.spec"
 using DummyERC20A as erc20_A
 using DummyERC20B as erc20_B
+using OptimismBridgeExecutor as optOrigin
 
 ////////////////////////////////////////////////////////////////////////////
 //                      Methods                                           //
@@ -21,11 +22,16 @@ methods {
 	getActionSetWithDelegate(uint256, uint256) returns (bool) envfree
 	getActionsSetTarget(uint256, uint256) returns (address) envfree
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
+	xDomainMessageSender() => CONSTANT
 	queue(address[], uint256[], string[], bytes[], bool[])
 	tokenA() returns (address) envfree
 	tokenB() returns (address) envfree
-	getTransferArguments() returns (address, address, uint256, uint256 ) envfree
+	getTransferArguments() returns (address, address, uint256, uint256) envfree
 	executeDelegateCall(address, bytes) => NONDET
+	noDelegateCalls(uint256) envfree
+	queueSingle(address, uint256, string, bytes, bool)
+	getActionsSetExecuted(uint256) returns (bool) envfree
+	getActionsSetCanceled(uint256) returns (bool) envfree
 }
 
  //enum ActionsSetState 
@@ -46,13 +52,28 @@ definition stateVariableGetter(method f)
 		f.selector == getMaximumDelay().selector ||
 		f.selector == getGuardian().selector ||
 		f.selector == getActionsSetCount().selector);
+
+definition stateVariableUpdate(method f)
+	returns bool = (
+		f.selector == updateDelay(uint256).selector ||
+		f.selector == updateGuardian(address).selector ||
+		f.selector == updateGracePeriod(uint256).selector ||
+		f.selector == updateMinimumDelay(uint256).selector ||
+		f.selector == updateMaximumDelay(uint256).selector);
 	
 ////////////////////////////////////////////////////////////////////////////
 //                       Rules                                            //
 ////////////////////////////////////////////////////////////////////////////
 invariant properDelay()
 	getDelay() >= getMinimumDelay() && getDelay() <= getMaximumDelay()
+	filtered{f -> f.selector != execute(uint256).selector}
 
+invariant actionNotCanceledAndExecuted(uint256 setID)
+	! (getActionsSetCanceled(setID) && getActionsSetExecuted(setID))
+	{
+		preserved { require setID < getActionsSetCount(); }
+	}
+	
 // Only the current contract (executor) can 
 // change its variables.
 rule whoChangedStateVariables(method f)
@@ -88,6 +109,71 @@ filtered{f -> !f.isView}
 		"Someone else changed state variables";
 }
 
+rule queueDoesntModifyStateVariables()
+{
+	env e;
+	calldataarg args;
+	// State variables before
+	uint256 delay1 = getDelay();
+	uint256 period1 = getGracePeriod();
+	uint256 minDelay1 = getMinimumDelay();
+	uint256 maxDelay1 = getMaximumDelay();
+	uint256 setCount1 = getActionsSetCount();
+	address guardian1 = getGuardian();
+
+	// Call queue with one action in the set.
+	require getActionsSetLength(setCount1) == 1;
+	queue(e, args);
+
+	// State variables after
+	uint256 delay2 = getDelay();
+	uint256 period2 = getGracePeriod();
+	uint256 minDelay2 = getMinimumDelay();
+	uint256 maxDelay2 = getMaximumDelay();
+	uint256 setCount2 = getActionsSetCount();
+	address guardian2 = getGuardian();
+
+	bool stateIntact =  delay1 == delay2 &&
+		 period1 == period2 &&
+		 minDelay1 == minDelay2 &&
+		 maxDelay1 == maxDelay2 &&
+		 setCount1 == setCount2 &&
+		 guardian1 == guardian2;
+
+	assert stateIntact,
+		"_queue changed state variables unexpectedly";
+}
+
+// Queue cannot cancel a action set
+rule queueCannotCancel()
+{
+	env e;
+	calldataarg args;
+	uint256 actionsSetId;
+
+	require getCurrentState(e, actionsSetId) != 2;
+	require getActionsSetLength(actionsSetId) == 1;
+		queue(e, args);
+	assert getCurrentState(e, actionsSetId) != 2;
+}
+
+rule executeCannotCancel()
+{
+	env e;
+	calldataarg args;
+	uint256 setCall;
+	uint256 setCanceled;
+
+	require getCurrentState(e, setCall) == 0;
+	require getCurrentState(e, setCanceled) == 0;
+	require getActionsSetLength(setCall) == 1;
+	require !getActionSetWithDelegate(setCall, 0);
+	
+	execute(e, setCall);
+
+	assert getCurrentState(e, setCanceled) != 2;
+}
+
 // After calling to queue, the new action set
 // must be set as 'queued'.
 rule queuedStateConsistency()
@@ -114,7 +200,8 @@ rule queuedChangedCounter()
 // A set status can be changed from 'ququed' to 'canceled'
 // via the "cancel" function only.
 rule onlyCancelCanCancel(method f, uint actionsSetId)
-filtered{f -> !f.isView}
+filtered{f -> !f.isView && f.selector != execute(uint256).selector &&
+f.selector != executeDelegateCall(address, bytes).selector}
 {
 	env e;
 	calldataarg args;
@@ -152,12 +239,15 @@ filtered {f -> !f.isView}
 }
 
 // No immediate execution after queue.
+// Verified
+// https://vaas-stg.certora.com/output/41958/b8f0fa4bc2da40e0cfa9/?anonymousKey=b02bd1f814aebb3299d0998dc3b74b5e2330d91d
 rule holdYourHorses()
 {
 	env e;
 	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
-	queue(e, args);
+	require getDelay() > getMinimumDelay();
+	queue2(e, args);
 	execute@withrevert(e, actionsSetId);
 	assert lastReverted;
 }
@@ -233,6 +323,53 @@ rule executeRevertsBeforeDelay()
 			=> executeFailed;
 }
 
+// Two similar actions in different sets in different blocks
+// should be successfully queued independently, regardless of 
+// the other one queued status.
+rule sameExecutionTimesReverts()
+{
+	env e1; env e2;
+	calldataarg args;
+	uint256 delay;
+	uint256 t1 = e1.block.timestamp;
+	uint256 t2 = e2.block.timestamp;
+
+	// Assume different blocks (block2 later than block1)
+	require t1 < t2;
+
+	// queue first set.
+	queueSingle(e1, args);
+	// Change the delay period.
+	uint256 delay1 = getDelay();
+		updateDelay(e1, delay);
+	uint256 delay2 = getDelay();
+	// Try to queue second set, with same arguments.
+	queueSingle@withrevert(e2, args);
+
+	assert t1 + delay1 == t2 + delay2 => lastReverted;
+}
+
+rule independentQueuedActions(method f)
+filtered{f -> stateVariableUpdate(f)}
+{
+	env e1; env e2;
+	calldataarg args;
+	calldataarg argsUpdate;
+	require e2.msg.value == 0;
+
+	// Assume different blocks (block2 later than block1)
+	require e1.block.timestamp < e2.block.timestamp;
+
+	// queue first set.
+	queue2(e1, args);
+	// Update some state variable.
+		f(e1, argsUpdate);
+	// Try to queue second set, with same arguments.
+	queue2@withrevert(e2, args);
+
+	assert !lastReverted;
+}
+
 // Only queued actions can be executed.
 // Assumes a batch with a single action.
 rule onlyQueuedAreExecuted(uint256 actionsSetId)
@@ -242,45 +379,28 @@ rule onlyQueuedAreExecuted(uint256 actionsSetId)
 	bytes32 actionHash = ID2actionHash(actionsSetId, 0);
 
 	bool queued = isActionQueued(e, actionHash);
-	execute(e,actionsSetId);
+	execute(e, actionsSetId);
 	assert queued, "A non queued action was executed";
 }
 
-// Checks if reentrancy is possible in the current contract.
-rule executeReentrancy()
+// Check if queue cannot be called twice with same arguments.
+rule actionDuplicate()
 {
-	env e; env e2;
-	calldataarg args;
+	env e; calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
 
-	require getActionsSetLength(actionsSetId) == 1;
-	require getActionsSetTarget(actionsSetId, 0) == currentContract;
-	queueHarness2(e, args);
-	execute@withrevert(e2, actionsSetId);
-	
+	queue2(e, args);
+	queue2@withrevert(e, args);
 	assert lastReverted;
 }
 
-// Checks reachability for a custom set of actions (erc20 transfers)
-rule checkQueuedBatch()
+rule queue2Reachability()
 {
-	env e; env e2;
-	calldataarg args;
+	env e; calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
 
-	address account1 = erc20_A;
-	address account2 = erc20_B;
-	uint256 amount1 = 1;
-	uint256 amount2 = 2;
-
-	require tokenA() == erc20_A;
-	require tokenB() == erc20_B;
-	require getActionsSetLength(actionsSetId) == 2;
-	require (account1, account2, amount1, amount2) == getTransferArguments();
-
-	queueHarness1(e, args);
-	execute@withrevert(e2, actionsSetId);
-	assert lastReverted;
+	queue2(e, args);
+	assert getActionsSetLength(actionsSetId) == 2;
 }
 
 rule mockReachability()
