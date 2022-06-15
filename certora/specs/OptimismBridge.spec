@@ -22,9 +22,6 @@ methods {
 	getActionsSetTarget(uint256, uint256) returns (address) envfree
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
 	queue(address[], uint256[], string[], bytes[], bool[])
-	tokenA() returns (address) envfree
-	tokenB() returns (address) envfree
-	getTransferArguments() returns (address, address, uint256, uint256) envfree
 	noDelegateCalls(uint256) envfree
 	queueSingle(address, uint256, string, bytes, bool)
 	getActionsSetExecuted(uint256) returns (bool) envfree
@@ -81,7 +78,7 @@ invariant actionNotCanceledAndExecuted(uint256 setID)
 	}
 	
 // Only the current contract (executor) can change its variables.
-// Verified
+// Verified (exepct delegate call)
 // https://prover.certora.com/output/41958/42913aaf7b3cf27076cd/?anonymousKey=177039a798fc5fcf998020246e8e4e997355febf
 rule whoChangedStateVariables(method f)
 filtered{f -> !f.isView && f.selector !=
@@ -149,7 +146,7 @@ rule queueDoesntModifyStateVariables()
 
 // Queue cannot cancel a action set.
 // Verified
-// https://prover.certora.com/output/41958/2933e2a125ff9002990a/?anonymousKey=81e99826b2e4bf7c95569e6e533ab108124ec8f2
+// https://prover.certora.com/output/41958/8123508132af65dab125/?anonymousKey=bffc0a16295e7bccdafb2b5eb9bba6a5f90c8968
 rule queueCannotCancel()
 {
 	env e;
@@ -157,13 +154,13 @@ rule queueCannotCancel()
 	uint256 actionsSetId;
 
 	require getCurrentState(e, actionsSetId) != 2;
-	require getActionsSetLength(actionsSetId) == 1;
 		queue2(e, args);
 	assert getCurrentState(e, actionsSetId) != 2;
 }
 
-// To check
-// execute was using reentrancyMock
+// Violated
+// cancel is possible via target call.
+// https://prover.certora.com/output/41958/0252f72d51a1012ce32d/?anonymousKey=d1368ee94c46def922f2613dc06f78d35895951c
 rule executeCannotCancel()
 {
 	env e;
@@ -180,24 +177,43 @@ rule executeCannotCancel()
 	assert getCurrentState(e, setCanceled) != 2;
 }
 
+// an ID is never queued twice (after being executed once)
+rule noIncarnations()
+{
+	env e; env e2; env e3;
+	calldataarg args;
+	calldataarg args2;
+
+	uint256 actionsSetId = getActionsSetCount();
+	queue2(e, args);
+	execute(e2, actionsSetId);
+	queue2(e3, args2);
+	assert !(getCurrentState(e3, actionsSetId) == 0);
+}
+
 // After calling to queue, the new action set
 // must be set as 'queued'.
+// Verified:
+// https://prover.certora.com/output/41958/b1be0924672f96f653d2/?anonymousKey=edd773b04d29b67b3d07e14449c437f8b130bcc2
 rule queuedStateConsistency()
 {
 	env e;
 	calldataarg args;
-	queue(e, args);
 	uint256 id = getActionsSetCount();
+	require !getActionsSetCanceled(id) && !getActionsSetExecuted(id);
+	queue2(e, args);
 	assert getCurrentState(e, id) == 0;
 }
 
 // Queue must increase action set by 1.
+// Verified 
+// https://prover.certora.com/output/41958/a56d0720f3c484ed1edd/?anonymousKey=aabe878e790200011529f5a1861f844ac335b61d
 rule queuedChangedCounter()
 {
 	env e;
 	calldataarg args;
 	uint256 count1 = getActionsSetCount();
-	queue(e, args);
+		queue2(e, args);
 	uint256 count2 = getActionsSetCount();
 
 	assert count1 < max_uint => count2 == count1+1;
@@ -308,12 +324,11 @@ rule executeFailsIfExpired(uint256 actionsSetId)
 
 // After updating a grace period, an action set execution reverts
 // if and only if it's state is 'expired'.
-// Verified (ignoring executeDelegate)
+// Verified
 // https://prover.certora.com/output/41958/d0d548f73a83cc1312a5/?anonymousKey=c897f275b2245e2bb46293303d42aa478cf8ed79
-// NURIT : advise
 rule gracePeriodChangedAffectsExecution(uint256 actionsSetId)
 {
-	env e;
+	env e; env e2;
 	uint period;
 	// Assume queued action set.
 	require getCurrentState(e, actionsSetId) == 0;
@@ -323,12 +338,11 @@ rule gracePeriodChangedAffectsExecution(uint256 actionsSetId)
 	execute(e, actionsSetId);
 	// Now check whether changing the grace period could lead to revert.
 	updateGracePeriod(e, period) at initialStorage;
-	uint8 stateAfterUpdate = getCurrentState(e, actionsSetId);
+	uint8 stateAfterUpdate = getCurrentState(e2, actionsSetId);
 
-	execute@withrevert(e, actionsSetId);
+	execute@withrevert(e2, actionsSetId);
 	assert lastReverted <=> stateAfterUpdate == 3;
 }
-
 
 // Cannot execute before delay passed
 // Verified
@@ -421,17 +435,6 @@ rule actionDuplicate()
 	queue2(e, args);
 	queue2@withrevert(e, args);
 	assert lastReverted;
-}
-
-// Checks whether reentrancy to the contract is possible
-// execute was called with 'reentrancyMock'
-rule reentrancyCheck()
-{
-	env e;
-	uint256 actionSetID;
-	require getActionsSetLength(actionSetID) !=0;
-	execute@withrevert(e, actionSetID);
-	assert e.msg.sender != currentContract => lastReverted;
 }
 
 rule queue2Reachability()

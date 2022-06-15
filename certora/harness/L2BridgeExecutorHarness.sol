@@ -133,8 +133,8 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     actionsSet.targets = targets;
     actionsSet.values = values;
-    actionsSet.signatures = signatures;
-    actionsSet.calldatas = calldatas;
+    //actionsSet.signatures = signatures;
+    //actionsSet.calldatas = calldatas;
     //actionsSet.withDelegatecalls = withDelegatecalls;
     actionsSet.executionTime = executionTime;
   }

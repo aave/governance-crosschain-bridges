@@ -88,14 +88,13 @@ contract OptimismHarness is L2BridgeExecutorHarness {
       (success, resultData) = this.executeDelegateCall{value: value}(target, data);
     } else {
       // solium-disable-next-line security/no-call-value
-       // (success, resultData) = mockTargetCall(target, data);
-        success = reentrancyMock(data);
-       // (success, resultData) = target.call{value: value}(data);
+        success = targetCall(data);
+        //(success, resultData) = target.call{value: value}(data);
     }
     return _verifyCallResult(success, resultData);
   }
 
-  function reentrancyMock(bytes memory data)
+  function targetCall(bytes memory data)
   internal returns (bool output)
   {
     uint8 funcId = abi.decode(data, (uint8));
@@ -110,30 +109,23 @@ contract OptimismHarness is L2BridgeExecutorHarness {
     }
     else if (funcId == 4){
       this.updateGracePeriod(_amount1);
-    } 
-    else {
+    }
+    else if (funcId == 5) {
       this.cancel(_amount1);
     }
-    return true; 
-  }
-
-  function mockTargetCall(address target, bytes memory data) 
-  public returns (bool output, bytes memory)
-  {
-    
-    if (target == address(_tokenA)) {
-      (address recipient, uint256 amount) = abi.decode(data, (address, uint256));
-      output = _tokenA.transfer(recipient, amount);
+    else if (funcId == 6) {
+      output = _tokenA.transfer(_account1, _amount1);
+      return output;
     }
-    else if (target == address(_tokenB)) {
-      (address recipient, uint256 amount) = abi.decode(data, (address, uint256));
-      output = _tokenB.transfer(recipient, amount);
+    else if (funcId == 7) {
+      output = _tokenB.transfer(_account2, _amount2);
+      return output;
     }
     else {
-      output = false;
-      return (false, abi.encode(output));
+      // Reverting path
+      return false;
     }
-    return (true, abi.encode(output));
+    return true; 
   }
 
   function tokenA() external view returns (DummyERC20Impl)

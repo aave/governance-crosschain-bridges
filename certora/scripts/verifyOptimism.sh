@@ -7,8 +7,7 @@ certoraRun certora/harness/OptimismHarness.sol \
     --loop_iter 3 \
     --cloud \
     --settings -contractRecursionLimit=1 \
-    --rule executeCannotCancel \
+    --rule actionNotCanceledAndExecuted \
     --send_only \
-    --rule_sanity advanced \
-    --msg "executeCannotCancel"  
+    --msg "actionNotCanceledAndExecuted"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \
