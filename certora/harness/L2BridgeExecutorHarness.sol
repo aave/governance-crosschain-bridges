@@ -90,7 +90,6 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
     _queue2(targets, values, signatures, calldatas, withDelegatecalls);
   }
   
-
   function _queue2(
     address[2] memory targets,
     uint256[2] memory values,
@@ -130,11 +129,11 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
         ++i;
       }
     } 
-
+    
     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
     actionsSet.targets = targets;
     actionsSet.values = values;
-    //actionsSet.signatures = signatures;
+    actionsSet.signatures = signatures;
     actionsSet.calldatas = calldatas;
     //actionsSet.withDelegatecalls = withDelegatecalls;
     actionsSet.executionTime = executionTime;

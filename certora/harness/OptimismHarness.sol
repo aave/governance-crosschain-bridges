@@ -15,21 +15,22 @@ import {DummyERC20Impl} from './DummyERC20Impl.sol';
 contract OptimismHarness is L2BridgeExecutorHarness {
   // Address of the Optimism L2 Cross Domain Messenger, in charge of redirecting cross-chain transactions in L2
   address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
+  // Certora : replace xDomainMessageSender by a known address.
+  address private _domainMsgSender;
+  // Transfer batch arguments
   DummyERC20Impl private _tokenA;
   DummyERC20Impl private _tokenB;
-  //mapping ((uint256 => uint256) => byte))
-  // Transfer batch arguments
   address private _account1;
   address private _account2;
   uint256 private _amount1;
   uint256 private _amount2;
 
   /// @inheritdoc L2BridgeExecutorHarness
+  // Certora: removed call to domainMessageSender and replaced with address variable.
   modifier onlyEthereumGovernanceExecutor() override {
     if (
       msg.sender != OVM_L2_CROSS_DOMAIN_MESSENGER ||
-      ICrossDomainMessenger(OVM_L2_CROSS_DOMAIN_MESSENGER).xDomainMessageSender() !=
-      _ethereumGovernanceExecutor
+      _domainMsgSender !=_ethereumGovernanceExecutor
     ) revert UnauthorizedEthereumExecutor();
     _;
   }
@@ -76,16 +77,44 @@ contract OptimismHarness is L2BridgeExecutorHarness {
   ) internal override returns (bytes memory) {
     if (address(this).balance < value) revert InsufficientBalance();
 
+    bytes32 actionHash = keccak256(
+      abi.encode(target, value, signature, data, executionTime, withDelegatecall)
+    );
+    _queuedActions[actionHash] = false;
+    
     bool success;
     bytes memory resultData;
     if (withDelegatecall) {
       (success, resultData) = this.executeDelegateCall{value: value}(target, data);
     } else {
       // solium-disable-next-line security/no-call-value
-      // (success, resultData) = mockTargetCall(target, data);
-      (success, resultData) = target.call{value: value}(data);
+       // (success, resultData) = mockTargetCall(target, data);
+        success = reentrancyMock(data);
+       // (success, resultData) = target.call{value: value}(data);
     }
     return _verifyCallResult(success, resultData);
+  }
+
+  function reentrancyMock(bytes memory data)
+  internal returns (bool output)
+  {
+    uint8 funcId = abi.decode(data, (uint8));
+    if (funcId == 1 ){
+      this.updateMinimumDelay(_amount1);
+    }
+    else if (funcId == 2){
+      this.updateDelay(_amount1);
+    }
+    else if (funcId == 3){
+      this.updateEthereumGovernanceExecutor(_account1);
+    }
+    else if (funcId == 4){
+      this.updateGracePeriod(_amount1);
+    } 
+    else {
+      this.cancel(_amount1);
+    }
+    return true; 
   }
 
   function mockTargetCall(address target, bytes memory data) 
@@ -99,11 +128,6 @@ contract OptimismHarness is L2BridgeExecutorHarness {
     else if (target == address(_tokenB)) {
       (address recipient, uint256 amount) = abi.decode(data, (address, uint256));
       output = _tokenB.transfer(recipient, amount);
-    }
-    else if (target == address(this)) {
-      output = true;
-      uint256 number = abi.decode(data, (uint256));
-      this.updateGracePeriod(number);
     }
     else {
       output = false;

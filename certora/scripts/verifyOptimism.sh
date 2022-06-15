@@ -5,10 +5,10 @@ certoraRun certora/harness/OptimismHarness.sol \
     --solc solc8.10 \
     --optimistic_loop \
     --loop_iter 3 \
-    --staging \
+    --cloud \
     --settings -contractRecursionLimit=1 \
-    --rule independentQueuedActions \
-    --rule_sanity advanced \
+    --rule executeCannotCancel \
     --send_only \
-    --msg "independentQueuedActions"  
+    --rule_sanity advanced \
+    --msg "executeCannotCancel"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \
