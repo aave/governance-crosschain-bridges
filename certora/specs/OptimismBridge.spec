@@ -28,6 +28,7 @@ methods {
 	getActionsSetCanceled(uint256) returns (bool) envfree
 
 	executeDelegateCall(address, bytes) => NONDET
+	delegatecall(bytes) => NONDET
 }
 
  // enum ActionsSetState 
@@ -61,14 +62,14 @@ definition stateVariableUpdate(method f)
 //                       Rules                                            //
 ////////////////////////////////////////////////////////////////////////////
 // Verified (except delegatecall)
-//https://prover.certora.com/output/41958/f1066dfbd0f0f9a36f6e/?anonymousKey=23a23ad6e83268704b05c6ae5770f3ef2320d0d2
+// https://prover.certora.com/output/41958/9f83cdb60dd8ee97166b/?anonymousKey=954a34aaa44992fcb7550314ee2e142534aa6fa8
 invariant properDelay()
 	getDelay() >= getMinimumDelay() && getDelay() <= getMaximumDelay()
 	filtered{f -> f.selector != 
 		queue(address[], uint256[], string[], bytes[], bool[]).selector}
 
-// Pass (except delegatecall)
-// https://prover.certora.com/output/41958/48645057e3741b1d5a59/?anonymousKey=ae00cf28cd6c6de91fcaaa49706db4d56cf67aeb
+// Verified (except delegatecall)
+// https://prover.certora.com/output/41958/905d3245bd302fbc339a/?anonymousKey=57538c2acd74733d09a823a655f2399235a35198
 invariant actionNotCanceledAndExecuted(uint256 setID)
 	! (getActionsSetCanceled(setID) && getActionsSetExecuted(setID))
 	filtered{f -> f.selector != 
@@ -144,7 +145,7 @@ rule queueDoesntModifyStateVariables()
 		"_queue changed state variables unexpectedly";
 }
 
-// Queue cannot cancel a action set.
+// Queue cannot cancel an action set.
 // Verified
 // https://prover.certora.com/output/41958/8123508132af65dab125/?anonymousKey=bffc0a16295e7bccdafb2b5eb9bba6a5f90c8968
 rule queueCannotCancel()
@@ -158,6 +159,7 @@ rule queueCannotCancel()
 	assert getCurrentState(e, actionsSetId) != 2;
 }
 
+// execute cannot cancel another set.
 // Violated
 // cancel is possible via target call.
 // https://prover.certora.com/output/41958/0252f72d51a1012ce32d/?anonymousKey=d1368ee94c46def922f2613dc06f78d35895951c
@@ -178,6 +180,8 @@ rule executeCannotCancel()
 }
 
 // an ID is never queued twice (after being executed once)
+// Verified (for a simpler actionHash calculation - less arguments):
+// https://prover.certora.com/output/41958/2fffa39eecae3bef46f4/?anonymousKey=9da4cce5c925087fd8e13a97646f9f8d6420a643
 rule noIncarnations()
 {
 	env e; env e2; env e3;
@@ -187,9 +191,26 @@ rule noIncarnations()
 	uint256 actionsSetId = getActionsSetCount();
 	queue2(e, args);
 	execute(e2, actionsSetId);
-	queue2(e3, args2);
+	queue2@withrevert(e3, args2);
 	assert !(getCurrentState(e3, actionsSetId) == 0);
 }
+
+// Once executed, an actions set ID remains executed forever.
+// Verified (execpt delegate):
+// https://prover.certora.com/output/41958/82a7a598594f67804b91/?anonymousKey=ebc5b375934595f5c8315460be4fe66db7877d79
+// Verified (for execute):
+// https://prover.certora.com/output/41958/8292edd79fdfe44fa0e9/?anonymousKey=fbd57f179fa107431847150f148bd5e0a9911841
+rule executedForever(method f, uint256 actionsSetId)
+filtered{f -> f.selector != 
+		queue(address[], uint256[], string[], bytes[], bool[]).selector}
+{
+	env e; env e2;
+	calldataarg args;
+	require actionsSetId < getActionsSetCount();
+	require getCurrentState(e, actionsSetId) == 1;
+		f(e, args);
+	assert getCurrentState(e2, actionsSetId) == 1;
+} 
 
 // After calling to queue, the new action set
 // must be set as 'queued'.
@@ -387,6 +408,8 @@ rule sameExecutionTimesReverts()
 	assert t1 + delay1 == t2 + delay2 => lastReverted;
 }
 
+// Can two batches with same arguments be queued twice? No:
+// https://prover.certora.com/output/41958/ba7c9281ca7e72605d07/?anonymousKey=61fd6a4fe7e02555c7d4281f33ff1ed929489136
 rule independentQueuedActions(method f)
 filtered{f -> stateVariableUpdate(f)}
 {

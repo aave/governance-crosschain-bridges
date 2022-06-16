@@ -137,7 +137,14 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
     //actionsSet.calldatas = calldatas;
     //actionsSet.withDelegatecalls = withDelegatecalls;
     actionsSet.executionTime = executionTime;
-  }
+
+    for (uint256 i = 0; i < targetsLength; ) {
+      actionsSet.withDelegatecalls[i] = withDelegatecalls[i];
+      unchecked {
+          ++i;
+        }
+      }
+    }
 
   // Certora : add getters
   function getActionsSetLength(uint256 actionsSetId) 

@@ -4,10 +4,11 @@ certoraRun certora/harness/OptimismHarness.sol \
     --verify OptimismHarness:certora/specs/OptimismBridge.spec \
     --solc solc8.10 \
     --optimistic_loop \
-    --loop_iter 3 \
+    --loop_iter 2 \
     --cloud \
     --settings -contractRecursionLimit=1 \
-    --rule actionNotCanceledAndExecuted \
+    --rule executedForever \
+    --rule_sanity advanced \
     --send_only \
-    --msg "actionNotCanceledAndExecuted"  
+    --msg "executedForever execute"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \
