@@ -23,7 +23,6 @@ methods {
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
 	queue(address[], uint256[], string[], bytes[], bool[])
 	noDelegateCalls(uint256) envfree
-	queueSingle(address, uint256, string, bytes, bool)
 	getActionsSetExecuted(uint256) returns (bool) envfree
 	getActionsSetCanceled(uint256) returns (bool) envfree
 
@@ -172,11 +171,12 @@ rule executeCannotCancel()
 
 	require getCurrentState(e, setCall) == 0;
 	require getCurrentState(e, setCanceled) == 0;
-	require getActionsSetLength(setCall) != 0 ;
+	require getActionsSetLength(setCall) != 0;
 	
 	execute(e, setCall);
 
-	assert getCurrentState(e, setCanceled) != 2;
+	assert getCurrentState(e, setCanceled) == 2 =>
+	e.msg.sender == getGuardian();
 }
 
 // an ID is never queued twice (after being executed once)
@@ -240,7 +240,7 @@ rule queuedChangedCounter()
 	assert count1 < max_uint => count2 == count1+1;
 }
 
-// A set status can be changed from 'ququed' to 'canceled'
+// A set status can be changed from 'queued' to 'canceled'
 // via the "cancel" function only.
 // Check whether filter is necessary.
 rule onlyCancelCanCancel(method f, uint actionsSetId)
@@ -359,9 +359,9 @@ rule gracePeriodChangedAffectsExecution(uint256 actionsSetId)
 	execute(e, actionsSetId);
 	// Now check whether changing the grace period could lead to revert.
 	updateGracePeriod(e, period) at initialStorage;
-	uint8 stateAfterUpdate = getCurrentState(e2, actionsSetId);
+	uint8 stateAfterUpdate = getCurrentState(e, actionsSetId);
 
-	execute@withrevert(e2, actionsSetId);
+	execute@withrevert(e, actionsSetId);
 	assert lastReverted <=> stateAfterUpdate == 3;
 }
 
@@ -432,19 +432,23 @@ filtered{f -> stateVariableUpdate(f)}
 }
 
 // Only queued actions can be executed.
+// Assuming only two actions per set.
 // Fails
-rule onlyQueuedAreExecuted(uint256 actionsSetId)
+rule onlyQueuedAreExecuted(bytes32 actionHash)
 {
-	env e;
-	uint i;
-	bytes32 actionHash = ID2actionHash(actionsSetId, i);
-	
+	env e2; env e;
+	calldataarg args;
+	uint256 actionsSetId = getActionsSetCount();
+		
+		queue2(e2, args);
 	bool queuedBefore = isActionQueued(e, actionHash);
 		execute(e, actionsSetId);
 	bool queuedAfter = isActionQueued(e, actionHash);
 	
-	assert i < getActionsSetLength(actionsSetId) <=> 
-			!queuedAfter;
+	assert (actionHash == ID2actionHash(actionsSetId, 0) ||
+			actionHash == ID2actionHash(actionsSetId, 1)) 
+			<=>
+			(queuedBefore && !queuedAfter);
 }
 
 // Check if queue cannot be called twice with same arguments.
@@ -460,6 +464,7 @@ rule actionDuplicate()
 	assert lastReverted;
 }
 
+// Reachable.
 rule queue2Reachability()
 {
 	env e; calldataarg args;

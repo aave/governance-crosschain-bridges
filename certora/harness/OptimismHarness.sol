@@ -3,7 +3,8 @@ pragma solidity 0.8.10;
 
 import {ICrossDomainMessenger} from '../munged/dependencies/optimism/interfaces/ICrossDomainMessenger.sol';
 import {L2BridgeExecutorHarness} from './L2BridgeExecutorHarness.sol';
-import {DummyERC20Impl} from './DummyERC20Impl.sol';
+import {mockTarget} from './mockTarget.sol';
+
 
 /**
  * @title OptimismBridgeExecutor
@@ -17,13 +18,7 @@ contract OptimismHarness is L2BridgeExecutorHarness {
   address public immutable OVM_L2_CROSS_DOMAIN_MESSENGER;
   // Certora : replace xDomainMessageSender by a known address.
   address private _domainMsgSender;
-  // Transfer batch arguments
-  DummyERC20Impl private _tokenA;
-  DummyERC20Impl private _tokenB;
-  address private _account1;
-  address private _account2;
-  uint256 private _amount1;
-  uint256 private _amount2;
+  mockTarget public _mock;
 
   /// @inheritdoc L2BridgeExecutorHarness
   // Certora: removed call to domainMessageSender and replaced with address variable.
@@ -78,7 +73,7 @@ contract OptimismHarness is L2BridgeExecutorHarness {
     if (address(this).balance < value) revert InsufficientBalance();
 
     bytes32 actionHash = keccak256(
-      abi.encode(target, value, signature, data, executionTime, withDelegatecall)
+      abi.encode(target, value, executionTime, withDelegatecall)
     );
     _queuedActions[actionHash] = false;
     
@@ -88,58 +83,8 @@ contract OptimismHarness is L2BridgeExecutorHarness {
       (success, resultData) = this.executeDelegateCall{value: value}(target, data);
     } else {
       // solium-disable-next-line security/no-call-value
-        success = targetCall(data);
-        //(success, resultData) = target.call{value: value}(data);
+        success = _mock.targetCall(data);
     }
     return _verifyCallResult(success, resultData);
   }
-
-  function targetCall(bytes memory data)
-  internal returns (bool output)
-  {
-    uint8 funcId = abi.decode(data, (uint8));
-    if (funcId == 1 ){
-      this.updateMinimumDelay(_amount1);
-    }
-    else if (funcId == 2){
-      this.updateDelay(_amount1);
-    }
-    else if (funcId == 3){
-      this.updateEthereumGovernanceExecutor(_account1);
-    }
-    else if (funcId == 4){
-      this.updateGracePeriod(_amount1);
-    }
-    else if (funcId == 5) {
-      this.cancel(_amount1);
-    }
-    else if (funcId == 6) {
-      output = _tokenA.transfer(_account1, _amount1);
-      return output;
-    }
-    else if (funcId == 7) {
-      output = _tokenB.transfer(_account2, _amount2);
-      return output;
-    }
-    else {
-      // Reverting path
-      return false;
-    }
-    return true; 
-  }
-
-  function tokenA() external view returns (DummyERC20Impl)
-  {
-    return _tokenA;
-  }
-
-  function tokenB() external view returns (DummyERC20Impl)
-  {
-    return _tokenB;
-  }
-
-  function getTransferArguments() external view 
-    returns(address, address, uint256, uint256) {
-      return (_account1, _account2, _amount1, _amount2);
-    }
 }

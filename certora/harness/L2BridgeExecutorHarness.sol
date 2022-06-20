@@ -42,44 +42,6 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
    * @param withDelegatecalls Array of whether to delegatecall for each call
    **/
 
-  function queueSingle(
-    address target,
-    uint256 value,
-    string memory signature, 
-    bytes memory Calldata,
-    bool withDelegatecall
-  ) external onlyEthereumGovernanceExecutor {
-    _queueSingle(target, value, signature, Calldata, withDelegatecall);
-  }
-
-  function _queueSingle(
-    address target,
-    uint256 value,
-    string memory signature,
-    bytes memory Calldata,
-    bool withDelegatecall) internal
-  {
-    uint256 actionsSetId = _actionsSetCounter;
-    uint256 executionTime = block.timestamp + _delay;
-    unchecked {
-      ++_actionsSetCounter;
-    }
-    
-    bytes32 actionHash = keccak256(abi.encode(target,
-    value, executionTime, withDelegatecall));
-    
-    if (isActionQueued(actionHash)) revert DuplicateAction();
-    _queuedActions[actionHash] = true;
-
-    ActionsSet storage actionsSet = _actionsSets[actionsSetId];
-    actionsSet.targets[0] = target;
-    actionsSet.values[0] = value;
-    actionsSet.signatures[0] = signature;
-    actionsSet.calldatas[0] = Calldata;
-    actionsSet.withDelegatecalls[0] = withDelegatecall;
-    actionsSet.executionTime = executionTime;
-  }
-
   function queue2(
     address[2] memory targets,
     uint256[2] memory values,
@@ -117,8 +79,6 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
         abi.encode(
           targets[i],
           values[i],
-          signatures[i],
-          calldatas[i],
           executionTime,
           withDelegatecalls[i]
         )
@@ -205,7 +165,6 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
       ActionsSet storage actionsSet = _actionsSets[actionsSetId];
       return keccak256(
         abi.encode(actionsSet.targets[i], actionsSet.values[i],
-          actionsSet.signatures[i], actionsSet.calldatas[i],
-          actionsSet.executionTime, actionsSet.withDelegatecalls[i]));
+         actionsSet.executionTime, actionsSet.withDelegatecalls[i]));
   }
 }
