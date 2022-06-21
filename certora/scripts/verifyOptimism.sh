@@ -13,7 +13,7 @@ certoraRun certora/harness/OptimismHarness.sol \
     --cloud \
     --settings -contractRecursionLimit=1 \
     --rule_sanity advanced \
-    --rule onlyQueuedAreExecuted \
+    --rule whoChangedStateVariables \
     --send_only \
-    --msg "onlyQueuedAreExecuted"  
+    --msg "whoChangedStateVariables"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \

@@ -73,7 +73,7 @@ contract OptimismHarness is L2BridgeExecutorHarness {
     if (address(this).balance < value) revert InsufficientBalance();
 
     bytes32 actionHash = keccak256(
-      abi.encode(target, value, executionTime, withDelegatecall)
+      abi.encode(target, value, executionTime)
     );
     _queuedActions[actionHash] = false;
     

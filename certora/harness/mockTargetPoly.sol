@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
-import {OptimismHarness} from './OptimismHarness.sol';
+import {PolygonHarness} from './PolygonHarness.sol';
 import {DummyERC20Impl} from './DummyERC20Impl.sol';
 
-// target call mock target for Optimism bridge
-contract mockTarget
+// target call mock target for Polygon bridge
+contract mockTargetPoly
 {
-    OptimismHarness public _executor;
+    PolygonHarness public _executor;
     DummyERC20Impl private _tokenA;
     DummyERC20Impl private _tokenB;
     address private _account1;
@@ -24,7 +24,7 @@ contract mockTarget
       _executor.updateDelay(_amount1);
     }
     else if (funcId == 3){
-      _executor.updateEthereumGovernanceExecutor(_account1);
+      _executor.updateFxRootSender(_account1);
     }
     else if (funcId == 4){
       _executor.updateGracePeriod(_amount1);
@@ -39,6 +39,9 @@ contract mockTarget
     else if (funcId == 7) {
       output = _tokenB.transfer(_account2, _amount2);
       return output;
+    }
+    else if (funcId == 8) {
+      _executor.updateFxChild(_account2);
     }
     else {
       // Reverting path

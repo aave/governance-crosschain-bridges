@@ -12,19 +12,22 @@ methods {
 	getMinimumDelay() returns (uint256) envfree
 	getMaximumDelay() returns (uint256) envfree
 	getGuardian() returns(address) envfree
+	updateFxChild(address) envfree
+	updateFxRootSender(address) envfree
+	getFxRootSender() envfree
+	getFxChild() envfree
 	getActionsSetCount() returns(uint256) envfree
 	getCurrentState(uint256) returns (uint8)
-	getEthereumGovernanceExecutor() returns (address) envfree
 	getActionsSetExecutionTime(uint256) returns (uint256) envfree
 	ID2actionHash(uint256, uint256) returns (bytes32) envfree
 	getActionsSetLength(uint256) returns (uint256) envfree
 	getActionSetWithDelegate(uint256, uint256) returns (bool) envfree
 	getActionsSetTarget(uint256, uint256) returns (address) envfree
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
-	queue(address[], uint256[], string[], bytes[], bool[])
 	noDelegateCalls(uint256) envfree
 	getActionsSetExecuted(uint256) returns (bool) envfree
 	getActionsSetCanceled(uint256) returns (bool) envfree
+	processMessageFromRoot(uint256, address, bytes)
 
 	executeDelegateCall(address, bytes) => NONDET
 	delegatecall(bytes) => NONDET
@@ -55,7 +58,9 @@ definition stateVariableUpdate(method f)
 		f.selector == updateGuardian(address).selector ||
 		f.selector == updateGracePeriod(uint256).selector ||
 		f.selector == updateMinimumDelay(uint256).selector ||
-		f.selector == updateMaximumDelay(uint256).selector);
+		f.selector == updateMaximumDelay(uint256).selector ||
+		f.selector == updateFxChild(address).selector ||
+		f.selector == updateFxRootSender(address).selector);
 	
 ////////////////////////////////////////////////////////////////////////////
 //                       Rules                                            //
@@ -64,15 +69,11 @@ definition stateVariableUpdate(method f)
 // https://prover.certora.com/output/41958/9f83cdb60dd8ee97166b/?anonymousKey=954a34aaa44992fcb7550314ee2e142534aa6fa8
 invariant properDelay()
 	getDelay() >= getMinimumDelay() && getDelay() <= getMaximumDelay()
-	filtered{f -> f.selector != 
-		queue(address[], uint256[], string[], bytes[], bool[]).selector}
 
 // Verified (except delegatecall)
 // https://prover.certora.com/output/41958/905d3245bd302fbc339a/?anonymousKey=57538c2acd74733d09a823a655f2399235a35198
 invariant actionNotCanceledAndExecuted(uint256 setID)
 	! (getActionsSetCanceled(setID) && getActionsSetExecuted(setID))
-	filtered{f -> f.selector != 
-		queue(address[], uint256[], string[], bytes[], bool[]).selector}
 	{
 		preserved { require setID < getActionsSetCount(); }
 	}
@@ -81,8 +82,7 @@ invariant actionNotCanceledAndExecuted(uint256 setID)
 // Verified (exepct delegate call)
 // https://prover.certora.com/output/41958/42913aaf7b3cf27076cd/?anonymousKey=177039a798fc5fcf998020246e8e4e997355febf
 rule whoChangedStateVariables(method f)
-filtered{f -> !f.isView && f.selector !=
-queue(address[], uint256[], string[], bytes[], bool[]).selector}
+filtered{f -> !f.isView}
 {
 	env e;
 	calldataarg args;
@@ -125,7 +125,7 @@ rule queueDoesntModifyStateVariables()
 	address guardian1 = getGuardian();
 
 	// Call queue with one action in the set.
-	queue2(e, args);
+	processMessageFromRoot(e, args);
 
 	// State variables after
 	uint256 delay2 = getDelay();
@@ -154,7 +154,7 @@ rule queueCannotCancel()
 	uint256 actionsSetId;
 
 	require getCurrentState(e, actionsSetId) != 2;
-		queue2(e, args);
+		processMessageFromRoot(e, args);
 	assert getCurrentState(e, actionsSetId) != 2;
 }
 
@@ -186,9 +186,9 @@ rule noIncarnations()
 	calldataarg args2;
 
 	uint256 actionsSetId = getActionsSetCount();
-	queue2(e, args);
+	processMessageFromRoot(e, args);
 	execute(e2, actionsSetId);
-	queue2@withrevert(e3, args2);
+	processMessageFromRoot@withrevert(e3, args2);
 	assert !(getCurrentState(e3, actionsSetId) == 0);
 }
 
@@ -198,8 +198,6 @@ rule noIncarnations()
 // Verified (for execute):
 // https://prover.certora.com/output/41958/8292edd79fdfe44fa0e9/?anonymousKey=fbd57f179fa107431847150f148bd5e0a9911841
 rule executedForever(method f, uint256 actionsSetId)
-filtered{f -> f.selector != 
-		queue(address[], uint256[], string[], bytes[], bool[]).selector}
 {
 	env e; env e2;
 	calldataarg args;
@@ -219,7 +217,7 @@ rule queuedStateConsistency()
 	calldataarg args;
 	uint256 id = getActionsSetCount();
 	require !getActionsSetCanceled(id) && !getActionsSetExecuted(id);
-	queue2(e, args);
+	processMessageFromRoot(e, args);
 	assert getCurrentState(e, id) == 0;
 }
 
@@ -231,7 +229,7 @@ rule queuedChangedCounter()
 	env e;
 	calldataarg args;
 	uint256 count1 = getActionsSetCount();
-		queue2(e, args);
+		processMessageFromRoot(e, args);
 	uint256 count2 = getActionsSetCount();
 
 	assert count1 < max_uint => count2 == count1+1;
@@ -243,8 +241,6 @@ rule queuedChangedCounter()
 // https://prover.certora.com/output/41958/92acf4198a0c8f6f76c7/?anonymousKey=6ea0ba77ee8dc58f66cd4a031e0ae2e3fb007259
 rule onlyCancelCanCancel(method f, uint actionsSetId)
 filtered{f -> !f.isView && 
-		f.selector != 
-		queue(address[], uint256[], string[], bytes[], bool[]).selector &&
 		f.selector != 
 		executeDelegateCall(address, bytes).selector}
 {
@@ -295,7 +291,7 @@ rule holdYourHorses()
 	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
 	require getDelay() > getMinimumDelay();
-	queue2(e, args);
+	processMessageFromRoot(e, args);
 	execute@withrevert(e, actionsSetId);
 	assert lastReverted;
 }
@@ -305,8 +301,7 @@ rule holdYourHorses()
 // Verified
 // https://prover.certora.com/output/41958/2a588a30aaf6e5894cbb/?anonymousKey=43a8f4ecddfa051095094ce41fa9b0a8de7bd8ab
 rule executedValidTransition1(method f, uint256 actionsSetId)
-filtered{f -> !f.isView && f.selector != execute(uint256).selector
-&& f.selector != queue(address[], uint256[], string[], bytes[], bool[]).selector}
+filtered{f -> !f.isView && f.selector != execute(uint256).selector}
 {
 	env e;
 	calldataarg args;
@@ -375,7 +370,7 @@ rule executeRevertsBeforeDelay()
 	env e; env e2;
 	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
-	queue2(e, args);
+	processMessageFromRoot(e, args);
 	execute@withrevert(e2, actionsSetId);
 	bool executeFailed = lastReverted;
 	assert e2.block.timestamp < e.block.timestamp + getDelay() 
@@ -399,13 +394,13 @@ rule sameExecutionTimesReverts()
 	require t1 < t2;
 
 	// queue first set.
-	queue2(e1, args);
+	processMessageFromRoot(e1, args);
 	// Change the delay period.
 	uint256 delay1 = getDelay();
 		updateDelay(e1, delay);
 	uint256 delay2 = getDelay();
 	// Try to queue second set, with same arguments.
-	queue2@withrevert(e2, args);
+	processMessageFromRoot@withrevert(e2, args);
 
 	assert t1 + delay1 == t2 + delay2 => lastReverted;
 }
@@ -424,11 +419,11 @@ filtered{f -> stateVariableUpdate(f)}
 	require e1.block.timestamp < e2.block.timestamp;
 
 	// queue first set.
-	queue2(e1, args);
+	processMessageFromRoot(e1, args);
 	// Update some state variable.
 		f(e1, argsUpdate);
 	// Try to queue second set, with same arguments.
-	queue2@withrevert(e2, args);
+	processMessageFromRoot@withrevert(e2, args);
 
 	assert !lastReverted;
 }
@@ -444,7 +439,7 @@ rule afterQueueHashQueued(bytes32 actionHash)
 	uint256 actionsSetId = getActionsSetCount();
 
 	bool queueBefore = isActionQueued(e, actionHash);
-		queue2(e, args);
+		processMessageFromRoot(e, args);
 	bool queuedAfter = isActionQueued(e, actionHash);
 		
 	assert (actionHash == ID2actionHash(actionsSetId, 0) ||
@@ -482,17 +477,17 @@ rule actionDuplicate()
 	env e; calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
 
-	queue2(e, args);
-	queue2@withrevert(e, args);
+	processMessageFromRoot(e, args);
+	processMessageFromRoot@withrevert(e, args);
 	assert lastReverted;
 }
 
 // Reachable.
-rule queue2Reachability()
+rule processMessageFromRootReachability()
 {
 	env e; calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
 
-	queue2(e, args);
+	processMessageFromRoot(e, args);
 	assert false;
 }

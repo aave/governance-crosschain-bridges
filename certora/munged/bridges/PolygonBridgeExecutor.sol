@@ -30,9 +30,9 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   event FxChildUpdate(address oldFxChild, address newFxChild);
 
   // Address of the FxRoot Sender, sending the cross-chain transaction from Ethereum
-  address private _fxRootSender;
+  address internal _fxRootSender; // Certora harness: private -> internal
   // Address of the FxChild, in charge of redirecting cross-chain transactions in Polygon
-  address private _fxChild;
+  address internal _fxChild; // Certora harness: private -> internal
 
   /**
    * @dev Only FxChild can call functions marked by this modifier.
@@ -67,11 +67,12 @@ contract PolygonBridgeExecutor is BridgeExecutorBase, IFxMessageProcessor {
   }
 
   /// @inheritdoc IFxMessageProcessor
+  // Certora harness: added virtual
   function processMessageFromRoot(
     uint256 stateId,
     address rootMessageSender,
     bytes calldata data
-  ) external override onlyFxChild {
+  ) external override virtual onlyFxChild {
     if (rootMessageSender != _fxRootSender) revert UnauthorizedRootOrigin();
 
     address[] memory targets;

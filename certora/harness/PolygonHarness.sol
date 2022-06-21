@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
-import {L2BridgeExecutor} from '../munged/bridges/L2BridgeExecutor.sol';
+import {PolygonBridgeExecutor} from '../munged/bridges/PolygonBridgeExecutor.sol';
+import {mockTargetPoly} from './mockTargetPoly.sol';
 
 /**
- * @title BridgeExecutorBase
+ * @title PolygonBridgeExecutor
  * @author Aave
- * @notice Abstract contract that implements basic executor functionality
- * @dev It does not implement an external `queue` function. This should instead be done in the inheriting
- * contract with proper access control
+ * @notice Implementation of the Polygon Bridge Executor, able to receive cross-chain transactions from Ethereum
+ * @dev Queuing an ActionsSet into this Executor can only be done by the FxChild and after passing the EthereumGovernanceExecutor check
+ * as the FxRoot sender
  */
-abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
-  modifier onlyEthereumGovernanceExecutor() override virtual;
+contract PolygonHarness is PolygonBridgeExecutor {
+  mockTargetPoly public _mock;
   /**
    * @dev Constructor
    *
-   * @param ethereumGovernanceExecutor The address of the EthereumGovernanceExecutor
+   * @param fxRootSender The address of the transaction sender in FxRoot
+   * @param fxChild The address of the FxChild
    * @param delay The delay before which an actions set can be executed
    * @param gracePeriod The time period after a delay during which an actions set can be executed
    * @param minimumDelay The minimum bound a delay can be set to
@@ -23,35 +25,65 @@ abstract contract L2BridgeExecutorHarness is L2BridgeExecutor {
    * @param guardian The address of the guardian, which can cancel queued proposals (can be zero)
    */
   constructor(
-    address ethereumGovernanceExecutor,
+    address fxRootSender,
+    address fxChild,
     uint256 delay,
     uint256 gracePeriod,
     uint256 minimumDelay,
     uint256 maximumDelay,
     address guardian
-  ) L2BridgeExecutor(ethereumGovernanceExecutor, delay, gracePeriod,
-    minimumDelay, maximumDelay, guardian){}
-  
-  /* 
-   * @notice Queue an ActionsSet
-   * @dev If a signature is empty, calldata is used for the execution, calldata is appended to signature otherwise
-   * @param targets Array of targets to be called by the actions set
-   * @param values Array of values to pass in each call by the actions set
-   * @param signatures Array of function signatures to encode in each call (can be empty)
-   * @param calldatas Array of calldata to pass in each call (can be empty)
-   * @param withDelegatecalls Array of whether to delegatecall for each call
-   **/
+  ) PolygonBridgeExecutor(fxRootSender, fxChild, delay, gracePeriod, minimumDelay, maximumDelay, guardian) {
+  }
 
-  function queue2(
-    address[2] memory targets,
-    uint256[2] memory values,
-    string[2] memory signatures, 
-    bytes[2] memory calldatas,
-    bool[2] memory withDelegatecalls
-  ) external onlyEthereumGovernanceExecutor {
+  // Certora harness: limit to 2 actions in set.
+  function processMessageFromRoot(
+    uint256 stateId,
+    address rootMessageSender,
+    bytes calldata data
+  ) external override onlyFxChild {
+    if (rootMessageSender != _fxRootSender) revert UnauthorizedRootOrigin();
+
+    address[2] memory targets;
+    uint256[2] memory values;
+    string[2] memory signatures;
+    bytes[2] memory calldatas;
+    bool[2] memory withDelegatecalls;
+
+    (targets, values, signatures, calldatas, withDelegatecalls) = 
+    abi.decode(
+      data,
+      (address[2], uint256[2], string[2], bytes[2], bool[2])
+    );
+
     _queue2(targets, values, signatures, calldatas, withDelegatecalls);
   }
-  
+
+  function _executeTransaction(
+    address target,
+    uint256 value,
+    string memory signature,
+    bytes memory data,
+    uint256 executionTime,
+    bool withDelegatecall
+  ) internal override returns (bytes memory) {
+    if (address(this).balance < value) revert InsufficientBalance();
+
+    bytes32 actionHash = keccak256(
+      abi.encode(target, value, executionTime)
+    );
+    _queuedActions[actionHash] = false;
+    
+    bool success;
+    bytes memory resultData;
+    if (withDelegatecall) {
+      (success, resultData) = this.executeDelegateCall{value: value}(target, data);
+    } else {
+      // solium-disable-next-line security/no-call-value
+        success = _mock.targetCall(data);
+    }
+    return _verifyCallResult(success, resultData);
+  }
+
   function _queue2(
     address[2] memory targets,
     uint256[2] memory values,
