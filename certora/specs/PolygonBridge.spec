@@ -14,8 +14,8 @@ methods {
 	getGuardian() returns(address) envfree
 	updateFxChild(address) envfree
 	updateFxRootSender(address) envfree
-	getFxRootSender() envfree
-	getFxChild() envfree
+	getFxRootSender() returns(address)
+	getFxChild() returns(address)
 	getActionsSetCount() returns(uint256) envfree
 	getCurrentState(uint256) returns (uint8)
 	getActionsSetExecutionTime(uint256) returns (uint256) envfree
@@ -24,7 +24,6 @@ methods {
 	getActionSetWithDelegate(uint256, uint256) returns (bool) envfree
 	getActionsSetTarget(uint256, uint256) returns (address) envfree
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
-	noDelegateCalls(uint256) envfree
 	getActionsSetExecuted(uint256) returns (bool) envfree
 	getActionsSetCanceled(uint256) returns (bool) envfree
 	processMessageFromRoot(uint256, address, bytes)
@@ -413,10 +412,11 @@ filtered{f -> stateVariableUpdate(f)}
 	env e1; env e2;
 	calldataarg args;
 	calldataarg argsUpdate;
-	require e2.msg.value == 0;
-
+	
 	// Assume different blocks (block2 later than block1)
 	require e1.block.timestamp < e2.block.timestamp;
+	require e1.msg.sender == e2.msg.sender;
+	require e2.msg.value == 0;
 
 	// queue first set.
 	processMessageFromRoot(e1, args);

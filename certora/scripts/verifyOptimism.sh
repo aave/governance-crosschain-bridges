@@ -11,9 +11,10 @@ certoraRun certora/harness/OptimismHarness.sol \
     --optimistic_loop \
     --loop_iter 2 \
     --cloud \
+    --rule independentQueuedActions \
     --settings -contractRecursionLimit=1 \
-    --rule_sanity advanced \
-    --rule whoChangedStateVariables \
     --send_only \
-    --msg "whoChangedStateVariables"  
+    --msg "Optimisim bridge independentQueuedActions"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \
+#     --rule_sanity advanced \
+

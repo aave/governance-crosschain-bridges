@@ -2,6 +2,7 @@ import "erc20.spec"
 using DummyERC20A as erc20_A
 using DummyERC20B as erc20_B
 
+
 ////////////////////////////////////////////////////////////////////////////
 //                      Methods                                           //
 ////////////////////////////////////////////////////////////////////////////
@@ -22,7 +23,6 @@ methods {
 	getActionsSetTarget(uint256, uint256) returns (address) envfree
 	getActionsSetCalldata(uint256, uint256) returns (bytes) envfree
 	queue(address[], uint256[], string[], bytes[], bool[])
-	noDelegateCalls(uint256) envfree
 	getActionsSetExecuted(uint256) returns (bool) envfree
 	getActionsSetCanceled(uint256) returns (bool) envfree
 
@@ -60,6 +60,13 @@ definition stateVariableUpdate(method f)
 ////////////////////////////////////////////////////////////////////////////
 //                       Rules                                            //
 ////////////////////////////////////////////////////////////////////////////
+
+// Last full run:
+// https://prover.certora.com/output/41958/743fd786dfdaab49731c/?anonymousKey=f9b721e24d5d60d7bfcac00d1716b7c9c191d240
+// For independentQueuedActions:
+// https://prover.certora.com/output/41958/044ed7bcca3aadbcfff6/?anonymousKey=c3c7f50927cf3ae94d7eeb3d9d7eb34502be0f61
+
+
 // Verified (except delegatecall)
 // https://prover.certora.com/output/41958/9f83cdb60dd8ee97166b/?anonymousKey=954a34aaa44992fcb7550314ee2e142534aa6fa8
 invariant properDelay()
@@ -418,10 +425,12 @@ filtered{f -> stateVariableUpdate(f)}
 	env e1; env e2;
 	calldataarg args;
 	calldataarg argsUpdate;
-	require e2.msg.value == 0;
-
+	
 	// Assume different blocks (block2 later than block1)
 	require e1.block.timestamp < e2.block.timestamp;
+	require e1.msg.sender == e2.msg.sender;
+	require e2.msg.value == 0;
+	require e2.block.timestamp + getDelay() < max_uint;
 
 	// queue first set.
 	queue2(e1, args);
