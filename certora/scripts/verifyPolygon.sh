@@ -12,8 +12,6 @@ certoraRun certora/harness/PolygonHarness.sol \
     --loop_iter 2 \
     --cloud \
     --settings -contractRecursionLimit=1 \
-    --rule_sanity advanced \
-    --rule processMessageFromRootReachability \
     --send_only \
-    --msg "processMessageFromRootReachability"  
+    --msg "Polygon bridge"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \
