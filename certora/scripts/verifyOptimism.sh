@@ -10,11 +10,12 @@ certoraRun certora/harness/OptimismHarness.sol \
     --solc solc8.10 \
     --optimistic_loop \
     --loop_iter 2 \
-    --cloud \
-    --rule independentQueuedActions \
+    --staging \
+    --rule_sanity basic \
+    --rule queuePriviliged \
     --settings -contractRecursionLimit=1 \
     --send_only \
-    --msg "Optimisim bridge independentQueuedActions"  
+    --msg "Optimisim queuePriviliged"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \
-#     --rule_sanity advanced \
+#     
 

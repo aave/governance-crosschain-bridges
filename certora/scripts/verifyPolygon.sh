@@ -10,8 +10,10 @@ certoraRun certora/harness/PolygonHarness.sol \
     --solc solc8.10 \
     --optimistic_loop \
     --loop_iter 2 \
-    --cloud \
+    --rule_sanity basic \
+    --rule executeRevertsBeforeDelay \
+    --staging \
     --settings -contractRecursionLimit=1 \
     --send_only \
-    --msg "Polygon bridge"  
+    --msg "Polygon executeRevertsBeforeDelay"  
 # py ../EVMVerifier/scripts/certoraRun.py contracts/bridges/OptimismBridgeExecutor.sol \

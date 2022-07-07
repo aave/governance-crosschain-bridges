@@ -161,11 +161,13 @@ abstract contract BridgeExecutorBase is IExecutorBase {
     _validateDelay(_delay);
   }
 
+  // Certora : added virtual
   /// @inheritdoc IExecutorBase
   function executeDelegateCall(address target, bytes calldata data)
     external
     payable
     override
+    virtual
     onlyThis
     returns (bool, bytes memory)
   {

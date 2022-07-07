@@ -42,6 +42,7 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase, IL2BridgeExecutor {
   }
 
   /// @inheritdoc IL2BridgeExecutor
+  // Certora harness : removed _queue()
   function queue(
     address[] memory targets,
     uint256[] memory values,
@@ -49,7 +50,7 @@ abstract contract L2BridgeExecutor is BridgeExecutorBase, IL2BridgeExecutor {
     bytes[] memory calldatas,
     bool[] memory withDelegatecalls
   ) external onlyEthereumGovernanceExecutor {
-    _queue(targets, values, signatures, calldatas, withDelegatecalls);
+    //_queue(targets, values, signatures, calldatas, withDelegatecalls);
   }
 
   /// @inheritdoc IL2BridgeExecutor

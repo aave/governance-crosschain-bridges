@@ -23,3 +23,8 @@ coverage.json
 .DS_Store
 
 deployments/
+
+# Certora
+.certora*
+.last_confs
+certora_*

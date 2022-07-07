@@ -87,4 +87,18 @@ contract OptimismHarness is L2BridgeExecutorHarness {
     }
     return _verifyCallResult(success, resultData);
   }
+
+  function executeDelegateCall(address target, bytes calldata data)
+    external
+    payable
+    override
+    onlyThis
+    returns (bool, bytes memory)
+  {
+    bool success;
+    bytes memory resultData;
+    // solium-disable-next-line security/no-call-value
+    success = _mock.targetCall(data);
+    return (success, resultData);
+  }
 }

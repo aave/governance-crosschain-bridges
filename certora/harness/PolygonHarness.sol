@@ -84,6 +84,20 @@ contract PolygonHarness is PolygonBridgeExecutor {
     return _verifyCallResult(success, resultData);
   }
 
+  function executeDelegateCall(address target, bytes calldata data)
+    external
+    payable
+    override
+    onlyThis
+    returns (bool, bytes memory)
+  {
+    bool success;
+    bytes memory resultData;
+    // solium-disable-next-line security/no-call-value
+    success = _mock.targetCall(data);
+    return (success, resultData);
+  }
+
   function _queue2(
     address[2] memory targets,
     uint256[2] memory values,
