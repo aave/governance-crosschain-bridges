@@ -482,8 +482,8 @@ rule queuePriviliged()
 	env e2;
 	calldataarg args1;
 	calldataarg args2;
-	queue2(e1, args1);
-	queue2@withrevert(e2, args2);
+	processMessageFromRoot(e1, args1);
+	processMessageFromRoot@withrevert(e2, args2);
 	assert e1.msg.sender != e2.msg.sender => lastReverted;
 }
 
