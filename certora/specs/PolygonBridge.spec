@@ -2,6 +2,8 @@ import "erc20.spec"
 using DummyERC20A as erc20_A
 using DummyERC20B as erc20_B
 
+//Verification reports:
+// https://vaas-stg.certora.com/output/41958/07a16231de45f5a25396/?anonymousKey=d9f85af7ef7c4ebf7cd2de9bfcc31b24f7d1d6d0
 
 ////////////////////////////////////////////////////////////////////////////
 //                      Methods                                           //
