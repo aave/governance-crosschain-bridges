@@ -185,7 +185,7 @@ rule noIncarnations()
 	uint256 actionsSetId = getActionsSetCount();
 	queue2(e, args);
 	execute(e2, actionsSetId);
-	queue2@withrevert(e3, args2);
+	//queue2@withrevert(e3, args2);
 	assert !(getCurrentState(e3, actionsSetId) == 0);
 }
 
@@ -398,22 +398,25 @@ rule sameExecutionTimesReverts()
 rule independentQueuedActions(method f)
 filtered{f -> stateVariableUpdate(f)}
 {
-	env e1; env e2;
+	env e1; env e2; env e3;
 	calldataarg args;
 	calldataarg argsUpdate;
 	
-	// Assume different blocks (block2 later than block1)
-	require e1.block.timestamp < e2.block.timestamp;
-	require e1.msg.sender == e2.msg.sender;
-	require e2.msg.value == 0;
-	require e2.block.timestamp + getDelay() < max_uint;
+	// Assume different blocks (block3 later than block1)
+	require e1.block.timestamp < e3.block.timestamp;
+	require e1.msg.sender == e3.msg.sender;
+	require e3.msg.value == 0;
+	require e3.block.timestamp + getDelay() < max_uint;
+
+	storage initState = lastStorage; 
+	queue2(e3, args);
 
 	// queue first set.
-	queue2(e1, args);
+	queue2(e1, args) at initState;
 	// Update some state variable changing method.
-		f(e1, argsUpdate);
+		f(e2, argsUpdate);
 	// Try to queue second set, with same arguments.
-	queue2@withrevert(e2, args);
+	queue2@withrevert(e3, args);
 
 	assert !lastReverted;
 }
