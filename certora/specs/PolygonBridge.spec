@@ -174,18 +174,46 @@ rule executeCannotCancel()
 	assert getCurrentState(e, canceledSet) != 2;
 }
 
-// an ID is never queued twice (after being executed once)
-rule noIncarnations()
-{
-	env e; env e2; env e3;
-	calldataarg args;
-	calldataarg args2;
+// A three-part rule to prove that:
+// An action set ID is never queued twice, after being executed once.
 
+// First part:
+// Prove that an actions set is marked as 'queued'
+// After invoking processMessageFromRoot.
+rule noIncarnations1()
+{
+	env e;
+	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
+	require actionsSetId < max_uint;
+	requireInvariant notCanceledNotExecuted(actionsSetId);
 	processMessageFromRoot(e, args);
-	execute(e2, actionsSetId);
-	processMessageFromRoot@withrevert(e3, args2);
-	assert !(getCurrentState(e3, actionsSetId) == 0);
+	assert getCurrentState(e, actionsSetId) == 0
+	&& actionsSetId < getActionsSetCount();
+}
+
+// Second part:
+// Given the first part, after execute of that set,
+// the same set cannot be marked as 'queued'.
+rule noIncarnations2(uint256 actionsSetId)
+{
+	env e;
+	execute(e, actionsSetId);
+	assert getCurrentState(e, actionsSetId) != 0;
+}
+
+// Third part:
+// Given the second part, while an action set is not marked
+// as 'queued', calling processMessageFromRoot with any arguments
+// cannot set the same set to 'queued' again.
+rule noIncarnations3(uint256 actionsSetId)
+{
+	env e;
+	calldataarg args;
+	require actionsSetId <= getActionsSetCount();
+	require getCurrentState(e, actionsSetId) != 0;
+	processMessageFromRoot(e, args);
+	assert getCurrentState(e, actionsSetId) != 0;
 }
 
 // Once executed, an actions set ID remains executed forever.
