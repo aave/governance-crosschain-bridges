@@ -18,10 +18,12 @@ import {
   setBlocktime,
   timeLatest,
   setCode,
+  getImpersonatedSigner,
 } from '../helpers/misc-utils';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ActionsSetState, ExecutorErrors } from './helpers/executor-helpers';
-import { applyL1ToL2Alias } from '../helpers/arbitrum-helpers';
+import { ALIASING_OFFSET, applyL1ToL2Alias, undoL1ToL2Alias } from '../helpers/arbitrum-helpers';
+import { parseEther } from 'ethers/lib/utils';
 
 chai.use(solidity);
 
@@ -633,6 +635,73 @@ describe('ArbitrumBridgeExecutor', async function () {
 
       expect(await bridgeExecutor.getEthereumGovernanceExecutor()).to.be.equal(
         NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS
+      );
+    });
+
+    it('Update the Ethereum Governance Executor with an l1Address that underflow when undoing Arbitrum aliasing', async () => {
+      expect(await bridgeExecutor.getEthereumGovernanceExecutor()).to.be.equal(
+        ethereumGovernanceExecutor.address
+      );
+
+      const upperBoundAddress = ethers.utils.getAddress(
+        BigNumber.from(2).pow(160).sub(1).toHexString() // 0xFF
+      );
+      const underflowingL2Address = ethers.utils.getAddress(
+        BigNumber.from(ALIASING_OFFSET).sub(1).toHexString()
+      );
+      const underflowingL1Address = undoL1ToL2Alias(underflowingL2Address);
+      expect(underflowingL1Address).to.be.eq(upperBoundAddress);
+
+      const NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS = underflowingL1Address;
+
+      const { data, encodedData } = encodeSimpleActionsSet(
+        bridgeExecutor,
+        bridgeExecutor.address,
+        'updateEthereumGovernanceExecutor(address)',
+        [NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS]
+      );
+      const retryableTicket = getSimpleRetryableTicket(bridgeExecutor.address, encodedData);
+
+      const tx = await arbitrumInbox.createRetryableTicket(
+        retryableTicket.destAddr,
+        retryableTicket.arbTxCallValue,
+        retryableTicket.maxSubmissionCost,
+        retryableTicket.submissionRefundAddress,
+        retryableTicket.valueRefundAddress,
+        retryableTicket.maxGas,
+        retryableTicket.gasPriceBid,
+        retryableTicket.data,
+        {
+          gasLimit: 12000000,
+        }
+      );
+
+      const executionTime = (await timeLatest()).add(DELAY);
+      expect(tx)
+        .to.emit(bridgeExecutor, 'ActionsSetQueued')
+        .withArgs(0, data[0], data[1], data[2], data[3], data[4], executionTime);
+
+      await setBlocktime(executionTime.add(1).toNumber());
+      await advanceBlocks(1);
+
+      expect(await bridgeExecutor.execute(0))
+        .to.emit(bridgeExecutor, 'ActionsSetExecuted')
+        .withArgs(0, user.address, ['0x'])
+        .to.emit(bridgeExecutor, 'EthereumGovernanceExecutorUpdate')
+        .withArgs(ethereumGovernanceExecutor.address, NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS);
+      expect(await bridgeExecutor.getEthereumGovernanceExecutor()).to.be.equal(
+        NEW_ETHEREUM_GOVERNANCE_EXECUTOR_ADDRESS
+      );
+
+      // Impersonate ethereum gov executor (with the l2 alias already applied)
+      const ethGovExecutor = await getImpersonatedSigner(underflowingL2Address);
+      await user.sendTransaction({ to: underflowingL2Address, value: parseEther('1') });
+
+      // Queues a new action set without issues
+      expect(
+        await bridgeExecutor
+          .connect(ethGovExecutor)
+          .queue([ZERO_ADDRESS], [0], ['mock()'], ['0x'], [false])
       );
     });
   });
