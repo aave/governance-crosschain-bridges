@@ -3,9 +3,11 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { ADDRESSES, CONSTANTS } from '../helpers/gov-constants';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployments, ethers, getNamedAccounts } = hre;
-  const { deploy, execute, log, read } = deployments;
+  const { deployments, getNamedAccounts } = hre;
+  const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
+
+  log(`Deployer: ${deployer}\n`);
 
   const optimisticGov = await deployments.getOrNull('OptimisticGov');
 

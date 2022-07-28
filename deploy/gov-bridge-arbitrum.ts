@@ -3,12 +3,13 @@ import { DeployFunction } from 'hardhat-deploy/types';
 import { ADDRESSES, CONSTANTS } from '../helpers/gov-constants';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployments, ethers, getNamedAccounts } = hre;
-  const { deploy, execute, log, read } = deployments;
+  const { deployments, getNamedAccounts } = hre;
+  const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const arbiGov = await deployments.getOrNull('ArbitrumGov');
+  log(`Deployer: ${deployer}\n`);
 
+  const arbiGov = await deployments.getOrNull('ArbitrumGov');
   if (arbiGov) {
     log(`Reusing optimistic governance at: ${arbiGov.address}`);
   } else {
