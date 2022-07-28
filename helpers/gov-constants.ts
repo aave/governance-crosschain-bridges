@@ -4,9 +4,13 @@ export const ADDRESSES = {
   OVM_L1_MESSENGER_KOVAN: '0x4361d0F75A0186C05f971c566dC6bEa5957483fD',
   OVM_L1_MESSENGER_MAIN: '0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1',
   OVM_L2_MESSENGER: '0x4200000000000000000000000000000000000007',
-  ETHEREUM_GOV_EXECUTOR: '0xEE56e2B3D491590B5b31738cC34d5232F378a8D5',
-  OVM_GUARDIAN: '',
-  ARB_GUARDIAN: '',
+  // The deployment process includes testing the deployed governance bridge via calling the
+  // 'updateEthereumGovernanceExecutor' method. As the initial value for EthereumGovExecutor
+  // is used test instance of Aragon Agent on mainnet. It will be replaced with the official
+  // Lido Aragon Agent before usage.
+  ETHEREUM_GOV_EXECUTOR: '0x184d39300f2fa4419d04998e9c58cb5de586d879',
+  OVM_GUARDIAN: '0x0000000000000000000000000000000000000000',
+  ARB_GUARDIAN: '0x0000000000000000000000000000000000000000',
   RETRYABLE_TICKET_TX_ADDRESS: '0x000000000000000000000000000000000000006E',
 };
 
