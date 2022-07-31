@@ -174,18 +174,46 @@ rule executeCannotCancel()
 	assert getCurrentState(e, canceledSet) != 2;
 }
 
-// an ID is never queued twice (after being executed once)
-rule noIncarnations()
-{
-	env e; env e2; env e3;
-	calldataarg args;
-	calldataarg args2;
+// A three-part rule to prove that:
+// An action set ID is never queued twice, after being executed once.
 
+// First part:
+// Prove that an actions set is marked as 'queued'
+// After invoking processMessageFromRoot.
+rule noIncarnations1()
+{
+	env e;
+	calldataarg args;
 	uint256 actionsSetId = getActionsSetCount();
+	require actionsSetId < max_uint;
+	requireInvariant notCanceledNotExecuted(actionsSetId);
 	processMessageFromRoot(e, args);
-	execute(e2, actionsSetId);
-	processMessageFromRoot@withrevert(e3, args2);
-	assert !(getCurrentState(e3, actionsSetId) == 0);
+	assert getCurrentState(e, actionsSetId) == 0
+	&& actionsSetId < getActionsSetCount();
+}
+
+// Second part:
+// Given the first part, after execute of that set,
+// the same set cannot be marked as 'queued'.
+rule noIncarnations2(uint256 actionsSetId)
+{
+	env e;
+	execute(e, actionsSetId);
+	assert getCurrentState(e, actionsSetId) != 0;
+}
+
+// Third part:
+// Given the second part, while an action set is not marked
+// as 'queued', calling processMessageFromRoot with any arguments
+// cannot set the same set to 'queued' again.
+rule noIncarnations3(uint256 actionsSetId)
+{
+	env e;
+	calldataarg args;
+	require actionsSetId <= getActionsSetCount();
+	require getCurrentState(e, actionsSetId) != 0;
+	processMessageFromRoot(e, args);
+	assert getCurrentState(e, actionsSetId) != 0;
 }
 
 // Once executed, an actions set ID remains executed forever.
@@ -398,25 +426,28 @@ rule sameExecutionTimesReverts()
 }
 
 // Can two batches with same arguments be queued twice? No:
-rule independentQueuedActions(method f)
+rule independentQueuedActions(method f) 
 filtered{f -> stateVariableUpdate(f)}
 {
-	env e1; env e2;
+	env e1; env e2; env e3;
 	calldataarg args;
 	calldataarg argsUpdate;
 	
-	// Assume different blocks (block2 later than block1)
-	require e1.block.timestamp < e2.block.timestamp;
-	require e1.msg.sender == e2.msg.sender;
-	require e2.msg.value == 0;
-	require e2.block.timestamp + getDelay() < max_uint;
+	// Assume different blocks (block3 later than block1)
+	require e1.block.timestamp < e3.block.timestamp;
+	require e1.msg.sender == e3.msg.sender;
+	require e3.msg.value == 0;
+	require e3.block.timestamp + getDelay() < max_uint;
+
+	storage initState = lastStorage; 
+	processMessageFromRoot(e3, args);
 
 	// queue first set.
-	processMessageFromRoot(e1, args);
+	processMessageFromRoot(e1, args) at initState;
 	// Update some state variable changing method.
-		f(e1, argsUpdate);
+		f(e2, argsUpdate);
 	// Try to queue second set, with same arguments.
-	processMessageFromRoot@withrevert(e2, args);
+	processMessageFromRoot@withrevert(e3, args);
 
 	assert !lastReverted;
 }
