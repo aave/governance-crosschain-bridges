@@ -49,16 +49,23 @@ const OPTIMISTIC_ETHERSCAN_KEY = process.env.OPTIMISTIC_ETHERSCAN_KEY || '';
 const TENDERLY_PROJECT = process.env.TENDERLY_PROJECT || '';
 const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
 
-const getCommonNetworkConfig = (networkName: eNetwork, chainId: number) => ({
-  url: NETWORKS_RPC_URL[networkName],
-  chainId,
-  accounts: {
-    mnemonic: MNEMONIC,
-    path: MNEMONIC_PATH,
-    initialIndex: 0,
-    count: 20,
-  },
-});
+const getCommonNetworkConfig = (networkName: eNetwork, chainId: number) => {
+  // For deployment, load the deployer account from the PRIVATE_KEY env variable
+  // if provided
+  const accounts = process.env.PRIVATE_KEY
+    ? [process.env.PRIVATE_KEY]
+    : {
+        mnemonic: MNEMONIC,
+        path: MNEMONIC_PATH,
+        initialIndex: 0,
+        count: 20,
+      };
+  return {
+    url: NETWORKS_RPC_URL[networkName],
+    chainId,
+    accounts,
+  };
+};
 
 const mainnetFork = MAINNET_FORK
   ? {
