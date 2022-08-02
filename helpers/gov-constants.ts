@@ -16,7 +16,7 @@ export const ADDRESSES = {
 
 export const CONSTANTS = {
   DELAY: 0,
-  GRACE_PERIOD: 604800, // 7 days
+  GRACE_PERIOD: 86400, // 24 hours
   MIN_DELAY: 0,
   // We can't use there max delay equal to 0 because BridgeExecutorBase
   // contract creation fails if minimumDelay >= maximumDelay
