@@ -54,7 +54,7 @@ jobs:
       max-parallel: 16
       matrix:
         rule:
-         - verifyArbitrum.sh executedValidTransition2
+          - verifyArbitrum.sh executedValidTransition2
           - verifyArbitrum.sh onlyCancelCanCancel
           - verifyArbitrum.sh onlyQueuedAreExecuted
           - verifyArbitrum.sh expiredForever
