@@ -1,0 +1,136 @@
+diff -ruN .gitignore .gitignore
+--- .gitignore	1970-01-01 02:00:00.000000000 +0200
++++ .gitignore	2022-08-03 12:50:10.000000000 +0300
+@@ -0,0 +1,2 @@
++*
++!.gitignore
+diff -ruN bridges/BridgeExecutorBase.sol bridges/BridgeExecutorBase.sol
+--- bridges/BridgeExecutorBase.sol	2022-07-31 16:38:17.000000000 +0300
++++ bridges/BridgeExecutorBase.sol	2022-07-31 16:35:45.000000000 +0300
+@@ -15,7 +15,7 @@
+   uint256 constant MINIMUM_GRACE_PERIOD = 10 minutes;
+ 
+   // Time between queuing and execution
+-  uint256 private _delay;
++  uint256 internal _delay; // harness: private -> internal
+   // Time after the execution time during which the actions set can be executed
+   uint256 private _gracePeriod;
+   // Minimum allowed delay
+@@ -24,13 +24,12 @@
+   uint256 private _maximumDelay;
+   // Address with the ability of canceling actions sets
+   address private _guardian;
+-
+   // Number of actions sets
+-  uint256 private _actionsSetCounter;
++  uint256 internal _actionsSetCounter; // harness: private -> internal
+   // Map of registered actions sets (id => ActionsSet)
+-  mapping(uint256 => ActionsSet) private _actionsSets;
+-  // Map of queued actions (actionHash => isQueued)
+-  mapping(bytes32 => bool) private _queuedActions;
++  mapping(uint256 => ActionsSet) internal _actionsSets; // harness: private -> internal
++  // Map of queued actions sets (actionHash => isQueued)
++  mapping(bytes32 => bool) internal _queuedActions; // harness: private -> internal
+ 
+   /**
+    * @dev Only guardian can call functions marked by this modifier.
+@@ -162,11 +161,13 @@
+     _validateDelay(_delay);
+   }
+ 
++  // Certora : added virtual
+   /// @inheritdoc IExecutorBase
+   function executeDelegateCall(address target, bytes calldata data)
+     external
+     payable
+     override
++    virtual
+     onlyThis
+     returns (bool, bytes memory)
+   {
+@@ -312,7 +313,7 @@
+       unchecked {
+         ++i;
+       }
+-    }
++    } 
+ 
+     ActionsSet storage actionsSet = _actionsSets[actionsSetId];
+     actionsSet.targets = targets;
+@@ -333,6 +334,7 @@
+     );
+   }
+ 
++  // harness : added virtual
+   function _executeTransaction(
+     address target,
+     uint256 value,
+@@ -340,7 +342,7 @@
+     bytes memory data,
+     uint256 executionTime,
+     bool withDelegatecall
+-  ) internal returns (bytes memory) {
++  ) internal virtual returns (bytes memory) {
+     if (address(this).balance < value) revert InsufficientBalance();
+ 
+     bytes32 actionHash = keccak256(
+@@ -385,8 +387,9 @@
+     if (delay > _maximumDelay) revert DelayLongerThanMax();
+   }
+ 
++  // harness: private to internal
+   function _verifyCallResult(bool success, bytes memory returnData)
+-    private
++    internal
+     pure
+     returns (bytes memory)
+   {
+diff -ruN bridges/L2BridgeExecutor.sol bridges/L2BridgeExecutor.sol
+--- bridges/L2BridgeExecutor.sol	2022-05-25 20:17:05.000000000 +0300
++++ bridges/L2BridgeExecutor.sol	2022-07-31 16:35:45.000000000 +0300
+@@ -42,6 +42,7 @@
+   }
+ 
+   /// @inheritdoc IL2BridgeExecutor
++  // Certora harness : removed _queue()
+   function queue(
+     address[] memory targets,
+     uint256[] memory values,
+@@ -49,7 +50,7 @@
+     bytes[] memory calldatas,
+     bool[] memory withDelegatecalls
+   ) external onlyEthereumGovernanceExecutor {
+-    _queue(targets, values, signatures, calldatas, withDelegatecalls);
++    //_queue(targets, values, signatures, calldatas, withDelegatecalls);
+   }
+ 
+   /// @inheritdoc IL2BridgeExecutor
+diff -ruN bridges/PolygonBridgeExecutor.sol bridges/PolygonBridgeExecutor.sol
+--- bridges/PolygonBridgeExecutor.sol	2022-05-25 20:17:05.000000000 +0300
++++ bridges/PolygonBridgeExecutor.sol	2022-07-31 16:35:45.000000000 +0300
+@@ -30,9 +30,9 @@
+   event FxChildUpdate(address oldFxChild, address newFxChild);
+ 
+   // Address of the FxRoot Sender, sending the cross-chain transaction from Ethereum
+-  address private _fxRootSender;
++  address internal _fxRootSender; // Certora harness: private -> internal
+   // Address of the FxChild, in charge of redirecting cross-chain transactions in Polygon
+-  address private _fxChild;
++  address internal _fxChild; // Certora harness: private -> internal
+ 
+   /**
+    * @dev Only FxChild can call functions marked by this modifier.
+@@ -67,11 +67,12 @@
+   }
+ 
+   /// @inheritdoc IFxMessageProcessor
++  // Certora harness: added virtual
+   function processMessageFromRoot(
+     uint256 stateId,
+     address rootMessageSender,
+     bytes calldata data
+-  ) external override onlyFxChild {
++  ) external override virtual onlyFxChild {
+     if (rootMessageSender != _fxRootSender) revert UnauthorizedRootOrigin();
+ 
+     address[] memory targets;
