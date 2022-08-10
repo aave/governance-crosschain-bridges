@@ -102,7 +102,7 @@ rule whoChangedStateVariables(method f)
 	address guardian2 = getGuardian();
 
 	bool stateChanged = !( delay1 == delay2 &&
-		 period1 == period2 &&git@github.com:mashuka-peglo/aave-token-v3.git
+		 period1 == period2 &&
 		 minDelay1 == minDelay2 &&
 		 maxDelay1 == maxDelay2 &&
 		 guardian1 == guardian2);
