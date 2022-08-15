@@ -32,7 +32,7 @@ jobs:
         with: { java-version: "11", java-package: jre }
 
       - name: Install certora
-        run: pip install certora-cli-alpha-master
+        run: pip install certora-cli
         
       - name: Install solc
         run: |
