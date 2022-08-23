@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-java@v1
         with: { java-version: "11", java-package: jre }
 
-      - name: Install certora
+      - name: Install certora cli
         run: pip install certora-cli
         
       - name: Install solc
