@@ -71,4 +71,4 @@ jobs:
           - verifyPolygon.sh executedForever
           - verifyPolygon.sh executeRevertsBeforeDelay
           - verifyPolygon.sh noIncarnations1 noIncarnations2 noIncarnations3
-          - verifyPolygon.sh actionDuplicate holdYourHorses executeFailsIfExpired executedValidTransition1 queuePriviliged afterQueueHashQueued queue2Reachability cancelPriviliged independentQueuedActions queueCannotCancel queueDoesntModifyStateVariables queuedStateConsistency queuedChangedCounter sameExecutionTimesReverts cancelExclusive
+          - verifyPolygon.sh actionDuplicate holdYourHorses executeFailsIfExpired executedValidTransition1 queuePriviliged afterQueueHashQueued cancelPriviliged independentQueuedActions queueCannotCancel queueDoesntModifyStateVariables queuedStateConsistency queuedChangedCounter sameExecutionTimesReverts cancelExclusive
