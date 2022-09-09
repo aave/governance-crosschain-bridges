@@ -42,6 +42,7 @@ if (!SKIP_LOAD) {
 
 const MNEMONIC_PATH = "m/44'/60'/0'/0";
 const MNEMONIC = process.env.MNEMONIC || '';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 const MAINNET_FORK = process.env.MAINNET_FORK === 'true';
 const FORKING_BLOCK_NUMBER = process.env.FORKING_BLOCK_NUMBER;
 const ARBISCAN_KEY = process.env.ARBISCAN_KEY || '';
@@ -49,15 +50,21 @@ const OPTIMISTIC_ETHERSCAN_KEY = process.env.OPTIMISTIC_ETHERSCAN_KEY || '';
 const TENDERLY_PROJECT = process.env.TENDERLY_PROJECT || '';
 const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
 
+// Use of mnemonic over private key if mnemonic is provided
+const accountsToUse =
+  MNEMONIC == ''
+    ? [PRIVATE_KEY]
+    : {
+        mnemonic: MNEMONIC,
+        path: MNEMONIC_PATH,
+        initialIndex: 0,
+        count: 20,
+      };
+
 const getCommonNetworkConfig = (networkName: eNetwork, chainId: number) => ({
   url: NETWORKS_RPC_URL[networkName],
   chainId,
-  accounts: {
-    mnemonic: MNEMONIC,
-    path: MNEMONIC_PATH,
-    initialIndex: 0,
-    count: 20,
-  },
+  accounts: accountsToUse,
 });
 
 const mainnetFork = MAINNET_FORK
