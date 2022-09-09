@@ -52,14 +52,14 @@ const TENDERLY_USERNAME = process.env.TENDERLY_USERNAME || '';
 
 // Use of mnemonic over private key if mnemonic is provided
 const accountsToUse =
-  MNEMONIC == ''
-    ? [PRIVATE_KEY]
-    : {
+  PRIVATE_KEY == ''
+    ? {
         mnemonic: MNEMONIC,
         path: MNEMONIC_PATH,
         initialIndex: 0,
         count: 20,
-      };
+      }
+    : [PRIVATE_KEY];
 
 const getCommonNetworkConfig = (networkName: eNetwork, chainId: number) => ({
   url: NETWORKS_RPC_URL[networkName],
