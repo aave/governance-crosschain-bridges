@@ -25,7 +25,8 @@ The `L2BridgeExecutor` abstract contract extends `BridgeExecutorBase` in order t
 
 ## Audits
 
-- [MixBytes (12/08/21)](./audits/12-08-2021_MixBytes_AaveGovernanceCrosschainBridges.pdf)
+- [MixBytes - Bridge contracts for Polygon (12/08/21)](./audits/12-08-2021_MixBytes_AaveGovernanceCrosschainBridges.pdf)
+- [ChainSecurity - Bridge contracts for Optimism and Arbitrum (26/07/22)](./audits/26-07-2022_ChainSecurity_AaveL2BridgeExecutors.pdf)
 
 ## Getting Started
 
