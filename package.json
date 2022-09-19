@@ -1,6 +1,6 @@
 {
-  "name": "governance-crosschain-bridges",
-  "version": "1.0.0",
+  "name": "@aave/governance-crosschain-bridges",
+  "version": "1.0.1",
   "description": "Contracts of Aave Governance Crosschain Bridges",
   "files": [
     "contracts",
