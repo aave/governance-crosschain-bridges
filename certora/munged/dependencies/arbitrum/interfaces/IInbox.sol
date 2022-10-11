@@ -1,4 +1,4 @@
-pragma solidity ^0.8.10;
+pragma solidity >=0.7.0;
 
 interface IInbox {
   function sendL2Message(bytes calldata messageData) external returns (uint256);
