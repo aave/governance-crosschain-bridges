@@ -3,11 +3,10 @@ name: certora-arbitrum
 on:
   push:
     branches:
-      - main
-      - l2-bridges-audit
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
   workflow_dispatch:
 
