@@ -2,7 +2,7 @@
 // For license information, see https://github.com/nitro/blob/master/LICENSE
 // SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 library AddressAliasHelper {
     uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);
