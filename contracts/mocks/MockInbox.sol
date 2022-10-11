@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity >=0.7.0;
+pragma solidity ^0.8.10;
 
 import {IInbox} from '../dependencies/arbitrum/interfaces/IInbox.sol';
 import {AddressAliasHelper} from '../dependencies/arbitrum/AddressAliasHelper.sol';
