@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.10;
 
 import {ICrossDomainMessenger} from '../munged/dependencies/optimism/interfaces/ICrossDomainMessenger.sol';
 import {L2BridgeExecutorHarness} from './L2BridgeExecutorHarness.sol';

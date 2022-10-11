@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.10;
+pragma solidity ^0.8.10;
 
 import {AddressAliasHelper} from './../dependencies/arbitrum/AddressAliasHelper.sol';
 
