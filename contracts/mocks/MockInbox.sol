@@ -20,11 +20,15 @@ contract MockInbox is IInbox {
     return ISequencerInbox(address(1));
   }
 
-  function sendL2MessageFromOrigin(bytes calldata messageData) external override returns (uint256) {
+  function sendL2MessageFromOrigin(
+    bytes calldata // messageData
+  ) external override returns (uint256) {
     return messageNum;
   }
 
-  function sendL2Message(bytes calldata messageData) external override returns (uint256) {
+  function sendL2Message(
+    bytes calldata // messageData
+  ) external override returns (uint256) {
     return messageNum;
   }
 
@@ -68,12 +72,10 @@ contract MockInbox is IInbox {
     return messageNum;
   }
 
-  function calculateRetryableSubmissionFee(uint256 dataLength, uint256 baseFee)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function calculateRetryableSubmissionFee(
+    uint256 dataLength,
+    uint256 // baseFee
+  ) external view override returns (uint256) {
     return 1_000_000;
   }
 
