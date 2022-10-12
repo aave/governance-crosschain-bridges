@@ -47,4 +47,9 @@ interface IInbox {
   ) external payable returns (uint256);
 
   function depositEth(uint256 maxSubmissionCost) external payable returns (uint256);
+
+  function calculateRetryableSubmissionFee(uint256 dataLength, uint256 baseFee)
+    external
+    view
+    returns (uint256);
 }
