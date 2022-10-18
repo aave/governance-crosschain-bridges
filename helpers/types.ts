@@ -31,7 +31,8 @@ export enum eXDaiNetwork {
 
 export enum eArbitrumNetwork {
   arbitrum = 'arbitrum',
-  arbitrumTestnet = 'arbitrum-testnet',
+  arbitrumRinkeby = 'arbitrum-rinkeby',
+  arbitrumGoerli = 'arbitrum-goerli'
 }
 
 export enum eOptimismNetwork {
@@ -86,7 +87,8 @@ export interface iXDaiParamsPerNetwork<T> {
 
 export interface iArbitrumParamsPerNetwork<T> {
   [eArbitrumNetwork.arbitrum]: T;
-  [eArbitrumNetwork.arbitrumTestnet]: T;
+  [eArbitrumNetwork.arbitrumRinkeby]: T;
+  [eArbitrumNetwork.arbitrumGoerli]: T;
 }
 
 export interface iOptimismParamsPerNetwork<T> {
