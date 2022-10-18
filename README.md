@@ -177,6 +177,38 @@ When this transaction is sent cross-chain, the `msg.sender` that send the messag
 - `maximumDelay` - maximum allowed delay
 - `guardian` - the admin address of this contract with the permission to cancel ActionsSets
 
+### Scripts
+
+This repository contains a set of handy scripts for retryable tickets management.
+
+Once a retryable ticket is created in L1, the ticket is redeemable for about a week on L2. Arbitrum will try to auto-redeem it. If the action succeeds, a receipt is issued for it and the ticket is canceled and cannot be used anymore. If the action fails, the redemption reports failure and the ticket remains available for redemption.
+
+Anyone can redeem a retryable ticket while the ticket is valid. The validity of a retyable ticket can be extended by anyone, so the ticket can be kept alive forever. However, a retyable ticket can be canceled by the `callValueRefundAddress` address, making its redemption impractical.
+
+- Get Ticket Id of Retryable Ticket
+
+```
+npm run hardhat:main arbitrum:get-ticket-id -- --txhash [L1_TX_HASH]
+```
+
+- Redeem a Retryable Ticket on L2
+
+```
+npm run hardhat:arbitrum arbitrum:redeem-retryable -- --ticketid [TICKET_ID]
+```
+
+- Extend lifetime of a Retryable Ticket on L2
+
+```
+npm run hardhat:arbitrum arbitrum:extend-retryable -- --ticketid [TICKET_ID]
+```
+
+- Cancel a Retryable Ticket on L2
+
+```
+npm run hardhat:arbitrum arbitrum:cancel-retryable -- --ticketid [TICKET_ID]
+```
+
 ## Optimism Governance Bridge
 
 ### Optimism Governance Bridge Architecture
