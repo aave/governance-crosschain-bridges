@@ -30,9 +30,11 @@
     "hardhat:optimism": "hardhat --network optimism",
     "hardhat:optimism-testnet": "hardhat --network optimism-testnet",
     "hardhat:arbitrum": "hardhat --network arbitrum",
-    "hardhat:arbitrum-testnet": "hardhat --network arbitrum-testnet",
-    "deploy:gov-bridge:optimism-testnet": "npm run hardhat:optimism-testnet -- --tags 'OptimisticGov,Greeter'",
-    "deploy:gov-bridge:arbitrum-testnet": "npm run hardhat:arbitrum-testnet -- --tags 'ArbitrumGov,Greeter'"
+    "hardhat:arbitrum-rinkeby": "hardhat --network arbitrum-rinkeby",
+    "hardhat:arbitrum-goerli": "hardhat --network arbitrum-goerli",
+    "deploy:gov-bridge:optimism-testnet": "npm run hardhat:optimism-testnet deploy -- --tags 'OptimisticGov,Greeter'",
+    "deploy:gov-bridge:arbitrum-rinkeby": "npm run hardhat:arbitrum-rinkeby deploy -- --tags 'ArbitrumGov,Greeter'",
+    "deploy:gov-bridge:arbitrum-goerli": "npm run hardhat:arbitrum-goerli deploy -- --tags 'ArbitrumGov,Greeter'"
   },
   "devDependencies": {
     "@aave/governance-v2": "^1.0.0",

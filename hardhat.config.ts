@@ -132,10 +132,15 @@ const hardhatConfig: HardhatUserConfig = {
     rinkeby: {
       ...getCommonNetworkConfig(eEthereumNetwork.rinkeby, 4),
       companionNetworks: {
-        arbitrum: eArbitrumNetwork.arbitrumTestnet,
+        arbitrum: eArbitrumNetwork.arbitrumRinkeby,
       },
     },
-    goerli: getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
+    goerli: {
+      ...getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
+      companionNetworks: {
+        arbitrum: eArbitrumNetwork.arbitrumGoerli,
+      },
+    },
     main: {
       ...getCommonNetworkConfig(eEthereumNetwork.main, 1),
       companionNetworks: {
@@ -148,10 +153,16 @@ const hardhatConfig: HardhatUserConfig = {
     mumbai: getCommonNetworkConfig(ePolygonNetwork.mumbai, 80001),
     xdai: getCommonNetworkConfig(eXDaiNetwork.xdai, 100),
     [eArbitrumNetwork.arbitrum]: getCommonNetworkConfig(eArbitrumNetwork.arbitrum, 42161),
-    [eArbitrumNetwork.arbitrumTestnet]: {
-      ...getCommonNetworkConfig(eArbitrumNetwork.arbitrumTestnet, 421611),
+    [eArbitrumNetwork.arbitrumRinkeby]: {
+      ...getCommonNetworkConfig(eArbitrumNetwork.arbitrumRinkeby, 421611),
       companionNetworks: {
         l1: 'rinkeby',
+      },
+    },
+    [eArbitrumNetwork.arbitrumGoerli]: {
+      ...getCommonNetworkConfig(eArbitrumNetwork.arbitrumGoerli, 421613),
+      companionNetworks: {
+        l1: 'goerli',
       },
     },
     [eOptimismNetwork.main]: getCommonNetworkConfig(eOptimismNetwork.main, 10),
