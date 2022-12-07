@@ -1,0 +1,51 @@
+---
+name: Verify deployed contracts' bytecode
+
+on:
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  assert-bytecode:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Setup node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: node_modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: node_modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install node dependencies
+        run: npm i
+        if: |
+          steps.cache-node-modules.outputs.cache-hit != 'true'
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Verify bytecode of contracts on Optimism chain
+        uses: lidofinance/action-verify-bytecode@master
+        if: always()
+        with:
+          file: artifacts-opt.json
+          rpcUrl: ${{ secrets.OPTIMISM_RPC }}
+
+      - name: Verify bytecode of contracts on Arbitrum chain
+        uses: lidofinance/action-verify-bytecode@master
+        if: always()
+        with:
+          file: artifacts-arb.json
+          rpcUrl: ${{ secrets.ARBITRUM_RPC }}

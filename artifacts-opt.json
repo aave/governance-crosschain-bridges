@@ -1,0 +1,9 @@
+[
+  {
+    "artifactPath": "artifacts/contracts/bridges/OptimismBridgeExecutor.sol/OptimismBridgeExecutor.json",
+    "sourcePath": "contracts/bridges/OptimismBridgeExecutor.sol",
+    "name": "OptimismBridgeExecutor",
+    "address": "0xEfa0dB536d2c8089685630fafe88CF7805966FC3",
+    "txHash": "0xb2cac3cea80817ddf1e5ae042a0a3cd6e017e30e663f857ae1be6f171a39e49b"
+  }
+]
