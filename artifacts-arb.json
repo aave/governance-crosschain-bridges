@@ -1,0 +1,9 @@
+[
+  {
+    "artifactPath": "artifacts/contracts/bridges/ArbitrumBridgeExecutor.sol/ArbitrumBridgeExecutor.json",
+    "sourcePath": "contracts/bridges/ArbitrumBridgeExecutor.sol",
+    "name": "ArbitrumBridgeExecutor",
+    "address": "0x1dcA41859Cd23b526CBe74dA8F48aC96e14B1A29",
+    "txHash": "0x182706c6ea244a184363608b646636e159238dbc737619873390b1021dd7857c"
+  }
+]
