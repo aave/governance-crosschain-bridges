@@ -28,6 +28,14 @@ The `L2BridgeExecutor` abstract contract extends `BridgeExecutorBase` in order t
 - [MixBytes - Bridge contracts for Polygon (12/08/21)](./audits/12-08-2021_MixBytes_AaveGovernanceCrosschainBridges.pdf)
 - [ChainSecurity - Bridge contracts for Optimism and Arbitrum (26/07/22)](./audits/26-07-2022_ChainSecurity_AaveL2BridgeExecutors.pdf)
 
+## Addresses
+
+| Contract Name          	| Address                                                                                                                               	| Code                                                                               	| Network  	|
+|------------------------	|---------------------------------------------------------------------------------------------------------------------------------------	|------------------------------------------------------------------------------------	|----------	|
+| PolygonBridgeExecutor  	| [0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772](https://polygonscan.com/address/0xdc9A35B16DB4e126cFeDC41322b3a36454B1F772#code)         	| [1.0.0](https://github.com/aave/governance-crosschain-bridges/tree/v1.0.0)         	| Polygon  	|
+| ArbitrumBridgeExecutor 	| [0x7d9103572be58ffe99dc390e8246f02dcae6f611]( https://arbiscan.io/address/0x7d9103572be58ffe99dc390e8246f02dcae6f611#code)            	| [1.0.1](https://github.com/aave/governance-crosschain-bridges/releases/tag/v1.0.1) 	| Arbitrum 	|
+| OptimismBridgeExecutor 	| [0x7d9103572be58ffe99dc390e8246f02dcae6f611](https://optimistic.etherscan.io/address/0x7d9103572be58ffe99dc390e8246f02dcae6f611#code) 	| [1.0.1](https://github.com/aave/governance-crosschain-bridges/releases/tag/v1.0.1) 	| Opitmism 	|
+
 ## Getting Started
 
 ### Setup
