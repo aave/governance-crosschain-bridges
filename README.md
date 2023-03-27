@@ -25,8 +25,10 @@ The `L2BridgeExecutor` abstract contract extends `BridgeExecutorBase` in order t
 
 ## Audits
 
-- [MixBytes - Bridge contracts for Polygon (12/08/21)](./audits/12-08-2021_MixBytes_AaveGovernanceCrosschainBridges.pdf)
-- [ChainSecurity - Bridge contracts for Optimism and Arbitrum (26/07/22)](./audits/26-07-2022_ChainSecurity_AaveL2BridgeExecutors.pdf)
+- [12/08/2021 MixBytes - Bridge contracts for Polygon](./audits/12-08-2021_MixBytes_AaveGovernanceCrosschainBridges.pdf)
+- [26/06/2022 Certora - Formal Verification of Arbitrum, Optimism and Polygon](./certora/report/Formal%20Verification%20Report%20of%20AAVE%20L2%20Bridge.pdf)
+- [26/07/2022 ChainSecurity - Bridge contracts for Optimism and Arbitrum](./audits/26-07-2022_ChainSecurity_AaveL2BridgeExecutors.pdf)
+- [15/08/2022 Oxorio - Bridge contracts for Optimism and Arbitrum](./audits/15-08-2022_Oxorio_AaveL2BridgeExecutors.pdf)
 
 ## Addresses
 
