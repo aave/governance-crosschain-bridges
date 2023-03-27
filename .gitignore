@@ -8,6 +8,7 @@ dist/
 build/
 .vscode
 .idea
+.npmrc
 /types
 /typechain
 temp.txt
