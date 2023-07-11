@@ -15,7 +15,7 @@ contract ZkEVMBridgeExecutor is L2BridgeExecutor, IBridgeMessageReceiver {
   error InvalidOriginNetwork();
   error InvalidMethodId();
 
-  address public immutable zkEVMBridge;
+  address internal constant zkEVMBridge = 0x2a3DD3EB832aF982ec71669E178424b10Dca2EDe;
   uint32 internal constant _MAINNET_NETWORK_ID = 0;
 
   /// @inheritdoc L2BridgeExecutor
@@ -32,7 +32,6 @@ contract ZkEVMBridgeExecutor is L2BridgeExecutor, IBridgeMessageReceiver {
   /**
    * @dev Constructor
    *
-   * @param zkEVMBridge_ The address of the ZkEVMBridge.
    * @param ethereumGovernanceExecutor The address of the EthereumGovernanceExecutor
    * @param delay The delay before which an actions set can be executed
    * @param gracePeriod The time period after a delay during which an actions set can be executed
@@ -43,7 +42,6 @@ contract ZkEVMBridgeExecutor is L2BridgeExecutor, IBridgeMessageReceiver {
    *      But this also means we need queue function to not be callable, will always revert.
    */
   constructor(
-    address zkEVMBridge_,
     address ethereumGovernanceExecutor,
     uint256 delay,
     uint256 gracePeriod,
@@ -61,7 +59,6 @@ contract ZkEVMBridgeExecutor is L2BridgeExecutor, IBridgeMessageReceiver {
     )
   {
     // Intentionally left blank
-    zkEVMBridge = zkEVMBridge_;
   }
 
   function onMessageReceived(
