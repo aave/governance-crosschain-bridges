@@ -8,7 +8,7 @@ export const ADDRESSES = {
   // 'updateEthereumGovernanceExecutor' method. As the initial value for EthereumGovExecutor
   // is used test instance of Aragon Agent on mainnet. It will be replaced with the official
   // Lido Aragon Agent before usage.
-  ETHEREUM_GOV_EXECUTOR: '0x184d39300f2fa4419d04998e9c58cb5de586d879',
+  ETHEREUM_GOV_EXECUTOR: '0x32A0E5828B62AAb932362a4816ae03b860b65e83',
   OVM_GUARDIAN: '0x0000000000000000000000000000000000000000',
   ARB_GUARDIAN: '0x0000000000000000000000000000000000000000',
   RETRYABLE_TICKET_TX_ADDRESS: '0x000000000000000000000000000000000000006E',
